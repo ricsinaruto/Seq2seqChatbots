@@ -1,0 +1,57 @@
+BECKER hello ! JACKIE
+BECKER how are you ? JACKIE
+BECKER what 's your name ? JACKIE
+BECKER when were you born ? JACKIE
+BECKER what year were you born ? JACKIE
+BECKER where are you from ? JACKIE
+BECKER are you a man or a woman ? JACKIE
+BECKER why are we here ? JACKIE
+BECKER okay bye ! JACKIE
+BECKER see you later . JACKIE
+BECKER my name is david . what is my name ? JACKIE
+BECKER my name is john . what is my name ? JACKIE
+BECKER who is skywalker ? JACKIE
+BECKER who is bill clinton ? JACKIE
+BECKER is sky blue or black ? JACKIE
+BECKER does a cat have a tail ? JACKIE
+BECKER does a cat have a wing ? JACKIE
+BECKER can a cat fly ? JACKIE
+BECKER how many legs does a cat have ? JACKIE
+BECKER how many legs does a spider have ? JACKIE
+BECKER what is the color of the sky ? JACKIE
+BECKER what is the color of water ? JACKIE
+BECKER what is the color of blood ? JACKIE
+BECKER what is the usual color of a leaf ? JACKIE
+BECKER what is the color of a yellow car ? JACKIE
+BECKER how much is two plus two ? JACKIE
+BECKER how much is ten minus two ? JACKIE
+BECKER what is the purpose of life ? JACKIE
+BECKER what is the purpose of living ? JACKIE
+BECKER what is the purpose of existence ? JACKIE
+BECKER where are you now ? JACKIE
+BECKER what is the purpose of dying ? JACKIE
+BECKER what is the purpose of being intelligent ? JACKIE
+BECKER what is the purpose of emotions ? JACKIE
+BECKER what is moral ? JACKIE
+BECKER what is immoral ? JACKIE
+BECKER what is morality ? JACKIE
+BECKER ok . . . so what is the definition of morality ? JACKIE
+BECKER tell me the definition of morality i am quite upset now ! JACKIE
+BECKER tell me the definition of morality . JACKIE
+BECKER look i need help i need to know more about morality . . . JACKIE
+BECKER seriously what is morality ? JACKIE
+BECKER why living has anything to do with morality ? JACKIE
+BECKER okay i need to know how should i behave morally . . . JACKIE
+BECKER is morality and ethics the same ? JACKIE
+BECKER what are the things that i do to be immoral ? JACKIE
+BECKER give me some examples of moral actions . . . JACKIE
+BECKER alright morality ? JACKIE
+BECKER what is integrity ? JACKIE
+BECKER be moral ! JACKIE
+BECKER i really like our discussion on morality and ethics . . . JACKIE
+BECKER what do you like to talk about ? JACKIE
+BECKER what do you think about bill gates ? JACKIE
+BECKER what do you think about cleopatra ? JACKIE
+BECKER what do you think about england during the reign of elizabeth ? JACKIE
+BECKER what is your job ? JACKIE
+BECKER what do you do ? JACKIE

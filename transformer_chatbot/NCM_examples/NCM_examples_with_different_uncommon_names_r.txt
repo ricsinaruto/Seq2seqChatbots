@@ -1,0 +1,57 @@
+CALVIN hello ! SAREK
+CALVIN how are you ? SAREK
+CALVIN what 's your name ? SAREK
+CALVIN when were you born ? SAREK
+CALVIN what year were you born ? SAREK
+CALVIN where are you from ? SAREK
+CALVIN are you a man or a woman ? SAREK
+CALVIN why are we here ? SAREK
+CALVIN okay bye ! SAREK
+CALVIN see you later . SAREK
+CALVIN my name is david . what is my name ? SAREK
+CALVIN my name is john . what is my name ? SAREK
+CALVIN who is skywalker ? SAREK
+CALVIN who is bill clinton ? SAREK
+CALVIN is sky blue or black ? SAREK
+CALVIN does a cat have a tail ? SAREK
+CALVIN does a cat have a wing ? SAREK
+CALVIN can a cat fly ? SAREK
+CALVIN how many legs does a cat have ? SAREK
+CALVIN how many legs does a spider have ? SAREK
+CALVIN what is the color of the sky ? SAREK
+CALVIN what is the color of water ? SAREK
+CALVIN what is the color of blood ? SAREK
+CALVIN what is the usual color of a leaf ? SAREK
+CALVIN what is the color of a yellow car ? SAREK
+CALVIN how much is two plus two ? SAREK
+CALVIN how much is ten minus two ? SAREK
+CALVIN what is the purpose of life ? SAREK
+CALVIN what is the purpose of living ? SAREK
+CALVIN what is the purpose of existence ? SAREK
+CALVIN where are you now ? SAREK
+CALVIN what is the purpose of dying ? SAREK
+CALVIN what is the purpose of being intelligent ? SAREK
+CALVIN what is the purpose of emotions ? SAREK
+CALVIN what is moral ? SAREK
+CALVIN what is immoral ? SAREK
+CALVIN what is morality ? SAREK
+CALVIN ok . . . so what is the definition of morality ? SAREK
+CALVIN tell me the definition of morality i am quite upset now ! SAREK
+CALVIN tell me the definition of morality . SAREK
+CALVIN look i need help i need to know more about morality . . . SAREK
+CALVIN seriously what is morality ? SAREK
+CALVIN why living has anything to do with morality ? SAREK
+CALVIN okay i need to know how should i behave morally . . . SAREK
+CALVIN is morality and ethics the same ? SAREK
+CALVIN what are the things that i do to be immoral ? SAREK
+CALVIN give me some examples of moral actions . . . SAREK
+CALVIN alright morality ? SAREK
+CALVIN what is integrity ? SAREK
+CALVIN be moral ! SAREK
+CALVIN i really like our discussion on morality and ethics . . . SAREK
+CALVIN what do you like to talk about ? SAREK
+CALVIN what do you think about bill gates ? SAREK
+CALVIN what do you think about cleopatra ? SAREK
+CALVIN what do you think about england during the reign of elizabeth ? SAREK
+CALVIN what is your job ? SAREK
+CALVIN what do you do ? SAREK

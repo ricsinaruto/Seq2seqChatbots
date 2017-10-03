@@ -1,0 +1,57 @@
+SAREK hello ! SPOCK
+SAREK how are you ? SPOCK
+SAREK what 's your name ? SPOCK
+SAREK when were you born ? SPOCK
+SAREK what year were you born ? SPOCK
+SAREK where are you from ? SPOCK
+SAREK are you a man or a woman ? SPOCK
+SAREK why are we here ? SPOCK
+SAREK okay bye ! SPOCK
+SAREK see you later . SPOCK
+SAREK my name is david . what is my name ? SPOCK
+SAREK my name is john . what is my name ? SPOCK
+SAREK who is skywalker ? SPOCK
+SAREK who is bill clinton ? SPOCK
+SAREK is sky blue or black ? SPOCK
+SAREK does a cat have a tail ? SPOCK
+SAREK does a cat have a wing ? SPOCK
+SAREK can a cat fly ? SPOCK
+SAREK how many legs does a cat have ? SPOCK
+SAREK how many legs does a spider have ? SPOCK
+SAREK what is the color of the sky ? SPOCK
+SAREK what is the color of water ? SPOCK
+SAREK what is the color of blood ? SPOCK
+SAREK what is the usual color of a leaf ? SPOCK
+SAREK what is the color of a yellow car ? SPOCK
+SAREK how much is two plus two ? SPOCK
+SAREK how much is ten minus two ? SPOCK
+SAREK what is the purpose of life ? SPOCK
+SAREK what is the purpose of living ? SPOCK
+SAREK what is the purpose of existence ? SPOCK
+SAREK where are you now ? SPOCK
+SAREK what is the purpose of dying ? SPOCK
+SAREK what is the purpose of being intelligent ? SPOCK
+SAREK what is the purpose of emotions ? SPOCK
+SAREK what is moral ? SPOCK
+SAREK what is immoral ? SPOCK
+SAREK what is morality ? SPOCK
+SAREK ok . . . so what is the definition of morality ? SPOCK
+SAREK tell me the definition of morality i am quite upset now ! SPOCK
+SAREK tell me the definition of morality . SPOCK
+SAREK look i need help i need to know more about morality . . . SPOCK
+SAREK seriously what is morality ? SPOCK
+SAREK why living has anything to do with morality ? SPOCK
+SAREK okay i need to know how should i behave morally . . . SPOCK
+SAREK is morality and ethics the same ? SPOCK
+SAREK what are the things that i do to be immoral ? SPOCK
+SAREK give me some examples of moral actions . . . SPOCK
+SAREK alright morality ? SPOCK
+SAREK what is integrity ? SPOCK
+SAREK be moral ! SPOCK
+SAREK i really like our discussion on morality and ethics . . . SPOCK
+SAREK what do you like to talk about ? SPOCK
+SAREK what do you think about bill gates ? SPOCK
+SAREK what do you think about cleopatra ? SPOCK
+SAREK what do you think about england during the reign of elizabeth ? SPOCK
+SAREK what is your job ? SPOCK
+SAREK what do you do ? SPOCK

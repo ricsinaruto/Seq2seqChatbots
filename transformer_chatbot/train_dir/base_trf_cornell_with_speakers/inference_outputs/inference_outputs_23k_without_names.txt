@@ -1,0 +1,57 @@
+hello .
+fine .
+bob .
+soon .
+i do n't know .
+<UNK> .
+no .
+i do n't know .
+bye .
+okay .
+bob .
+it 's me .
+<UNK> . . .
+i do n't know .
+<UNK> .
+no .
+yes .
+no .
+two .
+two .
+what ?
+no .
+no .
+it 's a <UNK> .
+yeah .
+five .
+five .
+nothing .
+nothing .
+i do n't know .
+i do n't know .
+nothing .
+i do n't know .
+i do n't know .
+nothing .
+i do n't know .
+what ?
+<UNK> .
+what ?
+what ?
+what ?
+what ?
+what ?
+good luck .
+no . . .
+i do n't know what you 're talking about .
+what ?
+what ?
+i do n't know . . .
+what ?
+what ?
+nothing .
+what ?
+i do n't know .
+i do n't know .
+i do n't know .
+nothing .
