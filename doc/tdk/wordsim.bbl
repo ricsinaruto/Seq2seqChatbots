@@ -1,0 +1,74 @@
+\begin{thebibliography}{}
+
+\bibitem[Apple, 2017]{Siri:2017}
+Apple (2017).
+\newblock Siri.
+\newblock \url{https://www.apple.com/ios/siri/}.
+\newblock Accessed: 2017-10-04.
+
+\bibitem[Cho et~al., 2014]{Cho:2014}
+Cho, K., Van~Merri{\"e}nboer, B., Gulcehre, C., Bahdanau, D., Bougares, F.,
+  Schwenk, H., and Bengio, Y. (2014).
+\newblock Learning phrase representations using rnn encoder-decoder for
+  statistical machine translation.
+\newblock {\em arXiv preprint arXiv:1406.1078}.
+
+\bibitem[Danescu-Niculescu-Mizil and Lee, 2011]{Danescu:2011}
+Danescu-Niculescu-Mizil, C. and Lee, L. (2011).
+\newblock Chameleons in imagined conversations: A new approach to understanding
+  coordination of linguistic style in dialogs.
+\newblock In {\em Proceedings of the 2nd Workshop on Cognitive Modeling and
+  Computational Linguistics}, pages 76--87. Association for Computational
+  Linguistics.
+
+\bibitem[Das et~al., 2017]{Das:2017}
+Das, A., Kottur, S., Moura, J.~M., Lee, S., and Batra, D. (2017).
+\newblock Learning cooperative visual dialog agents with deep reinforcement
+  learning.
+\newblock {\em arXiv preprint arXiv:1703.06585}.
+
+\bibitem[Google, 2017]{Google:2017}
+Google (2017).
+\newblock Google assistant.
+\newblock \url{https://assistant.google.com/}.
+\newblock Accessed: 2017-10-04.
+
+\bibitem[Li et~al., 2016]{Li:2016}
+Li, J., Galley, M., Brockett, C., Spithourakis, G.~P., Gao, J., and Dolan, B.
+  (2016).
+\newblock A persona-based neural conversation model.
+\newblock {\em arXiv preprint arXiv:1603.06155}.
+
+\bibitem[Microsoft, 2017]{Cortana:2017}
+Microsoft (2017).
+\newblock Cortana.
+\newblock \url{https://www.microsoft.com/en-us/windows/cortana}.
+\newblock Accessed: 2017-10-04.
+
+\bibitem[Serban et~al., 2017]{Serban:2017}
+Serban, I.~V., Sankar, C., Germain, M., Zhang, S., Lin, Z., Subramanian, S.,
+  Kim, T., Pieper, M., Chandar, S., Ke, N.~R., et~al. (2017).
+\newblock A deep reinforcement learning chatbot.
+\newblock {\em arXiv preprint arXiv:1709.02349}.
+
+\bibitem[Serban et~al., 2016]{Serban:2015}
+Serban, I.~V., Sordoni, A., Bengio, Y., Courville, A.~C., and Pineau, J.
+  (2016).
+\newblock Building end-to-end dialogue systems using generative hierarchical
+  neural network models.
+\newblock In {\em AAAI}, pages 3776--3784.
+
+\bibitem[Tiedemann, 2009]{Tiedemann:2009}
+Tiedemann, J. (2009).
+\newblock News from opus-a collection of multilingual parallel corpora with
+  tools and interfaces.
+\newblock In {\em Recent advances in natural language processing}, volume~5,
+  pages 237--248.
+
+\bibitem[Vaswani et~al., 2017]{Vaswani:2017}
+Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A.~N.,
+  Kaiser, L., and Polosukhin, I. (2017).
+\newblock Attention is all you need.
+\newblock {\em arXiv preprint arXiv:1706.03762}.
+
+\end{thebibliography}

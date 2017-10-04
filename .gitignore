@@ -146,6 +146,7 @@ transformer_chatbot/train_dir/base_big_batch_good/*
 transformer_chatbot/train_dir/base_big_batch_opensubs_2M/*
 transformer_chatbot/train_dir/base_lstm_seq2seq_attention/*
 transformer_chatbot/train_dir/base_trf_cornell_with_speakers/*
+transformer_chatbot/train_dir/base_trf_cornell_with_sep_speakers/*
 transformer_chatbot/train_dir/new_hparams/*
 transformer_wmtende/*
 transformer_chatbot/t2t_csaky/opensubs_small_data/
@@ -157,3 +158,4 @@ transformer_chatbot/data_dir/*
 !transformer_chatbot/train_dir/base_big_batch_opensubs_2M/inference_outputs/
 !transformer_chatbot/train_dir/base_lstm_seq2seq_attention/inference_outputs/
 !transformer_chatbot/train_dir/base_trf_cornell_with_speakers/inference_outputs/
+!transformer_chatbot/train_dir/base_trf_cornell_with_sep_speakers/inference_outputs/

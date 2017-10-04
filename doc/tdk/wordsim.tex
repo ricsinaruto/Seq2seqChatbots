@@ -1,93 +1,125 @@
-\documentclass[11pt]{article}
+\documentclass[12pt]{article}
 \usepackage{times}
+\usepackage[hungarian,british]{babel}
 \usepackage{url}
 \usepackage{latexsym}
 \usepackage[utf8]{inputenc}
+\usepackage[hidelinks]{hyperref}
 \usepackage{color}
-\usepackage{multirow}
-%\usepackage{latexsym}
+\usepackage{graphicx}
 \usepackage{booktabs,amsmath,multicol}
-%\usepackage{hyperref}
-% really have to
-
-\title{Title}
-\author{ % G\'abor Recski and Eszter Ikl\'odi and Katalin Pajkossy
-    Rich\'ard Cs\'aky \\
-    Department of Automation and Applied Informatics \\
-    Budapest University of Technology and Economics \\
-    {\tt ricsinaruto@hotmail.com} \\
-    }
-\date{}
+\usepackage{breakcites}
+\usepackage[nottoc]{tocbibind}
+\setcounter{secnumdepth}{3}
+\usepackage[top=2.5cm, bottom=4cm, left=2.5cm, right=2.5cm]{geometry}
 
 \begin{document}
+	\title{Deep Learning Based Chatbot Models}
+	\author{Richárd Krisztián Csáky \\ Budapest University of Technology and Economics}
+	\date{\today}
+	
+\begin{titlepage}
+		\centering
+		\includegraphics[width=0.6\textwidth]{bme_logo_nagy.eps}\par\vspace{1cm}
+		{\scshape Budapest University of Technology and Economics \\ Faculty of Electrical Engineering and Informatics \\
+			Department of Automation and Applied Informatics \par}
+		\vspace{2cm}
+		{\huge\mdseries Deep Learning Based Chatbot Models\par}
+		\vspace{0.5cm}
+		{\scshape\Large Scientific Students' Associations Report\par}
+		\vspace{1.5cm}
+		
+		{\Large Author: \\ Richárd Krisztián Csáky\par}
+		\vspace{1.5cm}
+		{\Large Supervised by \\ Gábor Recski\par}
+		\vfill
+		\par
+		{\Large 2017\par}
+		
+		
+\end{titlepage}
 
-\maketitle
-
+\begin{otherlanguage}{hungarian}
 \begin{abstract}
-Absztrakt
+A konverzációs ágens (chatbot) egy olyan program, mely természetes nyelvet használva képes emberekkel kommunikálni. A beszélgetés modellezése fontos feladat a természetes nyelvfeldolgozás és mesterséges intelligencia (MI) területén. Az MI tudományág megszületése óta egy jól működő chatbot létrehozása még mindig az egyik legnehezebb kihívás. A chatbotok sokféle feladatra használhatók, de mindegyik esetében elvárt, hogy megértsék a felhasználó mondandóját és az adott problémához releváns válaszokat generáljanak.
+		
+A múlt chatbot architektúrái kézi szabályokra és sablonokra, vagy egyszerű statisztikai módszerekre támaszkodtak. 2015 óta, a  mélytanulás (deep learning) elterjedésével ezek a modellek gyorsan felcserélődtek elejétől végéig tanítható neurális hálózatokkal. Manapság a rekurrens enkóder-dekóder modell \cite{Cho:2014} dominál a konverzáció modellezésben. Ezt az architektúrát a neurális gépi fordítás területéről adaptálták, ahol rendkívül jó eredményeket ért el. Azóta sokféle változata \cite{Serban:2015} és kiegészítése született annak érdekében, hogy minél jobb minőségű legyen a chatbotok által folytatott beszélgetés.
+		
+Munkám során részletes irodalmi kutatást végeztem, melyben az elmúlt 3 évben publikált, több mint 70, a chatbotokkal kapcsolatos publikációt vizsgálok meg. Ezután amellett érvelek, hogy a konverzáció modellezés sajátosságai a jelenlegi state-of-the-art architektúráktól eltérő megközelítést igényelnek. Szakirodalmi példákon alapulva bemutatom, hogy a jelenlegi chatbot modellek miért nem vesznek figyelembe elég ún. priort a válasz generálása során, és ez hogyan befolyásolja a beszélgetés minőségét. Ezek a priorok olyan külső információt hordoznak, melyen a beszélgetés kondicionálva lehet, mint például a beszélők személye \cite{Li:2016} vagy hangulata. Amellett, hogy bemutatom az okait, javaslatokat is teszek a probléma orvoslására.
+		
+A dolgozat következő részében egy nemrég bemutatott modellt, mely jelenleg state-of-the-art-nak számít a neurális gépi fordításban, az úgynevezett Transformer-t \cite{Vaswani:2017} adaptálom a beszélgetés-modellezés feladatára. Először az eredeti cikkben leírt modell tanításával kísérletezek, tanítóadatként a Cornell Movie-Dialog Corpus \cite{Danescu:2011} dialógusait használva. Emellett továbbfejlesztem a modellt saját, az enkóder-dekóder architektúra hiányainak orvoslására született ötletekkel. További priorokat adok bemenetként a modellbe, mint a beszélgetők személye vagy hangulata. Végül korábbi chatbot modellekkel való összehasonlítás útján részletes elemzést végzek arról, hogy az eredeti modell mennyire teljesít jól dialógus adattal és hogyan befolyásolják a generált válaszok minőségét az általam implementált további kiegészítések.
+\end{abstract}
+\end{otherlanguage}
+
+
+\newpage\begin{abstract}
+A conversational agent (chatbot) is a piece of software that is able to communicate with humans using natural language. Modelling conversation is an important task in natural language processing and artificial intelligence (AI). Indeed, ever since the birth of AI, creating a good chatbot remains one of the field’s hardest challenges. While chatbots can be used for various tasks, in general they have to understand users’ utterances and provide responses that are relevant to the problem at hand.
+
+In the past, methods for constructing chatbot architectures have relied on hand-written rules and templates or simple statistical methods. With the rise of deep learning these models were quickly replaced by end-to-end trainable neural networks around 2015. More specifically, the recurrent encoder-decoder model \cite{Cho:2014} dominates the task of conversational modelling. This architecture was adapted from the neural machine translation domain, where it performs extremely well. Since then a multitude of variations \cite{Serban:2015} and features were presented that augment the quality of the conversation that chatbots are capable of.
+
+In my work, I conduct an in-depth survey of recent literature, examining over 70 publications related to chatbots published in the last 3 years. Then I proceed to make the argument that the very nature of the general conversation domain demands approaches that are different from current state-of-the-art architectures. Based on several examples from the literature I show why current chatbot models fail to take into account enough priors when generating responses and how this affects the quality of the conversation. In the case of chatbots these priors can be outside sources of information that the conversation is conditioned on like the persona \cite{Li:2016} or mood of the conversers. In addition to presenting the reasons behind this problem, I propose several ideas on how it could be remedied.
+
+The next section of my paper focuses on adapting the very recent Tranformer \cite{Vaswani:2017} model to the chatbot domain, which is currently the state-of-the-art in neural machine translation. I first present my experiments with the vanilla model, using conversations extracted from the Cornell Movie-Dialog Corpus \cite{Danescu:2011}. Secondly, I augment the model with some of my ideas regarding the issues of encoder-decoder architectures. More specifically, I feed additional features into the model like mood or persona together with the raw conversation data. Finally, I conduct a detailed analysis of how the vanilla model performs on conversational data by comparing it to previous chatbot models and how the additional features, affect the quality of the generated responses.
 \end{abstract}
 
-\begin{abstract}
-Abstract
-\end{abstract}
+\newpage\tableofcontents
+\newpage\section{Introduction} \label{sec:intro}
 
-\section{Introduction}
-\label{sec:intro}
+A conversational agent (chatbot) is a piece of software that is able to communicate with humans using natural language. Ever since the birth of AI, modelling conversations remains one of the field's toughest challenges. Even though they are far from perfect chatbots are now used in a plethora of applications like Apple's Siri \cite{Siri:2017}, Google's Google Assistant \cite{Google:2017} or Microsoft's Cortana \cite{Cortana:2017}. In order to fully understand the capabilities and limitations of current chatbot architectures and techniques I conduct an in-depth survey, where I examine related literature published over the past 3 years and I implement my own chatbot based on a novel neural network model. 
 
-A chatbotokat már a régi görögök is...
+The paper begins with a brief overview of the history of chatbots in Section~\ref{sec:history}, where I discuss the properties and objectives of conversational modelling. I present early approaches and the current dominating model based on neural networks for building conversational agents.
 
-Ez a cikk...
-    background
-        - the task
-        - seq2seq
-        - ...
-    critical survey of literature
-    experiments with transformer model on various datasets
-    directions for future work
+In the following section I present key architectures and techniques that were developed over the past 3 years relating to chatbots. I group publications into 11 groups based on the specific technique or approach that is discussed by the authors. After this I present criticism regarding some of the properties of current chatbot models and I show how several of the techniques used are inappropriate for the task of modelling conversations.
 
+In the next section I conduct experiments by training a novel neural network model, the Transformer \cite{Vaswani:2017} using dialog datasets \cite{Danescu:2011,Tiedemann:2009}. I run several trainings using these datasets detailed in Section~\ref{sec:experiments}. I present the results of the different training setups by qualitatively comparing them to previous chatbot models and by using standard evaluation metrics.
 
-\section{History of chatbots}
-\label{sec:background}
+In the final section before concluding I offer possible directions for future work. More specifically, I propose several ideas in order to remedy the problems discussed in Section~\ref{ssec:32}.
 
-    \subsection{Task}
-    Mik azok a chatbotok
-    
-    Miben mas mint a task-specific dolgok
-    
-    ...
+\newpage\section{History of Chatbots} \label{sec:history}
 
+\subsection{Modelling Conversations} \label{ssec:21}
+Chatbot models usually take in as input natural language sentences uttered by the user, and output a response. Models have also been developed to accommodate for spoken or visual inputs. They oftentimes make use of a speech recognition component to transform speech into text \cite{Serban:2017} or convolutional neural networks that transform the input pictures into useful representations for the chatbot. The latter models are also called visual dialog agents, where the conversation is grounded on both textual and visual input \cite{Das:2017}.
 
-    \subsection{Early approaches}
+Mik azok a chatbotok 
+Miben mas mint a task-specific dolgok
+...
+\subsection{Early Approaches} \label{ssec:22}
+\subsection{The Seq2seq Model} \label{ssec:23}
 
-    \subsection{The seq2seq model}
+\newpage\section{Background} \label{sec:background}
+\subsection{Recent Chatbot Architectures and Augmentations} \label{ssec:31}
+\subsubsection{Attention}
+\subsubsection{Context}
+\subsubsection{Objective Functions}
+\subsubsection{Additional Features}
+\subsubsection{Knowledge Bases, Copying and Information Retrieval}
+\subsubsection{Task-Oriented Approaches}
+\subsubsection{Decoding and Beam Search}
+\subsubsection{Reinforcement Learning}
+\subsubsection{Pretraining}
+\subsubsection{Additional Encoder-Decoder Models}
+\subsubsection{Evaluation Methods}
 
-
-\section{Background}
-
-    \subsection{Recent chatbot architectures}
-75+ cikk...
-    \cite{Cho:2014}
-    itt is kellenek section-ok (75 cikk csoportositva)
-    pl. \subsubsection{Persona}
-    - csoportonkent is kell kis osszefoglalo a problemakrol (1-1)
-
-    \subsection{Criticism}
-        \subsubsection{Evaluation}
-        ...
-
-    \subsection{Summary}
+\subsection{Criticism} \label{ssec:32}
+\subsubsection{Datasets}
+\subsubsection{Loss Function}
+\subsubsection{Memory}
+\subsubsection{Evaluation Metrics}
+\subsection{Summary} \label{ssec:33}
     
 
-\section{Experiments}
-\label{sec:experiments}
+\newpage\section{Experiments} \label{sec:experiments}
 
-\subsection{The Tranformer model}
-\label{sec:transformer}
+\subsection{The Tranformer Model} \label{ssec:41}
 
-\subsection{Datasets}
+\subsection{Datasets} \label{ssec:42}
+
+\newpage\section{Results} \label{sec:results}
+\newpage\section{Future Work} \label{sec:future}
+\newpage\section{Conclusion} \label{sec:conclusion}
 
 
 
-\bibliographystyle{plain}
-\bibliography{chatbots}
+\bibliographystyle{apalike}
+\newpage\bibliography{chatbots}
 \end{document}
