@@ -29,7 +29,7 @@ EOS = text_encoder.EOS_ID
 
 # Data file paths 
 # TODO: make these not hardcoded but either flags or downloadable
-_CORNELL_TRAIN_DATASETS = ["t2t_csaky/cornell_movie_data/movie_lines.txt","t2t_csaky/cornell_movie_data/movie_conversations.txt"]
+_CORNELL_TRAIN_DATASETS = ["t2t_csaky/cornell_movie_data/movie_lines_full.txt","t2t_csaky/cornell_movie_data/movie_conversations_full.txt"]
 _CORNELL_DEV_DATASETS = ["t2t_csaky/cornell_movie_data/movie_lines_dev.txt","t2t_csaky/cornell_movie_data/movie_conversations_dev.txt"]
 _CORNELL_TEST_DATASETS = ["t2t_csaky/cornell_movie_data/movie_lines_test.txt","t2t_csaky/cornell_movie_data/movie_conversations_test.txt"]
 
@@ -252,6 +252,7 @@ def save_lines(in_file,dialogs,src,trg,vocab_file,voc_size,tag,vocab_list=0):
 	line_dict={}
 	comma_words=Counter()
 	name_counter=Counter()
+	name_vc_size=8000
 
 	def repl(matchobj):
 		return re.sub("'"," '",str(matchobj.group(0)))
@@ -263,7 +264,7 @@ def save_lines(in_file,dialogs,src,trg,vocab_file,voc_size,tag,vocab_list=0):
 		line=line.split(" +++$+++ ")
 		token=line[0]
 		name=line[3]
-		name=re.sub(" ","_",name)
+		name=re.sub(" ","_",name)+"_"+line[2]
 		line=line[4].lower()
 
 		"""
@@ -301,8 +302,8 @@ def save_lines(in_file,dialogs,src,trg,vocab_file,voc_size,tag,vocab_list=0):
 
 		line_dict[token]=name+" "+line
 
-	most_common_words=wc.most_common(voc_size-4-3000)
-	most_common_names=name_counter.most_common(3000)
+	most_common_words=wc.most_common(voc_size-4-name_vc_size)
+	most_common_names=name_counter.most_common(name_vc_size)
 	comm_words=[]
 	comm_names=[]
 	for w,i in most_common_words:
@@ -310,6 +311,7 @@ def save_lines(in_file,dialogs,src,trg,vocab_file,voc_size,tag,vocab_list=0):
 	for w,i in most_common_names:
 		comm_names.append(w)
 	print(len(wc))
+	print(len(name_counter))
 	i=0
 	for key in line_dict:
 		i+=1
@@ -321,7 +323,7 @@ def save_lines(in_file,dialogs,src,trg,vocab_file,voc_size,tag,vocab_list=0):
 					string=" "+word+" "
 					line_dict[key]=re.sub(string," <UNK> "," "+line_dict[key]+" ")
 			else:
-				if word not in vocab_list[:voc_size-4-3000-1]:
+				if word not in vocab_list[:voc_size-4-name_vc_size-1]:
 					string=" "+word+" "
 					line_dict[key]=re.sub(string," <UNK> "," "+line_dict[key]+" ")
 		if tag=="train":
@@ -329,23 +331,35 @@ def save_lines(in_file,dialogs,src,trg,vocab_file,voc_size,tag,vocab_list=0):
 				string=" "+line[0]+" "
 				line_dict[key]=re.sub(string," <UNK_NAME> "," "+line_dict[key]+" ")
 		else:
-			if line[0] not in vocab_list[voc_size-4-3000:]:
+			if line[0] not in vocab_list[voc_size-4-name_vc_size:]:
 				string=" "+line[0]+" "
 				line_dict[key]=re.sub(string," <UNK_NAME> "," "+line_dict[key]+" ")
 
 	# get the separate dialogs
 	source_file = open(src, "w")
 	target_file = open(trg, "w")
+	dev_source_file = open("devSource.txt", "w")
+	dev_target_file = open("devTarget.txt", "w")
 
+
+	dev_count=0
 	for dialog in dialogs:
 		i=0
 		for utterance in dialog:
 			if utterance != dialog[-1] and dialog[i+1]!="L211194" and dialog[i+1]!="L1045":
-				target_words=line_dict[dialog[i+1]].split()
-				target_name=target_words[0]
-				target_sent=" ".join(target_words[1:])
-				source_file.write(line_dict[utterance]+" "+target_name+'\n')
-				target_file.write(target_sent+'\n')
+				if dev_count<30000 and len(dialog)>2 and dialog[0]==utterance:
+					target_words=line_dict[dialog[i+1]].split()
+					target_name=target_words[0]
+					target_sent=" ".join(target_words[1:])
+					dev_source_file.write(line_dict[utterance]+" "+target_name+'\n')
+					dev_target_file.write(target_sent+'\n')
+					dev_count+=1
+				else:
+					target_words=line_dict[dialog[i+1]].split()
+					target_name=target_words[0]
+					target_sent=" ".join(target_words[1:])
+					source_file.write(line_dict[utterance]+" "+target_name+'\n')
+					target_file.write(target_sent+'\n')
 			i+=1
 
 	source_file.close()
@@ -354,9 +368,9 @@ def save_lines(in_file,dialogs,src,trg,vocab_file,voc_size,tag,vocab_list=0):
 	# print vocabulary to a file
 	if tag=="train":
 		voc_file=open("data_dir/"+vocab_file,"w")
-		for word,i in wc.most_common(voc_size-4-3000):
+		for word,i in wc.most_common(voc_size-4-name_vc_size):
 			voc_file.write(word+'\n')
-		for word,i in name_counter.most_common(3000):
+		for word,i in name_counter.most_common(name_vc_size):
 			voc_file.write(word+'\n')
 		# write UNK
 		voc_file.write("<UNK>"+'\n')
@@ -418,7 +432,7 @@ def preproc_data(tag,dataset,vocab_file,voc_size,vocab_list=0):
 class ChatbotCornell32k(Chatbot):
 	@property
 	def targeted_vocab_size(self):
-		return 2**15 # 32768
+		return 40000 
 
 	@property
 	def input_space_id(self):
@@ -434,7 +448,7 @@ class ChatbotCornell32k(Chatbot):
 		s_path=tag+"Source.txt"
 		t_path=tag+"Target.txt"
 
-		if train and os.path.getsize(s_path)!=1941950464 :
+		if train and os.path.getsize(s_path)!=15355320:
 			preproc_data(tag,datasets,self.vocab_file,self.targeted_vocab_size)
 		# get vocab 
 		# TODO: use data_dir argument
@@ -444,7 +458,7 @@ class ChatbotCornell32k(Chatbot):
 			vocab_list.append(word.strip('\n'))
 		vocab_file.close()
 		print("Total vocabulary size of train data: ",len(vocab_list))
-		if not train and os.path.getsize(s_path)!=882973051:
+		if not train and os.path.getsize(s_path)!=2630764:
 			preproc_data(tag,datasets,self.vocab_file,self.targeted_vocab_size,vocab_list)
 		# reserve padding and eos
 		symbolizer_vocab = text_encoder.TokenTextEncoder(None,vocab_list=vocab_list,num_reserved_ids=0)
