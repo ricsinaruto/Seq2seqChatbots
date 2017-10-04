@@ -9,6 +9,7 @@
 \usepackage{graphicx}
 \usepackage{booktabs,amsmath,multicol}
 \usepackage{breakcites}
+\usepackage{float}
 \usepackage[nottoc]{tocbibind}
 \setcounter{secnumdepth}{3}
 \usepackage[top=2.5cm, bottom=4cm, left=2.5cm, right=2.5cm]{geometry}
@@ -20,7 +21,7 @@
 	
 \begin{titlepage}
 		\centering
-		\includegraphics[width=0.6\textwidth]{bme_logo_nagy.eps}\par\vspace{1cm}
+		\includegraphics[width=0.6\textwidth]{pics/bme_logo_nagy.eps}\par\vspace{1cm}
 		{\scshape Budapest University of Technology and Economics \\ Faculty of Electrical Engineering and Informatics \\
 			Department of Automation and Applied Informatics \par}
 		\vspace{2cm}
@@ -65,11 +66,11 @@ The next section of my paper focuses on adapting the very recent Tranformer \cit
 \newpage\tableofcontents
 \newpage\section{Introduction} \label{sec:intro}
 
-A conversational agent (chatbot) is a piece of software that is able to communicate with humans using natural language. Ever since the birth of AI, modelling conversations remains one of the field's toughest challenges. Even though they are far from perfect chatbots are now used in a plethora of applications like Apple's Siri \cite{Siri:2017}, Google's Google Assistant \cite{Google:2017} or Microsoft's Cortana \cite{Cortana:2017}. In order to fully understand the capabilities and limitations of current chatbot architectures and techniques I conduct an in-depth survey, where I examine related literature published over the past 3 years and I implement my own chatbot based on a novel neural network model. 
+A conversational agent (chatbot) is a piece of software that is able to communicate with humans using natural language. Ever since the birth of AI, modelling conversations remains one of the field's toughest challenges. Even though they are far from perfect, chatbots are now used in a plethora of applications like Apple's Siri \cite{Siri:2017}, Google's Google Assistant \cite{Google:2017} or Microsoft's Cortana \cite{Cortana:2017}. In order to fully understand the capabilities and limitations of current chatbot architectures and techniques I conduct an in-depth survey, where I examine related literature published over the past 3 years and I implement my own chatbot based on a novel neural network model. 
 
 The paper begins with a brief overview of the history of chatbots in Section~\ref{sec:history}, where I discuss the properties and objectives of conversational modelling. I present early approaches and the current dominating model based on neural networks for building conversational agents.
 
-In the following section I present key architectures and techniques that were developed over the past 3 years relating to chatbots. I group publications into 11 groups based on the specific technique or approach that is discussed by the authors. After this I present criticism regarding some of the properties of current chatbot models and I show how several of the techniques used are inappropriate for the task of modelling conversations.
+In the following section I present key architectures and techniques that were developed over the past 3 years relating to chatbots. I group publications into 11 groups based on the specific techniques or approaches that are discussed by the authors. After this I present criticism regarding some of the properties of current chatbot models and I show how several of the techniques used are inappropriate for the task of modelling conversations.
 
 In the next section I conduct experiments by training a novel neural network model, the Transformer \cite{Vaswani:2017} using dialog datasets \cite{Danescu:2011,Tiedemann:2009}. I run several trainings using these datasets detailed in Section~\ref{sec:experiments}. I present the results of the different training setups by qualitatively comparing them to previous chatbot models and by using standard evaluation metrics.
 
@@ -78,13 +79,33 @@ In the final section before concluding I offer possible directions for future wo
 \newpage\section{History of Chatbots} \label{sec:history}
 
 \subsection{Modelling Conversations} \label{ssec:21}
-Chatbot models usually take in as input natural language sentences uttered by the user, and output a response. Models have also been developed to accommodate for spoken or visual inputs. They oftentimes make use of a speech recognition component to transform speech into text \cite{Serban:2017} or convolutional neural networks that transform the input pictures into useful representations for the chatbot. The latter models are also called visual dialog agents, where the conversation is grounded on both textual and visual input \cite{Das:2017}.
+Chatbot models usually take in as input natural language sentences uttered by the user, and output a response. There are two main approaches for generating responses. The traditional approach is to use hard-coded templates and rules to make chatbots, which I present in Section~\ref{ssec:22}. The more novel approach, which I discuss in detail in Section~\ref{ssec:23} was made possible by the rise of deep learning. Neural network models are trained on large amounts of data to learn the process of generating relevant and grammatically correct responses to input utterances. Models have also been developed to accommodate for spoken or visual inputs. They oftentimes make use of a speech recognition component to transform speech into text \cite{Serban:2017} or convolutional neural networks that transform the input pictures into useful representations for the chatbot \cite{Havrylov:2017}. The latter models are also called visual dialog agents, where the conversation is grounded on both textual and visual input \cite{Das:2017}.
 
-Mik azok a chatbotok 
-Miben mas mint a task-specific dolgok
-...
+Conversational agents exist in two main forms. The first one is the more traditional task-oriented dialog system, which is limited in its conversational capabilities, however it is very robust at executing task specific commands and requirements. Task-oriented models are built to accomplish a specific task like making restaurant reservations \cite{Joshi:2017,Bordes:2016} or promoting movies \cite{Yu:2017}, just to name a few. These systems often don't have the ability to respond to arbitrary utterances since they are limited to a specific domain, thus users have to be guided by the dialog system towards the task at hand. Usually they are deployed to tasks where some information has to be retrieved from a knowledge base. They are mainly used to replace the process of navigating through menus and user interfaces like making the process of booking flight tickets or finding a public transportation route between two locations conversational \cite{Zhao:2017}.  
+
+The second type of dialog agents are the non-task or open-domain chatbots. These conversation systems try to imitate human dialog in all its facets. This means that one should hardly be able to distinguish such a chatbot from a real human, but current models are still far away from such claims. These models are usually trained with conversation examples extracted from movie scripts or from Twitter-like post-reply pairs \cite{Vinyals:2015,Shang:2015,Serban:2015,Li:2016}. For these models there isn't a well defined goal, but they are required to have a certain amount of world knowledge and commonsense in order to hold conversations about basically anything.
+
+Recently an emphasis has been put on integrating the two types of conversational agents. The main idea is to combine the positive aspects of both types, like the robust abilities of goal-oriented dialog systems to perform tasks and the human-like chattyness of open-domain chatbots \cite{Zhao:2017,Yu:2017,Serban:2017}. This is beneficial because the user is more likely to engage with a task-oriented dialog agent if its more human-like, and handles out of domain responses well.
+
 \subsection{Early Approaches} \label{ssec:22}
-\subsection{The Seq2seq Model} \label{ssec:23}
+
+ELIZA is one of the first ever chatbot programs written \cite{Weizenbaum:1966}. It uses clever hand-written templates to generate a reply that resembles the user's input utterance. Since then countless hand-coded rule-based chatbots have been written \cite{Wallace:2009,Cleverbot:2017,Mitsuku:2017}. Furthermore, a number of programming frameworks specifically designed to facilitate building dialog agents have been developed \cite{Marietto:2013,Microsoft:2017}.
+
+These chatbot programs are very similar in their core, namely that they all use hand-written rules to generate replies. Usually simple pattern matching or keyword retrieval techniques are employed to handle the user's input utterance. Then rules are used to transform a matching pattern or a keyword into a predefined reply.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.4\textwidth]{pics/cleverbot.png}
+	\caption{Sample conversation with Cleverbot \cite{Cleverbot:2017}}
+\end{figure}
+
+\subsection{The Encoder-Decoder Model} \label{ssec:23}
+The main concept that differentiates rule-based and neural network based approaches is the presence of a learning algorithm in the latter case. Instead of using hand-written rules deep learning models transform input sentences into replies directly by using matrix multiplications and non-linearities over millions of parameters. We can further divide neural network based models into two categories, retrieval-based and generative models. The former simply returns a reply from the dataset by computing the most likely response to the current input utterance based on a scoring function, which can be implemented as a neural network \cite{Cho:2014} or by simply computing the cosine similarity between the input utterance and candidate replies \cite{stalemate:2016}. Generative models on the other hand synthesize the reply one word at a time by computing probabilities over the whole vocabulary \cite{Sutskever:2014,Vinyals:2015}. There have also been approaches that integrate the two types of dialog systems by comparing a generated reply with a retrieved reply and determining which one is more likely \cite{Song:2016}.
+
+As with many other applications the field of conversational modelling has been transformed by the rise of deep learning. More specifically the encoder-decoder recurrent neural network (RNN) model (also called seq2seq \cite{Sutskever:2014}) introduced by \cite{Cho:2014} and its variations have been dominating the field. This model was originally developed for neural machine translation, but it was found to be suitable to \textit{translate} source utterances into responses within a conversational setting \cite{Shang:2015,Vinyals:2015}.
+
+
+
 
 \newpage\section{Background} \label{sec:background}
 \subsection{Recent Chatbot Architectures and Augmentations} \label{ssec:31}

@@ -6,6 +6,17 @@ Apple (2017).
 \newblock \url{https://www.apple.com/ios/siri/}.
 \newblock Accessed: 2017-10-04.
 
+\bibitem[Bordes et~al., 2016]{Bordes:2016}
+Bordes, A., Boureau, Y.-L., and Weston, J. (2016).
+\newblock Learning end-to-end goal-oriented dialog.
+\newblock {\em arXiv preprint arXiv:1605.07683}.
+
+\bibitem[Carpenter, 2017]{Cleverbot:2017}
+Carpenter, R. (2017).
+\newblock Cleverbot.
+\newblock \url{http://www.cleverbot.com/}.
+\newblock Accessed: 2017-10-04.
+
 \bibitem[Cho et~al., 2014]{Cho:2014}
 Cho, K., Van~Merri{\"e}nboer, B., Gulcehre, C., Bahdanau, D., Bougares, F.,
   Schwenk, H., and Bengio, Y. (2014).
@@ -33,16 +44,45 @@ Google (2017).
 \newblock \url{https://assistant.google.com/}.
 \newblock Accessed: 2017-10-04.
 
-\bibitem[Li et~al., 2016]{Li:2016}
+\bibitem[Havrylov and Titov, 2017]{Havrylov:2017}
+Havrylov, S. and Titov, I. (2017).
+\newblock Emergence of language with multi-agent games: Learning to communicate
+  with sequences of symbols.
+\newblock {\em arXiv preprint arXiv:1705.11192}.
+
+\bibitem[Joshi et~al., 2017]{Joshi:2017}
+Joshi, C.~K., Mi, F., and Faltings, B. (2017).
+\newblock Personalization in goal-oriented dialog.
+\newblock {\em arXiv preprint arXiv:1706.07503}.
+
+\bibitem[Li et~al., 2016a]{Li:2016}
 Li, J., Galley, M., Brockett, C., Spithourakis, G.~P., Gao, J., and Dolan, B.
-  (2016).
+  (2016a).
 \newblock A persona-based neural conversation model.
 \newblock {\em arXiv preprint arXiv:1603.06155}.
 
-\bibitem[Microsoft, 2017]{Cortana:2017}
-Microsoft (2017).
+\bibitem[Li et~al., 2016b]{stalemate:2016}
+Li, X., Mou, L., Yan, R., and Zhang, M. (2016b).
+\newblock Stalematebreaker: A proactive content-introducing approach to
+  automatic human-computer conversation.
+\newblock {\em arXiv preprint arXiv:1604.04358}.
+
+\bibitem[Marietto et~al., 2013]{Marietto:2013}
+Marietto, M. d. G.~B., de~Aguiar, R.~V., Barbosa, G. d.~O., Botelho, W.~T.,
+  Pimentel, E., Fran{\c{c}}a, R. d.~S., and da~Silva, V.~L. (2013).
+\newblock Artificial intelligence markup language: A brief tutorial.
+\newblock {\em arXiv preprint arXiv:1307.3091}.
+
+\bibitem[Microsoft, 2017a]{Cortana:2017}
+Microsoft (2017a).
 \newblock Cortana.
 \newblock \url{https://www.microsoft.com/en-us/windows/cortana}.
+\newblock Accessed: 2017-10-04.
+
+\bibitem[Microsoft, 2017b]{Microsoft:2017}
+Microsoft (2017b).
+\newblock Microsoft bot framework.
+\newblock \url{https://dev.botframework.com/}.
 \newblock Accessed: 2017-10-04.
 
 \bibitem[Serban et~al., 2017]{Serban:2017}
@@ -58,6 +98,23 @@ Serban, I.~V., Sordoni, A., Bengio, Y., Courville, A.~C., and Pineau, J.
   neural network models.
 \newblock In {\em AAAI}, pages 3776--3784.
 
+\bibitem[Shang et~al., 2015]{Shang:2015}
+Shang, L., Lu, Z., and Li, H. (2015).
+\newblock Neural responding machine for short-text conversation.
+\newblock {\em arXiv preprint arXiv:1503.02364}.
+
+\bibitem[Song et~al., 2016]{Song:2016}
+Song, Y., Yan, R., Li, X., Zhao, D., and Zhang, M. (2016).
+\newblock Two are better than one: An ensemble of retrieval-and
+  generation-based dialog systems.
+\newblock {\em arXiv preprint arXiv:1610.07149}.
+
+\bibitem[Sutskever et~al., 2014]{Sutskever:2014}
+Sutskever, I., Vinyals, O., and Le, Q.~V. (2014).
+\newblock Sequence to sequence learning with neural networks.
+\newblock In {\em Advances in neural information processing systems}, pages
+  3104--3112.
+
 \bibitem[Tiedemann, 2009]{Tiedemann:2009}
 Tiedemann, J. (2009).
 \newblock News from opus-a collection of multilingual parallel corpora with
@@ -70,5 +127,39 @@ Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A.~N.,
   Kaiser, L., and Polosukhin, I. (2017).
 \newblock Attention is all you need.
 \newblock {\em arXiv preprint arXiv:1706.03762}.
+
+\bibitem[Vinyals and Le, 2015]{Vinyals:2015}
+Vinyals, O. and Le, Q. (2015).
+\newblock A neural conversational model.
+\newblock {\em arXiv preprint arXiv:1506.05869}.
+
+\bibitem[Wallace, 2009]{Wallace:2009}
+Wallace, R.~S. (2009).
+\newblock The anatomy of alice.
+\newblock {\em Parsing the Turing Test}, pages 181--210.
+
+\bibitem[Weizenbaum, 1966]{Weizenbaum:1966}
+Weizenbaum, J. (1966).
+\newblock Eliza—a computer program for the study of natural language
+  communication between man and machine.
+\newblock {\em Communications of the ACM}, 9(1):36--45.
+
+\bibitem[Worswick, 2017]{Mitsuku:2017}
+Worswick, S. (2017).
+\newblock Mitsuku.
+\newblock \url{http://www.mitsuku.com/}.
+\newblock Accessed: 2017-10-04.
+
+\bibitem[Yu et~al., 2017]{Yu:2017}
+Yu, Z., Black, A.~W., and Rudnicky, A.~I. (2017).
+\newblock Learning conversational systems that interleave task and non-task
+  content.
+\newblock {\em arXiv preprint arXiv:1703.00099}.
+
+\bibitem[Zhao et~al., 2017]{Zhao:2017}
+Zhao, T., Lu, A., Lee, K., and Eskenazi, M. (2017).
+\newblock Generative encoder-decoder models for task-oriented spoken dialog
+  systems with chatting capability.
+\newblock {\em arXiv preprint arXiv:1706.08476}.
 
 \end{thebibliography}
