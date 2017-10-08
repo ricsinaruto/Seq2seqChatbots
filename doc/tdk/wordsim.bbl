@@ -6,6 +6,12 @@ Apple (2017).
 \newblock \url{https://www.apple.com/ios/siri/}.
 \newblock Accessed: 2017-10-04.
 
+\bibitem[Bahdanau et~al., 2014]{Bahdanau:2014}
+Bahdanau, D., Cho, K., and Bengio, Y. (2014).
+\newblock Neural machine translation by jointly learning to align and
+  translate.
+\newblock {\em arXiv preprint arXiv:1409.0473}.
+
 \bibitem[Barone and Sennrich, 2017]{Rico:2017}
 Barone, A. V.~M. and Sennrich, R. (2017).
 \newblock A parallel corpus of python functions and documentation strings for
@@ -24,7 +30,7 @@ Bottou, L. (2010).
 
 \bibitem[Britz, 2016]{seq2seq_pic:2017}
 Britz, D. (2016).
-\newblock Deep learning for chatbots, part 1 - introduction.
+\newblock Deep learning for chatbots.
 \newblock
   \url{http://www.wildml.com/2016/04/deep-learning-for-chatbots-part-1-introduction/}.
 \newblock Accessed: 2017-10-08.
@@ -34,6 +40,11 @@ Carpenter, R. (2017).
 \newblock Cleverbot.
 \newblock \url{http://www.cleverbot.com/}.
 \newblock Accessed: 2017-10-04.
+
+\bibitem[Cheng et~al., 2016]{Cheng:2016}
+Cheng, J., Dong, L., and Lapata, M. (2016).
+\newblock Long short-term memory-networks for machine reading.
+\newblock {\em arXiv preprint arXiv:1601.06733}.
 
 \bibitem[Chiu et~al., 2017]{Chiu:2017}
 Chiu, C.-C., Lawson, D., Luo, Y., Tucker, G., Swersky, K., Sutskever, I., and
@@ -62,6 +73,11 @@ Das, A., Kottur, S., Moura, J.~M., Lee, S., and Batra, D. (2017).
   learning.
 \newblock {\em arXiv preprint arXiv:1703.06585}.
 
+\bibitem[Feng et~al., 2017]{Feng:2017}
+Feng, Y., Zhang, S., Zhang, A., Wang, D., and Abel, A. (2017).
+\newblock Memory-augmented neural machine translation.
+\newblock {\em arXiv preprint arXiv:1708.02005}.
+
 \bibitem[Google, 2017]{Google:2017}
 Google (2017).
 \newblock Google assistant.
@@ -78,6 +94,11 @@ Havrylov, S. and Titov, I. (2017).
 Hochreiter, S. and Schmidhuber, J. (1997).
 \newblock Long short-term memory.
 \newblock {\em Neural computation}, 9(8):1735--1780.
+
+\bibitem[Jean et~al., 2014]{Jean:2014}
+Jean, S., Cho, K., Memisevic, R., and Bengio, Y. (2014).
+\newblock On using very large target vocabulary for neural machine translation.
+\newblock {\em arXiv preprint arXiv:1412.2007}.
 
 \bibitem[Joshi et~al., 2017]{Joshi:2017}
 Joshi, C.~K., Mi, F., and Faltings, B. (2017).
@@ -100,6 +121,28 @@ Li, X., Mou, L., Yan, R., and Zhang, M. (2016b).
 \newblock Stalematebreaker: A proactive content-introducing approach to
   automatic human-computer conversation.
 \newblock {\em arXiv preprint arXiv:1604.04358}.
+
+\bibitem[Lin et~al., 2017]{Lin:2017}
+Lin, Z., Feng, M., Santos, C. N.~d., Yu, M., Xiang, B., Zhou, B., and Bengio,
+  Y. (2017).
+\newblock A structured self-attentive sentence embedding.
+\newblock {\em arXiv preprint arXiv:1703.03130}.
+
+\bibitem[Lison and Tiedemann, 2016]{OpenSubtitles:2016}
+Lison, P. and Tiedemann, J. (2016).
+\newblock Opensubtitles2016: Extracting large parallel corpora from movie and
+  tv subtitles.
+\newblock In {\em LREC}.
+
+\bibitem[Luong et~al., 2015]{Luong:2015}
+Luong, M.-T., Pham, H., and Manning, C.~D. (2015).
+\newblock Effective approaches to attention-based neural machine translation.
+\newblock {\em arXiv preprint arXiv:1508.04025}.
+
+\bibitem[Luong et~al., 2014]{Luong:2014}
+Luong, M.-T., Sutskever, I., Le, Q.~V., Vinyals, O., and Zaremba, W. (2014).
+\newblock Addressing the rare word problem in neural machine translation.
+\newblock {\em arXiv preprint arXiv:1410.8206}.
 
 \bibitem[Marietto et~al., 2013]{Marietto:2013}
 Marietto, M. d. G.~B., de~Aguiar, R.~V., Barbosa, G. d.~O., Botelho, W.~T.,
@@ -136,10 +179,21 @@ Olah, C. (2015).
 \newblock \url{http://colah.github.io/posts/2015-08-Understanding-LSTMs/}.
 \newblock Accessed: 2017-10-08.
 
+\bibitem[opensubtitles.org, 2017]{opensubtitles}
+opensubtitles.org (2017).
+\newblock Opensubtitles.
+\newblock \url{https://www.opensubtitles.org/}.
+\newblock Accessed: 2017-10-08.
+
 \bibitem[Rumelhart et~al., 1988]{RNN:1988}
 Rumelhart, D.~E., Hinton, G.~E., Williams, R.~J., et~al. (1988).
 \newblock Learning representations by back-propagating errors.
 \newblock {\em Cognitive modeling}, 5(3):1.
+
+\bibitem[Sennrich et~al., 2015]{Sennrich:2015}
+Sennrich, R., Haddow, B., and Birch, A. (2015).
+\newblock Neural machine translation of rare words with subword units.
+\newblock {\em arXiv preprint arXiv:1508.07909}.
 
 \bibitem[Serban et~al., 2017]{Serban:2017}
 Serban, I.~V., Sankar, C., Germain, M., Zhang, S., Lin, Z., Subramanian, S.,
@@ -158,6 +212,14 @@ Serban, I.~V., Sordoni, A., Bengio, Y., Courville, A.~C., and Pineau, J.
 Shang, L., Lu, Z., and Li, H. (2015).
 \newblock Neural responding machine for short-text conversation.
 \newblock {\em arXiv preprint arXiv:1503.02364}.
+
+\bibitem[Shao et~al., 2017]{Shao:2017}
+Shao, Y., Gouws, S., Britz, D., Goldie, A., Strope, B., and Kurzweil, R.
+  (2017).
+\newblock Generating high-quality and informative conversation responses with
+  sequence-to-sequence models.
+\newblock In {\em Proceedings of the 2017 Conference on Empirical Methods in
+  Natural Language Processing}, pages 2200--2209.
 
 \bibitem[Song et~al., 2016]{Song:2016}
 Song, Y., Yan, R., Li, X., Zhao, D., and Zhang, M. (2016).
@@ -224,6 +286,21 @@ Wu, Y., Schuster, M., Chen, Z., Le, Q.~V., Norouzi, M., Macherey, W., Krikun,
   human and machine translation.
 \newblock {\em arXiv preprint arXiv:1609.08144}.
 
+\bibitem[Xing et~al., 2017a]{Xing_topic:2017}
+Xing, C., Wu, W., Wu, Y., Liu, J., Huang, Y., Zhou, M., and Ma, W.-Y. (2017a).
+\newblock Topic aware neural response generation.
+\newblock In {\em AAAI}, pages 3351--3357.
+
+\bibitem[Xing et~al., 2017b]{Xing:2017}
+Xing, C., Wu, W., Wu, Y., Zhou, M., Huang, Y., and Ma, W.-Y. (2017b).
+\newblock Hierarchical recurrent attention network for response generation.
+\newblock {\em arXiv preprint arXiv:1701.07149}.
+
+\bibitem[Yao et~al., 2016]{Yao:2016}
+Yao, K., Peng, B., Zweig, G., and Wong, K.-F. (2016).
+\newblock An attentional neural conversation model with improved specificity.
+\newblock {\em arXiv preprint arXiv:1606.01292}.
+
 \bibitem[Yu et~al., 2017]{Yu:2017}
 Yu, Z., Black, A.~W., and Rudnicky, A.~I. (2017).
 \newblock Learning conversational systems that interleave task and non-task
@@ -235,5 +312,12 @@ Zhao, T., Lu, A., Lee, K., and Eskenazi, M. (2017).
 \newblock Generative encoder-decoder models for task-oriented spoken dialog
   systems with chatting capability.
 \newblock {\em arXiv preprint arXiv:1706.08476}.
+
+\bibitem[Zhu et~al., 2017]{Zhu:2017}
+Zhu, Q., Li, Y., and Li, X. (2017).
+\newblock Character sequence-to-sequence model with global attention for
+  universal morphological reinflection.
+\newblock {\em Proceedings of the CoNLL SIGMORPHON 2017 Shared Task: Universal
+  Morphological Reinflection}, pages 85--89.
 
 \end{thebibliography}
