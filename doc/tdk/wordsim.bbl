@@ -6,6 +6,12 @@ Apple (2017).
 \newblock \url{https://www.apple.com/ios/siri/}.
 \newblock Accessed: 2017-10-04.
 
+\bibitem[Barone and Sennrich, 2017]{Rico:2017}
+Barone, A. V.~M. and Sennrich, R. (2017).
+\newblock A parallel corpus of python functions and documentation strings for
+  automated code documentation and code generation.
+\newblock {\em arXiv preprint arXiv:1707.02275}.
+
 \bibitem[Bordes et~al., 2016]{Bordes:2016}
 Bordes, A., Boureau, Y.-L., and Weston, J. (2016).
 \newblock Learning end-to-end goal-oriented dialog.
@@ -16,11 +22,24 @@ Bottou, L. (2010).
 \newblock Large-scale machine learning with stochastic gradient descent.
 \newblock In {\em Proceedings of COMPSTAT'2010}, pages 177--186. Springer.
 
+\bibitem[Britz, 2016]{seq2seq_pic:2017}
+Britz, D. (2016).
+\newblock Deep learning for chatbots, part 1 - introduction.
+\newblock
+  \url{http://www.wildml.com/2016/04/deep-learning-for-chatbots-part-1-introduction/}.
+\newblock Accessed: 2017-10-08.
+
 \bibitem[Carpenter, 2017]{Cleverbot:2017}
 Carpenter, R. (2017).
 \newblock Cleverbot.
 \newblock \url{http://www.cleverbot.com/}.
 \newblock Accessed: 2017-10-04.
+
+\bibitem[Chiu et~al., 2017]{Chiu:2017}
+Chiu, C.-C., Lawson, D., Luo, Y., Tucker, G., Swersky, K., Sutskever, I., and
+  Jaitly, N. (2017).
+\newblock An online sequence-to-sequence model for noisy speech recognition.
+\newblock {\em arXiv preprint arXiv:1706.06428}.
 
 \bibitem[Cho et~al., 2014]{Cho:2014}
 Cho, K., Van~Merri{\"e}nboer, B., Gulcehre, C., Bahdanau, D., Bougares, F.,
@@ -65,6 +84,11 @@ Joshi, C.~K., Mi, F., and Faltings, B. (2017).
 \newblock Personalization in goal-oriented dialog.
 \newblock {\em arXiv preprint arXiv:1706.07503}.
 
+\bibitem[Konstas et~al., 2017]{Konstas:2017}
+Konstas, I., Iyer, S., Yatskar, M., Choi, Y., and Zettlemoyer, L. (2017).
+\newblock Neural amr: Sequence-to-sequence models for parsing and generation.
+\newblock {\em arXiv preprint arXiv:1704.08381}.
+
 \bibitem[Li et~al., 2016a]{Li:2016}
 Li, J., Galley, M., Brockett, C., Spithourakis, G.~P., Gao, J., and Dolan, B.
   (2016a).
@@ -100,6 +124,18 @@ Mitchell, M. (1998).
 \newblock {\em An introduction to genetic algorithms}.
 \newblock MIT press.
 
+\bibitem[Nallapati et~al., 2016]{Nallapati:2016}
+Nallapati, R., Zhou, B., Gulcehre, C., Xiang, B., et~al. (2016).
+\newblock Abstractive text summarization using sequence-to-sequence rnns and
+  beyond.
+\newblock {\em arXiv preprint arXiv:1602.06023}.
+
+\bibitem[Olah, 2015]{LSTM_pic:2017}
+Olah, C. (2015).
+\newblock Understanding lstm networks.
+\newblock \url{http://colah.github.io/posts/2015-08-Understanding-LSTMs/}.
+\newblock Accessed: 2017-10-08.
+
 \bibitem[Rumelhart et~al., 1988]{RNN:1988}
 Rumelhart, D.~E., Hinton, G.~E., Williams, R.~J., et~al. (1988).
 \newblock Learning representations by back-propagating errors.
@@ -134,6 +170,12 @@ Sutskever, I., Vinyals, O., and Le, Q.~V. (2014).
 \newblock Sequence to sequence learning with neural networks.
 \newblock In {\em Advances in neural information processing systems}, pages
   3104--3112.
+
+\bibitem[Tensorflow, 2017]{deep_seq2seq}
+Tensorflow (2017).
+\newblock Sequence-to-sequence models.
+\newblock \url{https://www.tensorflow.org/tutorials/seq2seq}.
+\newblock Accessed: 2017-10-08.
 
 \bibitem[Tiedemann, 2009]{Tiedemann:2009}
 Tiedemann, J. (2009).
@@ -174,6 +216,13 @@ Worswick, S. (2017).
 \newblock Mitsuku.
 \newblock \url{http://www.mitsuku.com/}.
 \newblock Accessed: 2017-10-04.
+
+\bibitem[Wu et~al., 2016]{googleNMT:2016}
+Wu, Y., Schuster, M., Chen, Z., Le, Q.~V., Norouzi, M., Macherey, W., Krikun,
+  M., Cao, Y., Gao, Q., Macherey, K., et~al. (2016).
+\newblock Google's neural machine translation system: Bridging the gap between
+  human and machine translation.
+\newblock {\em arXiv preprint arXiv:1609.08144}.
 
 \bibitem[Yu et~al., 2017]{Yu:2017}
 Yu, Z., Black, A.~W., and Rudnicky, A.~I. (2017).

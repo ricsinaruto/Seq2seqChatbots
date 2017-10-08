@@ -5,36 +5,37 @@
 \select@language {british} \contentsline {subsection}{\numberline {2.3}The Encoder-Decoder Model}{7}{subsection.2.3}
 \select@language {british} \contentsline {subsubsection}{\numberline {2.3.1}Recurrent Neural Networks}{8}{subsubsection.2.3.1}
 \select@language {british} \contentsline {subsubsection}{\numberline {2.3.2}The Seq2seq Model}{9}{subsubsection.2.3.2}
-\select@language {british} \contentsline {subsubsection}{\numberline {2.3.3}Decoding and OOV}{10}{subsubsection.2.3.3}
-\select@language {british} \contentsline {section}{\numberline {3}Background}{11}{section.3}
-\select@language {british} \contentsline {subsection}{\numberline {3.1}Recent Chatbot Architectures and Augmentations}{11}{subsection.3.1}
-\select@language {british} \contentsline {subsubsection}{\numberline {3.1.1}Attention}{11}{subsubsection.3.1.1}
-\select@language {british} \contentsline {subsubsection}{\numberline {3.1.2}Context}{11}{subsubsection.3.1.2}
-\select@language {british} \contentsline {subsubsection}{\numberline {3.1.3}Objective Functions}{11}{subsubsection.3.1.3}
-\select@language {british} \contentsline {subsubsection}{\numberline {3.1.4}Additional Features}{11}{subsubsection.3.1.4}
-\select@language {british} \contentsline {subsubsection}{\numberline {3.1.5}Knowledge Bases, Copying and Information Retrieval}{11}{subsubsection.3.1.5}
-\select@language {british} \contentsline {subsubsection}{\numberline {3.1.6}Task-Oriented Approaches}{11}{subsubsection.3.1.6}
-\select@language {british} \contentsline {subsubsection}{\numberline {3.1.7}Decoding and Beam Search}{11}{subsubsection.3.1.7}
-\select@language {british} \contentsline {subsubsection}{\numberline {3.1.8}Reinforcement Learning}{11}{subsubsection.3.1.8}
-\select@language {british} \contentsline {subsubsection}{\numberline {3.1.9}Pretraining}{11}{subsubsection.3.1.9}
-\select@language {british} \contentsline {subsubsection}{\numberline {3.1.10}Additional Encoder-Decoder Models}{11}{subsubsection.3.1.10}
-\select@language {british} \contentsline {subsubsection}{\numberline {3.1.11}Evaluation Methods}{11}{subsubsection.3.1.11}
-\select@language {british} \contentsline {subsection}{\numberline {3.2}Criticism}{11}{subsection.3.2}
-\select@language {british} \contentsline {subsubsection}{\numberline {3.2.1}Datasets}{11}{subsubsection.3.2.1}
-\select@language {british} \contentsline {subsubsection}{\numberline {3.2.2}Loss Function}{11}{subsubsection.3.2.2}
-\select@language {british} \contentsline {subsubsection}{\numberline {3.2.3}Memory}{11}{subsubsection.3.2.3}
-\select@language {british} \contentsline {subsubsection}{\numberline {3.2.4}Evaluation Metrics}{11}{subsubsection.3.2.4}
-\select@language {british} \contentsline {subsection}{\numberline {3.3}Summary}{11}{subsection.3.3}
-\select@language {british} \contentsline {section}{\numberline {4}Experiments}{12}{section.4}
-\select@language {british} \contentsline {subsection}{\numberline {4.1}The Tranformer Model}{12}{subsection.4.1}
-\select@language {british} \contentsline {subsection}{\numberline {4.2}Datasets}{12}{subsection.4.2}
-\select@language {british} \contentsline {subsection}{\numberline {4.3}Training Details}{12}{subsection.4.3}
-\select@language {british} \contentsline {section}{\numberline {5}Results}{13}{section.5}
-\select@language {british} \contentsline {subsection}{\numberline {5.1}Quantitative Analysis}{13}{subsection.5.1}
-\select@language {british} \contentsline {subsection}{\numberline {5.2}Qualitative Analysis}{13}{subsection.5.2}
-\select@language {british} \contentsline {section}{\numberline {6}Future Work}{14}{section.6}
-\select@language {british} \contentsline {subsection}{\numberline {6.1}Ideas Towards Solving The Loss Function Issue}{14}{subsection.6.1}
-\select@language {british} \contentsline {subsection}{\numberline {6.2}Temporal Conditioning and Memory}{14}{subsection.6.2}
-\select@language {british} \contentsline {subsection}{\numberline {6.3}Additional Ideas}{14}{subsection.6.3}
-\select@language {british} \contentsline {section}{\numberline {7}Conclusion}{15}{section.7}
-\select@language {british} \contentsline {section}{References}{16}{section*.2}
+\select@language {british} \contentsline {subsubsection}{\numberline {2.3.3}Decoding and OOV}{11}{subsubsection.2.3.3}
+\select@language {british} \contentsline {subsubsection}{\numberline {2.3.4}Bucketing and Padding}{11}{subsubsection.2.3.4}
+\select@language {british} \contentsline {section}{\numberline {3}Background}{12}{section.3}
+\select@language {british} \contentsline {subsection}{\numberline {3.1}Recent Chatbot Architectures and Augmentations}{12}{subsection.3.1}
+\select@language {british} \contentsline {subsubsection}{\numberline {3.1.1}Attention}{12}{subsubsection.3.1.1}
+\select@language {british} \contentsline {subsubsection}{\numberline {3.1.2}Context}{12}{subsubsection.3.1.2}
+\select@language {british} \contentsline {subsubsection}{\numberline {3.1.3}Objective Functions}{12}{subsubsection.3.1.3}
+\select@language {british} \contentsline {subsubsection}{\numberline {3.1.4}Additional Features}{12}{subsubsection.3.1.4}
+\select@language {british} \contentsline {subsubsection}{\numberline {3.1.5}Knowledge Bases, Copying and Information Retrieval}{12}{subsubsection.3.1.5}
+\select@language {british} \contentsline {subsubsection}{\numberline {3.1.6}Task-Oriented Approaches}{12}{subsubsection.3.1.6}
+\select@language {british} \contentsline {subsubsection}{\numberline {3.1.7}Decoding and Beam Search}{12}{subsubsection.3.1.7}
+\select@language {british} \contentsline {subsubsection}{\numberline {3.1.8}Reinforcement Learning}{12}{subsubsection.3.1.8}
+\select@language {british} \contentsline {subsubsection}{\numberline {3.1.9}Pretraining}{12}{subsubsection.3.1.9}
+\select@language {british} \contentsline {subsubsection}{\numberline {3.1.10}Additional Encoder-Decoder Models}{12}{subsubsection.3.1.10}
+\select@language {british} \contentsline {subsubsection}{\numberline {3.1.11}Evaluation Methods}{12}{subsubsection.3.1.11}
+\select@language {british} \contentsline {subsection}{\numberline {3.2}Criticism}{12}{subsection.3.2}
+\select@language {british} \contentsline {subsubsection}{\numberline {3.2.1}Datasets}{12}{subsubsection.3.2.1}
+\select@language {british} \contentsline {subsubsection}{\numberline {3.2.2}Loss Function}{12}{subsubsection.3.2.2}
+\select@language {british} \contentsline {subsubsection}{\numberline {3.2.3}Memory}{12}{subsubsection.3.2.3}
+\select@language {british} \contentsline {subsubsection}{\numberline {3.2.4}Evaluation Metrics}{12}{subsubsection.3.2.4}
+\select@language {british} \contentsline {subsection}{\numberline {3.3}Summary}{12}{subsection.3.3}
+\select@language {british} \contentsline {section}{\numberline {4}Experiments}{13}{section.4}
+\select@language {british} \contentsline {subsection}{\numberline {4.1}The Tranformer Model}{13}{subsection.4.1}
+\select@language {british} \contentsline {subsection}{\numberline {4.2}Datasets}{13}{subsection.4.2}
+\select@language {british} \contentsline {subsection}{\numberline {4.3}Training Details}{13}{subsection.4.3}
+\select@language {british} \contentsline {section}{\numberline {5}Results}{14}{section.5}
+\select@language {british} \contentsline {subsection}{\numberline {5.1}Quantitative Analysis}{14}{subsection.5.1}
+\select@language {british} \contentsline {subsection}{\numberline {5.2}Qualitative Analysis}{14}{subsection.5.2}
+\select@language {british} \contentsline {section}{\numberline {6}Future Work}{15}{section.6}
+\select@language {british} \contentsline {subsection}{\numberline {6.1}Ideas Towards Solving The Loss Function Issue}{15}{subsection.6.1}
+\select@language {british} \contentsline {subsection}{\numberline {6.2}Temporal Conditioning and Memory}{15}{subsection.6.2}
+\select@language {british} \contentsline {subsection}{\numberline {6.3}Additional Ideas}{15}{subsection.6.3}
+\select@language {british} \contentsline {section}{\numberline {7}Conclusion}{16}{section.7}
+\select@language {british} \contentsline {section}{References}{17}{section*.2}

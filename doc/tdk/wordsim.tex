@@ -103,7 +103,7 @@ These chatbot programs are very similar in their core, namely that they all use 
 \subsection{The Encoder-Decoder Model} \label{ssec:23}
 The main concept that differentiates rule-based and neural network based approaches is the presence of a learning algorithm in the latter case. Instead of using hand-written rules deep learning models transform input sentences into replies directly by using matrix multiplications and non-linearities over millions of parameters. We can further divide neural network based models into two categories, retrieval-based and generative models. The former simply returns a reply from the dataset by computing the most likely response to the current input utterance based on a scoring function, which can be implemented as a neural network \cite{Cho:2014} or by simply computing the cosine similarity between the input utterance and candidate replies \cite{stalemate:2016}. Generative models on the other hand synthesize the reply one word at a time by computing probabilities over the whole vocabulary \cite{Sutskever:2014,Vinyals:2015}. There have also been approaches that integrate the two types of dialog systems by comparing a generated reply with a retrieved reply and determining which one is more likely to be a better response \cite{Song:2016}.
 
-As with many other applications the field of conversational modelling has been transformed by the rise of deep learning. More specifically the encoder-decoder recurrent neural network (RNN) model (also called seq2seq \cite{Sutskever:2014}) introduced by \cite{Cho:2014} and its variations have been dominating the field. This model was originally developed for neural machine translation, but it was found to be suitable to \textit{translate} source utterances into responses within a conversational setting \cite{Shang:2015,Vinyals:2015}.
+As with many other applications the field of conversational modelling has been transformed by the rise of deep learning. More specifically the encoder-decoder recurrent neural network (RNN) model (also called seq2seq \cite{Sutskever:2014}) introduced by \cite{Cho:2014} and its variations have been dominating the field. This model was originally developed for neural machine translation (NMT), but it was found to be suitable to \textit{translate} source utterances into responses within a conversational setting \cite{Shang:2015,Vinyals:2015}.
 
 \subsubsection{Recurrent Neural Networks} \label{sssec:231}
 A recurrent neural network (RNN) \cite{RNN:1988} is a neural network that can take as inputs a variable length sequence \(\bm{x}=(x_1,...,x_n)\), by unfolding itself over each input \(x_i\) and generating a hidden state at each step \(\bm{h}=(\bm{h_1},...,\bm{h_n})\). At each step \(i\), the hidden state \(\bm{h}_i\) is updated by
@@ -116,7 +116,7 @@ which is also called the unrolling of the network. \(f\) here is a non-linear ac
 	\label{fig:231}
 	\centering
 	\includegraphics[width=0.7\textwidth]{pics/LSTM.png}
-	\caption{Unrolling the LSTM network over 3 time steps}
+	\caption{Unrolling the LSTM network over 3 time steps \cite{LSTM_pic:2017}}
 \end{figure}
 
 RNNs can be used for language modelling by training it to learn the probability distribution over the vocabulary \(\bm{V}\) given an input sequence of words. We can generate this probability distribution to predict the next word in the sequence by taking the hidden state of the RNN in the last step, and feeding it into a softmax activation function
@@ -132,13 +132,13 @@ L(\bm{y}_i,\bm{\hat{y}}_{i})=-\bm{y}_i log(\bm{\hat{y}}_{i})
 where \(\bm{\hat{y}}_{i}\) is the vector of the predicted probabilities over all words in the vocabulary at step \(i\), and \(\bm{y}_i\) is the one-hot vector over the vocabulary. A one-hot vector is made up of zeros except at the index of the one true word that follows in the sequence, where it is equal to 1. After computing the derivative with respect to all of the weights in the network using the backpropagation through time algorithm we can update the weights in order to get closer to an optimum with optimization techniques like stochastic gradient descent (SGD) \cite{SGD:2010}. 
 
 \subsubsection{The Seq2seq Model}
-The sequence to sequence model (seq2seq) was first introduced by \cite{Cho:2014}, but they only used it to re-rank sentences instead of generating completely new ones, which was first done by \cite{Sutskever:2014}.
+The sequence to sequence model (seq2seq) was first introduced by \cite{Cho:2014}, but they only used it to re-rank sentences instead of generating completely new ones, which was first done by \cite{Sutskever:2014}. Since then, besides NMT and conversational models a plethora of different applications of these models have been introduced like text summarization \cite{Nallapati:2016}, speech recognition \cite{Chiu:2017}, code generation \cite{Rico:2017} and parsing \cite{Konstas:2017}, just to name a few.
 
 \begin{figure}[H]
-	\label{fig:232}
+	\label{fig:232a}
 	\centering
 	\includegraphics[width=0.9\textwidth]{pics/seq2seq.png}
-	\caption{LSTM based Seq2seq model used to generate a reply from a source sentence}
+	\caption{LSTM based Seq2seq model applied to conversational modelling \cite{seq2seq_pic:2017}}
 \end{figure}
 
 The simplest and initial form of the model is based on two RNNs. The actual implementation of RNNs can be in the form of LSTMs or GRUs as discussed in Section~\ref{sssec:231}. The goal is two estimate the conditional probability of \(p(y_1,...,y_{N^{'}}|x_1,...,x_N)\), where \(x_1,...,x_N\) is the input sequence and \(y_1,...,y_{N^{'}}\) is the corresponding output sequence. Since two different RNNs are used for the input and output sequences, the length of the sequences, \(N\) and \(N^{'}\) can be different. The encoder RNN is unrolled over the words in the source sequence and its last hidden state is called the thought vector, which is a representation of the whole source sequence. The initial hidden state of the decoder RNN is then set to this representation, and the generation of target sequence words is done by taking the output of the unrolled decoder network at each time-step and feeding it into a softmax function to, which produces the probabilities over all words in the vocabulary.
@@ -152,6 +152,17 @@ Training is very similar to a normal RNN, namely the log probability of a correc
 \end{equation}
 where \(\bm{S}\) is the training set. The two networks are trained jointly, errors are backpropagated through the whole model and the weights are optimized with some kind of optimization technique like SGD.
 
+In NMT the input sequences as sentences in one language from which we wish to translate and target sequences are sentences in a different language to which we wish to translate. In conversational modelling the simplest approach is to treat an utterance by a speaker as input sequence and the response to that utterance from a different speaker as the target sequence. I will talk about better approaches however in Section~\ref{sssec:312}.
+
+Seq2seq models can also contain multiple layers of LSTM networks as seen in Figure~\ref{fig:232b}. This is done in order to make the model deeper and to have more parameters, which should ideally lead to better performance \cite{Vinyals:2015,googleNMT:2016}. There exist multiple variants, but the most straightforward one is to feed in the source sentence to the first layer of the encoder network. The output from the previous LSTM layer is fed as input to the next layer and the layers are unrolled jointly. Then the last hidden state of the final encoder layer can be used to initialize the initial hidden state of the first decoding layer. The output of the previous decoder layer is input to the next layer until the final layer, where we apply a softmax activation function over the outputs from the last layer to generate the predicted target sequence. How we initialize the layers in the decoder network can be implemented in many different ways, like taking the last hidden state from each encoder layer and using it to initialize the first hidden state of each corresponding decoder layer, to name another method.
+
+\begin{figure}[H]
+	\label{fig:232b}
+	\centering
+	\includegraphics[width=0.7\textwidth]{pics/deep_seq2seq.png}
+	\caption{A 3 layer Sequence-to-sequence model \cite{deep_seq2seq}. The lines pointing from the last decoder states to the last encoder represent an attention mechanism about which I talk in Section~\ref{sssec:311}}
+\end{figure}
+
 \subsubsection{Decoding and OOV}
 In order to get the actual generated output sequences there are several techniques to decode from the probabilities of the words. One such technique is the Roulette Wheel selection, which is commonly used for genetic algorithms \cite{GA:1998}. Using this method at each time-step each word from the vocabulary can be generated with the probability computed from the softmax function. This is useful if we want to have some stochasticity in the decoding process, because it can produce slightly different outputs for the same source sequence. However it doesn't perform as well as the more frequent method used, which is to simply output the word with the highest probability from the softmax function. This is a greedy and deterministic approach since we will always get the same output for the same input.
 
@@ -163,12 +174,12 @@ Since in order to get the sequence with the highest probability we have to first
 
 Another important aspect of sequence to sequence models applied to tasks involving language is the vocabulary.
 
-
+\subsubsection{Bucketing and Padding}
 
 \newpage\section{Background} \label{sec:background}
 \subsection{Recent Chatbot Architectures and Augmentations} \label{ssec:31}
-\subsubsection{Attention}
-\subsubsection{Context}
+\subsubsection{Attention} \label{sssec:311}
+\subsubsection{Context} \label{sssec:312}
 \subsubsection{Objective Functions}
 \subsubsection{Additional Features}
 \subsubsection{Knowledge Bases, Copying and Information Retrieval}
