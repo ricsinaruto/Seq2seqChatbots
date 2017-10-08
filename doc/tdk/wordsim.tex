@@ -7,7 +7,7 @@
 \usepackage[hidelinks]{hyperref}
 \usepackage{color}
 \usepackage{graphicx}
-\usepackage{booktabs,amsmath,multicol}
+\usepackage{booktabs,amsmath,multicol,bm}
 \usepackage{breakcites}
 \usepackage{float}
 \usepackage[nottoc]{tocbibind}
@@ -94,6 +94,7 @@ ELIZA is one of the first ever chatbot programs written \cite{Weizenbaum:1966}. 
 These chatbot programs are very similar in their core, namely that they all use hand-written rules to generate replies. Usually simple pattern matching or keyword retrieval techniques are employed to handle the user's input utterance. Then rules are used to transform a matching pattern or a keyword into a predefined reply.
 
 \begin{figure}[H]
+	\label{fig:22}
 	\centering
 	\includegraphics[width=0.4\textwidth]{pics/cleverbot.png}
 	\caption{Sample conversation with Cleverbot \cite{Cleverbot:2017}}
@@ -104,6 +105,63 @@ The main concept that differentiates rule-based and neural network based approac
 
 As with many other applications the field of conversational modelling has been transformed by the rise of deep learning. More specifically the encoder-decoder recurrent neural network (RNN) model (also called seq2seq \cite{Sutskever:2014}) introduced by \cite{Cho:2014} and its variations have been dominating the field. This model was originally developed for neural machine translation, but it was found to be suitable to \textit{translate} source utterances into responses within a conversational setting \cite{Shang:2015,Vinyals:2015}.
 
+\subsubsection{Recurrent Neural Networks} \label{sssec:231}
+A recurrent neural network (RNN) \cite{RNN:1988} is a neural network that can take as inputs a variable length sequence \(\bm{x}=(x_1,...,x_n)\), by unfolding itself over each input \(x_i\) and generating a hidden state at each step \(\bm{h}=(\bm{h_1},...,\bm{h_n})\). At each step \(i\), the hidden state \(\bm{h}_i\) is updated by
+\begin{equation} \label{eq231a}
+\bm{h}_i=f(\bm{h}_{i-1},x_i)
+\end{equation}
+which is also called the unrolling of the network. \(f\) here is a non-linear activation function. Usually long short-term memory (LSTM) or gated recurrent units (GRU) are used for the activation function \cite{Hochreiter:1997,Cho:2014}. An important characteristic of recurrent neural networks is that the parameters of the function \(f\) don't change during the unrolling of the network.
+
+\begin{figure}[H]
+	\label{fig:231}
+	\centering
+	\includegraphics[width=0.7\textwidth]{pics/LSTM.png}
+	\caption{Unrolling the LSTM network over 3 time steps}
+\end{figure}
+
+RNNs can be used for language modelling by training it to learn the probability distribution over the vocabulary \(\bm{V}\) given an input sequence of words. We can generate this probability distribution to predict the next word in the sequence by taking the hidden state of the RNN in the last step, and feeding it into a softmax activation function
+\begin{equation} \label{eq231b}
+p(x_{i,j}|x_{i-1},...,x_1)=\frac{exp(\bm{w}_j\bm{h}_i)}{\sum_{j^{'}=1}^{K}exp(\bm{w}_{j^{'}}\bm{h}_i)}
+\end{equation}
+for all possible words (symbols) \(j=1,...,K\), where \(\bm{w}_j\) are the rows in the weight matrix of the softmax function.
+
+Training of these networks is done via the generalized backpropagation algorithm called truncated backpropagation through time \cite{Werbos:1990,RNN:1988}. Essentially we backpropagate the error through each time step of the network to learn its parameters. The error can be computed by using the cross-entropy loss, which calculates how different the predictions are compared to the true labels.
+\begin{equation} \label{eq231c}
+L(\bm{y}_i,\bm{\hat{y}}_{i})=-\bm{y}_i log(\bm{\hat{y}}_{i})
+\end{equation}
+where \(\bm{\hat{y}}_{i}\) is the vector of the predicted probabilities over all words in the vocabulary at step \(i\), and \(\bm{y}_i\) is the one-hot vector over the vocabulary. A one-hot vector is made up of zeros except at the index of the one true word that follows in the sequence, where it is equal to 1. After computing the derivative with respect to all of the weights in the network using the backpropagation through time algorithm we can update the weights in order to get closer to an optimum with optimization techniques like stochastic gradient descent (SGD) \cite{SGD:2010}. 
+
+\subsubsection{The Seq2seq Model}
+The sequence to sequence model (seq2seq) was first introduced by \cite{Cho:2014}, but they only used it to re-rank sentences instead of generating completely new ones, which was first done by \cite{Sutskever:2014}.
+
+\begin{figure}[H]
+	\label{fig:232}
+	\centering
+	\includegraphics[width=0.9\textwidth]{pics/seq2seq.png}
+	\caption{LSTM based Seq2seq model used to generate a reply from a source sentence}
+\end{figure}
+
+The simplest and initial form of the model is based on two RNNs. The actual implementation of RNNs can be in the form of LSTMs or GRUs as discussed in Section~\ref{sssec:231}. The goal is two estimate the conditional probability of \(p(y_1,...,y_{N^{'}}|x_1,...,x_N)\), where \(x_1,...,x_N\) is the input sequence and \(y_1,...,y_{N^{'}}\) is the corresponding output sequence. Since two different RNNs are used for the input and output sequences, the length of the sequences, \(N\) and \(N^{'}\) can be different. The encoder RNN is unrolled over the words in the source sequence and its last hidden state is called the thought vector, which is a representation of the whole source sequence. The initial hidden state of the decoder RNN is then set to this representation, and the generation of target sequence words is done by taking the output of the unrolled decoder network at each time-step and feeding it into a softmax function to, which produces the probabilities over all words in the vocabulary.
+\begin{equation} \label{eq232a}
+p(y_1,...,y_{N^{'}}|x_1,...,x_N)=\prod_{i=1}^{N^{'}}p(y_i|v,y_1,...,y_{i-1})
+\end{equation}
+
+Training is very similar to a normal RNN, namely the log probability of a correct target sequence \(T\) given the source sequence \(S\) is maximized
+\begin{equation} \label{eq232b}
+\frac{1}{\bm{S}}\sum_{T,S \in \bm{S}}log(p(T|S))
+\end{equation}
+where \(\bm{S}\) is the training set. The two networks are trained jointly, errors are backpropagated through the whole model and the weights are optimized with some kind of optimization technique like SGD.
+
+\subsubsection{Decoding and OOV}
+In order to get the actual generated output sequences there are several techniques to decode from the probabilities of the words. One such technique is the Roulette Wheel selection, which is commonly used for genetic algorithms \cite{GA:1998}. Using this method at each time-step each word from the vocabulary can be generated with the probability computed from the softmax function. This is useful if we want to have some stochasticity in the decoding process, because it can produce slightly different outputs for the same source sequence. However it doesn't perform as well as the more frequent method used, which is to simply output the word with the highest probability from the softmax function. This is a greedy and deterministic approach since we will always get the same output for the same input.
+
+While decoding a word at each time-step is fine a better approach is to the decode the whole output sequence at the same time, by outputting the sequence with the highest probability.
+\begin{equation} \label{eq233}
+\hat{T}=\arg\max_{T}p(T|S)
+\end{equation}
+Since in order to get the sequence with the highest probability we have to first generate all of the possible sequences a simple left-to-right beam search is usually employed to make the computation tractable. First, \(K\) words with the highest probability are retained in the first time-step, then at each time-step we expand this list by computing the joint probability of the partial sequences in the list and the words in the current time-step and retaining the \(K\) most probable partial sequences until we get to the end of the output sequence.
+
+Another important aspect of sequence to sequence models applied to tasks involving language is the vocabulary.
 
 
 
@@ -135,8 +193,17 @@ As with many other applications the field of conversational modelling has been t
 
 \subsection{Datasets} \label{ssec:42}
 
+\subsection{Training Details} \label{ssec:43}
+
 \newpage\section{Results} \label{sec:results}
+\subsection{Quantitative Analysis} \label{ssec:51}
+\subsection{Qualitative Analysis} \label{ssec:52}
+
 \newpage\section{Future Work} \label{sec:future}
+\subsection{Ideas Towards Solving The Loss Function Issue} \label{ssec:61}
+\subsection{Temporal Conditioning and Memory} \label{ssec:62}
+\subsection{Additional Ideas} \label{ssec:63}
+
 \newpage\section{Conclusion} \label{sec:conclusion}
 
 

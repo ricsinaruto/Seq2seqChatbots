@@ -11,6 +11,11 @@ Bordes, A., Boureau, Y.-L., and Weston, J. (2016).
 \newblock Learning end-to-end goal-oriented dialog.
 \newblock {\em arXiv preprint arXiv:1605.07683}.
 
+\bibitem[Bottou, 2010]{SGD:2010}
+Bottou, L. (2010).
+\newblock Large-scale machine learning with stochastic gradient descent.
+\newblock In {\em Proceedings of COMPSTAT'2010}, pages 177--186. Springer.
+
 \bibitem[Carpenter, 2017]{Cleverbot:2017}
 Carpenter, R. (2017).
 \newblock Cleverbot.
@@ -50,6 +55,11 @@ Havrylov, S. and Titov, I. (2017).
   with sequences of symbols.
 \newblock {\em arXiv preprint arXiv:1705.11192}.
 
+\bibitem[Hochreiter and Schmidhuber, 1997]{Hochreiter:1997}
+Hochreiter, S. and Schmidhuber, J. (1997).
+\newblock Long short-term memory.
+\newblock {\em Neural computation}, 9(8):1735--1780.
+
 \bibitem[Joshi et~al., 2017]{Joshi:2017}
 Joshi, C.~K., Mi, F., and Faltings, B. (2017).
 \newblock Personalization in goal-oriented dialog.
@@ -84,6 +94,16 @@ Microsoft (2017b).
 \newblock Microsoft bot framework.
 \newblock \url{https://dev.botframework.com/}.
 \newblock Accessed: 2017-10-04.
+
+\bibitem[Mitchell, 1998]{GA:1998}
+Mitchell, M. (1998).
+\newblock {\em An introduction to genetic algorithms}.
+\newblock MIT press.
+
+\bibitem[Rumelhart et~al., 1988]{RNN:1988}
+Rumelhart, D.~E., Hinton, G.~E., Williams, R.~J., et~al. (1988).
+\newblock Learning representations by back-propagating errors.
+\newblock {\em Cognitive modeling}, 5(3):1.
 
 \bibitem[Serban et~al., 2017]{Serban:2017}
 Serban, I.~V., Sankar, C., Germain, M., Zhang, S., Lin, Z., Subramanian, S.,
@@ -143,6 +163,11 @@ Weizenbaum, J. (1966).
 \newblock Eliza—a computer program for the study of natural language
   communication between man and machine.
 \newblock {\em Communications of the ACM}, 9(1):36--45.
+
+\bibitem[Werbos, 1990]{Werbos:1990}
+Werbos, P.~J. (1990).
+\newblock Backpropagation through time: what it does and how to do it.
+\newblock {\em Proceedings of the IEEE}, 78(10):1550--1560.
 
 \bibitem[Worswick, 2017]{Mitsuku:2017}
 Worswick, S. (2017).
