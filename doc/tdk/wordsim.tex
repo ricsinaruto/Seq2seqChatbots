@@ -185,8 +185,8 @@ Seq2seq models can also contain multiple layers of LSTM networks as seen in Figu
 \begin{figure}[H]
 	\label{fig:232b}
 	\centering
-	\includegraphics[width=0.6\textwidth]{pics/deep_seq2seq.png}
-	\caption{A 3 layer Sequence-to-sequence model \cite{deep_seq2seq}. The lines pointing from the last decoder states to the last encoder represent an attention mechanism about which I talk in Section~\ref{sssec:attention}}
+	\includegraphics[width=0.55\textwidth]{pics/deep_seq2seq.png}
+	\caption{A 3 layer seq2seq model \cite{deep_seq2seq}. The lines pointing from the last decoder states to the last encoder represent an attention mechanism about which I talk in Section~\ref{sssec:attention}}
 \end{figure}
 
 \subsubsection{Decoding and Vocabulary} \label{sssec:234}
@@ -196,7 +196,7 @@ While decoding a word at each time-step is fine a better approach is to the deco
 \begin{equation} \label{eq233}
 \hat{T}=\arg\max_{T}p(T|S)
 \end{equation}
-Here \(S\) is the source sentence and \(T\) is the target sentence. Since in order to get the sequence with the highest probability we have to first generate all of the possible sequences a simple left-to-right beam search is usually employed to make the computation tractable. First, \(K\) words with the highest probability are retained in the first time-step, then at each time-step we expand this list by computing the joint probability of the partial sequences in the list and the words in the current time-step and retaining the \(K\) most probable partial sequences until we get to the end of the output sequence.
+Here \(S\) is the source sentence and \(T\) is the target sentence. Since in order to get the sequence with the highest probability we have to first generate all of the possible sequences a simple left-to-right beam search is usually employed to make the computation tractable. First, \(K\) words with the highest probability are retained in the first time-step. Then at each time-step we expand this list by computing the joint probability of the partial sequences in the list and the words in the current time-step and retaining the \(K\) most probable partial sequences until we get to the end of the output sequence.
 
 Another important aspect of sequence-to-sequence models applied to tasks involving language is the vocabulary. The vocabulary consists of all the different words and symbols present in the dataset. One problem with this approach is that the vocabulary tends to be quite large, especially for very big datasets like \cite{OpenSubtitles:2016,opensubtitles}. Since the number of parameters of the model increases proportionally with the size of the vocabulary it is usually the case that the vocabulary is limited to some arbitrary size \(K\). This way we only use the embeddings of the \(K\) most frequent words in the dataset and replace any other symbols with a common token representing unknown words. Many approaches have been proposed to the problem of handling out of vocabulary (OOV) or unknown words \cite{Luong:2014,Feng:2017,Jean:2014}. Other methods involve using characters \cite{Zhu:2017} or subword units \cite{Sennrich:2015} instead of words.
 
@@ -225,6 +225,23 @@ A possible solution is to represent the current utterance and previous dialog tu
  
 
 \subsubsection{Objective Functions} \label{sssec:functions}
+In addition to the standard cross-entropy loss introduced in Section~\ref{sssec:231} there have been proposed several different loss functions for conversational models in order to generate more varied and interesting replies. One such class of loss functions are reinforcement learning based, which I talk about in detail in Section~\ref{sssec:RL}. In \cite{Ramachandran:2016} a seq2seq model is pretrained as a language model and in order to avoid over-fitting monolingual language modeling losses are added to the standard loss function. These losses act as a regularizer by forcing the seq2seq model to correctly model both the normal seq2seq task and the original monolingual language modeling tasks. In \cite{Lison:2017} it is argued that not all context-response pairs in a dialog dataset have the same importance for conversational modeling. Accordingly they weight each context-response pair with a scoring model and use these weights in the loss function when training a seq2seq model. Hence, examples associated with bigger weights in the dataset will have a larger impact on the gradient update steps through the loss function. 
+
+Approaches to incorporate beam search into the training procedure have also been explored. In \cite{Wiseman:2016} a simple approach is taken to construct the loss function by penalizing when the gold target sequences is not present in the beam consisting of the most likely predictions. The issue with incorporating beam search directly into the training procedure of seq2seq models is that it uses the argmax function which is discontinuous and hence is not amenable to backpropagation. Since the predictions, which serve as input to the standard loss function are discrete (from beam search), the evaluation of the final loss is also discontinuous. A relaxation based technique is proposed in \cite{Goyal:2017}, where the beam search based loss function is gradually relaxed to the standard loss function as training progresses.
+
+Perhaps the most extensively used objective function used besides the standard one is based on Maximum Mutual Information (MMI) \cite{Li:2015}. In MMI the goal is defined as maximizing pairwise or mutual information between a source sentence \(S\) and the corresponding target \(T\):
+\begin{equation}
+\log{\frac{p(S,T)}{p(S)p(T)}}=\log{p(T|S)}-\log{p(T)}
+\end{equation}
+By introducing a weighting constant \(\lambda\) and by using the Bayes' theorem the training objective can be written in the following two ways:
+\begin{equation} \label{eqMMIa}
+\hat{T}=\arg\max_{T}[\log{p(T|S)}-\lambda\log{p(T)}]
+\end{equation}
+\begin{equation} \label{eqMMIb}
+\hat{T}=\arg\max_{T}[(1-\lambda)\log{p(T|S)}+\lambda\log{p(S|T)}]
+\end{equation}
+However, it is not trivial to use these equations as loss functions in practice. In Equation~\ref{eqMMIa} the term \(\lambda\log{p(T)}\) acts as an anti-language model since it is subtracted from the loss function. This leads to ungrammatical output sentences in practice. Training using Equation~\ref{eqMMIb} is possible since we just have to train an additional seq2seq model for the \(\lambda\log{p(S|T)}\) term by using targets as inputs and inputs as targets, but direct decoding is intractable since it requires completion of target generation before \(p(S|T)\) can actually be computed. Solutions to these issues have been proposed in \cite{Li:2015}.
+
 \subsubsection{Evaluation Methods} \label{sssec:eval}
 % Evaluation methods sectionben beszélni a sima (rossz metrikákról meg az emberi véleményezésről is)
 
@@ -323,14 +340,26 @@ In \cite{Serban_MrRNN:2017} two HRED models are employed simultaneously. One HRE
 
 In order to handle the two-party style of conversations, two separate hierarchical recurrent encoder (HRE) models are used in \cite{Shen:2017}. The HRE is similar to the HRED, the only difference being that it misses the decoder RNN. One of the HRE networks encodes only the utterances coming from one of the speakers, and the other HRE encodes the utterances of the other speaker. Thus at each turn the two networks produce two hidden context states which are concatenated and fed into a single decoder RNN, which produces the output prediction.
 
-A natural extension to the original HRED model is to incorporate attention mechanisms which was explored in several works \cite{Yao:2015,Yao:2016,Xing:2017}.
+A natural extension to the original HRED model is to incorporate attention mechanisms which was explored in several works \cite{Yao:2015,Yao:2016,Xing:2017}. The simplest form of integrating attention with the HRED model is between the previous decoder RNN hidden state and the encoder RNN hidden states from the previous turn. This can be done in exactly the same way as in standard seq2seq models and has been explored in \cite{Yao:2015,Yao:2016}.
+
+A more interesting approach is to make use of the hierarchical structure of the HRED and integrate attention hierarchically as well \cite{Xing:2017}. Accordingly the model in this work is called the hierarchical recurrent attention network (HRAN). There are two levels of attention employed. The word level attention mechanism computes vector representations over the hidden states of the encoder RNN (keys) and the previous hidden state of the decoder RNN (queries). Each utterance is encoded separately by the encoder RNN and word level attention is also computed separately for each utterance. The produced vector representations are fed into the utterance level encoder (context RNN). Then the utterance level attention mechanism computes a context vector based on the hidden states of the context RNN. The last step is to feed in this context vector into the decoder RNN at each step, which computes the output sequence predictions. 
+
+An additional technique employed in the HRAN architecture is to use context RNN hidden states as input to the word level attention. More specifically the context RNN is implemented in a reverse order, meaning that if we have a sequence of utterances \((u_1,...,u_n)\), the encoder RNN first encodes \(u_n\), thus the utterance level encoder will also start with the vector representation from the last utterance in the conversation. Because the utterances are reversed the word level attention mechanism for each utterance can use as additional input the hidden state of the context RNN from the next utterance in the original order. Figure~\ref{fig:HRAN} depicts the HRAN with all the components mentioned above.
+\begin{figure}[H]
+	\label{fig:HRAN}
+	\centering
+	\includegraphics[width=0.9\textwidth]{pics/hran.png}
+	\caption{The Hierarchical Recurrent Attention Network \cite{Xing:2017}}
+\end{figure}
+
+
+
 
 \subsubsection{Task-Oriented Approaches} \label{sssec:task}
 \subsubsection{Reinforcement Learning} \label{sssec:RL}
 
 \subsubsection{Different Encoder-Decoder Models} \label{sssec:diffencdec}
 % don't write about attention is all you need here, because you will describe it in ssec:41
-
 
 \subsection{Criticism} \label{ssec:problems}
 \subsubsection{Datasets}
