@@ -17,6 +17,22 @@
 \newcommand{\tab}[1]{\hspace{.2\textwidth}\rlap{#1}}
 \usepackage[top=2.5cm, bottom=4cm, left=2.5cm, right=2.5cm]{geometry}
 
+\DeclareMathOperator{\Attention}{Attention}
+\DeclareMathOperator{\softmax}{softmax}
+\DeclareMathOperator{\MultiHead}{MultiHead}
+\DeclareMathOperator{\Concatenate}{Concatenate}
+\DeclareMathOperator{\head}{head}
+
+\DeclareMathOperator{\FFN}{FFN}
+\DeclareMathOperator{\MLP}{MLP}
+\DeclareMathOperator{\DP}{DP}
+\DeclareMathOperator{\SDP}{SDP}
+\DeclareMathOperator{\BL}{BL}
+\DeclareMathOperator{\Loss}{Loss}
+
+\DeclareMathOperator{\Layer}{Layer}
+\DeclareMathOperator{\LayerNormalization}{LayerNormalization}
+
 \begin{document}
 	\title{Deep Learning Based Chatbot Models}
 	\author{Richárd Krisztián Csáky \\ Budapest University of Technology and Economics}
@@ -95,10 +111,10 @@ Recently an emphasis has been put on integrating the two types of conversational
 ELIZA is one of the first ever chatbot programs written \cite{Weizenbaum:1966}. It uses clever hand-written templates to generate a reply that resembles the user's input utterance. Since then countless hand-coded rule-based chatbots have been written \cite{Wallace:2009,Cleverbot:2017,Mitsuku:2017}. Furthermore, a number of programming frameworks specifically designed to facilitate building dialog agents have been developed \cite{Marietto:2013,Microsoft:2017}.
 
 \begin{figure}[H]
-	\label{fig:22a}
 	\centering
 	\includegraphics[width=0.4\textwidth]{pics/cleverbot.png}
 	\caption{Sample conversation with Cleverbot \cite{Cleverbot:2017}}
+	\label{fig:22a}
 \end{figure}
 
 
@@ -123,37 +139,37 @@ Another example is shown below where we make use of the \textit{star} symbol to 
 \subsection{The Encoder-Decoder Model} \label{ssec:23}
 The main concept that differentiates rule-based and neural network based approaches is the presence of a learning algorithm in the latter case. An important distinction has to be made between traditional machine learning and deep learning which is a sub-field of the former. In my work I talk about deep learning methods applied to chatbots since neural networks have been the backbone of the field of conversational modeling and traditional machine learning methods are only rarely used as supplementary techniques.   
 
-When applying neural networks to natural language processing (NLP) tasks we have to transform each word (symbol) into a numerical representation \cite{Bengio:2003}. This is done through word embeddings, which represent each word as a fixed size vector of real numbers. Word embeddings are useful because instead of handling words as huge vectors of the size of the vocabulary we can represent them in much lower dimensions. I talk about the vocabulary used in NLP tasks in more detail in Section~\ref{sssec:234}. The vector that represents each word can be regarded as a set of parameters and these parameters can be jointly learned with the neural network's parameters, or they can be pre-learned which I detail further in Section~\ref{sssec:pretrain}.
+When applying neural networks to natural language processing (NLP) tasks we have to transform each word (symbol) into a numerical representation \cite{Bengio:2003}. This is done through word embeddings, which represent each word as a fixed size vector of real numbers. Word embeddings are useful because instead of handling words as huge vectors of the size of the vocabulary we can represent them in much lower dimensions. Word embeddings are trained on large amounts of natural language data and the goal is to build vector representations that capture the semantic similarity between words. More specifically, because similar context usually is related to similar meaning, words with similar distributions should have similar vector representations. This concept is called the Distributional Hypothesis \cite{Harris:1954}. I talk about the vocabulary used in NLP tasks in more detail in Section~\ref{sssec:234}. The vector that represents each word can be regarded as a set of parameters and these parameters can be jointly learned with the neural network's parameters, or they can be pre-learned which I detail further in Section~\ref{sssec:pretrain}.
 
 Instead of using hand-written rules deep learning models transform input sentences into replies directly by using matrix multiplications and non-linear functions that contain millions of parameters. We can further divide neural network based conversational models into two categories, retrieval-based and generative models. The former simply returns a reply from the dataset by computing the most likely response to the current input utterance based on a scoring function, which can be implemented as a neural network \cite{Cho:2014} or by simply computing the cosine similarity between the input utterance and candidate replies \cite{stalemate:2016}. Generative models on the other hand synthesize the reply one word at a time by computing probabilities over the whole vocabulary \cite{Sutskever:2014,Vinyals:2015}. There have also been approaches that integrate the two types of dialog systems by comparing a generated reply with a retrieved reply and determining which one is more likely to be a better response \cite{Song:2016}.
 
 As with many other applications the field of conversational modeling has been transformed by the rise of deep learning. More specifically the encoder-decoder recurrent neural network (RNN) model (also called seq2seq \cite{Sutskever:2014}) introduced by \cite{Cho:2014} and its variations have been dominating the field. After talking about RNNs in Section~\ref{sssec:231} I present the seq2seq model in Section~\ref{sssec:232}. This model was originally developed for neural machine translation (NMT), but it was found to be suitable to \textit{translate} source utterances into responses within a conversational setting \cite{Shang:2015,Vinyals:2015}. Even though this is a relatively new field already attempts to create unified dialog platforms for training and evaluating different conversational models have been proposed \cite{Miller:2017}.
 
 \subsubsection{Recurrent Neural Networks} \label{sssec:231}
-A recurrent neural network (RNN) \cite{RNN:1988} is a neural network that can take as inputs a variable length sequence \(\bm{x}=(\bm{x}_1,...,\bm{x}_n)\), by unfolding itself over each input \(\bm{x}_i\) and generating a hidden state at each step \(\bm{h}=(\bm{h_1},...,\bm{h_n})\). At each step \(i\), the hidden state \(\bm{h}_i\) is updated by
+A recurrent neural network (RNN) \cite{RNN:1988} is a neural network that can take as inputs a variable length sequence \(\bm{x}=(\bm{x}_1,...,\bm{x}_n)\) and produce a sequence of hidden states \(\bm{h}=(\bm{h}_1,...,\bm{h}_n)\), by using recurrence. This is also called the unrolling or unfolding of the network. At each step the network takes as input \(\bm{x}_i\) and \(\bm{h}_{i-1}\) and generates a hidden state \(\bm{h}_i\). At each step \(i\), the hidden state \(\bm{h}_i\) is updated by
 \begin{equation} \label{eq231a}
 \bm{h}_i=f(W\bm{h}_{i-1}+U\bm{x}_i)
 \end{equation}
-which is also called the unrolling of the network. \(W\) and \(U\) are matrices containing the weights (parameters) of the network. \(f\) here is a non-linear activation function which can be the hyperbolic tangent function for example. The vanilla implementation of an RNN is rarely used, because it suffers from the vanishing gradient problem which makes it very hard to train \cite{Hochreiter:1998}. Usually long short-term memory (LSTM) \cite{Hochreiter:1997} or gated recurrent units (GRU) \cite{Cho:2014} are used for the activation function. LSTMs were developed to combat the problem of long-term dependencies that vanilla RNNs face. As the number of steps of the unrolling increase it becomes increasingly hard for a simple RNN to learn to remember information seen multiple steps ago. 
+where \(W\) and \(U\) are matrices containing the weights (parameters) of the network. \(f\) is a non-linear activation function which can be the hyperbolic tangent function for example. The vanilla implementation of an RNN is rarely used, because it suffers from the vanishing gradient problem which makes it very hard to train \cite{Hochreiter:1998}. Usually long short-term memory (LSTM) \cite{Hochreiter:1997} or gated recurrent units (GRU) \cite{Cho:2014} are used for the activation function. LSTMs were developed to combat the problem of long-term dependencies that vanilla RNNs face. As the number of steps of the unrolling increase it becomes increasingly hard for a simple RNN to learn to remember information seen multiple steps ago. 
 
 LSTM networks use a gating mechanism to control the information flow in the recurrent network. More specifically the input and forgetting gates are used to determine how to update the network's state and the output gate is used to determine what to output. Mathematically these gates consist of several matrix multiplications and non-linear functions applied to the input vector and the previous hidden state. LSTMs are particularly useful for language modeling, because we need to preserve information over multiple sentences while the network is unrolled over each word. Because of space constraints I don't detail LSTMs here further, but a very good quick explanation can be found in \cite{LSTM_article}. An important characteristic of recurrent neural networks is that the parameters of the function \(f\) don't change during the unrolling of the network.
 
 \begin{figure}[H]
-	\label{fig:231}
 	\centering
-	\includegraphics[width=0.5\textwidth]{pics/rnn.jpg}
+	\includegraphics[width=0.7\textwidth]{pics/rnn.jpg}
 	\caption{Unfolding of an RNN over 3 time-steps. Here \(x\) is the input sequence, \(o\) is the output sequence, \(s\) is the sequence of hidden states and \(U\),\(W\) and \(V\) are the weights of the network. \cite{RNN_pic:2017}}
+	\label{fig:231}
 \end{figure}
 
 Language modeling is the task of predicting the next word in a sentence based on the previous words \cite{Bengio:2003}. RNNs can be used for language modeling by training them to learn the probability distribution over the vocabulary \(\bm{V}\) given an input sequence of words. As previously discussed the RNN receives the word embedding vectors representing words in lower dimensions. We can generate the probability distribution to predict the next word in the sequence by taking the hidden state of the RNN in the last step, and feeding it into a softmax activation function
 \begin{equation} \label{eq231b}
-p(\bm{x}_{i,j}|\bm{x}_{i-1},...,\bm{x}_1)=\frac{exp(\bm{v}_j\bm{h}_i)}{\sum_{j^{'}=1}^{K}exp(\bm{v}_{j^{'}}\bm{h}_i)}
+p(\bm{x}_{i,j}|\bm{x}_{i-1},...,\bm{x}_1)=\frac{\exp(\bm{v}_j\bm{h}_i)}{\sum_{j^{'}=1}^{K}\exp(\bm{v}_{j^{'}}\bm{h}_i)}
 \end{equation}
 for all possible words (symbols) \(j=1,...,K\), where \(\bm{v}_j\) are the rows in the \(V\) weight matrix of the softmax function. \((\bm{x}_{i-1},...,\bm{x}_1)\) is the input sequence and \(\bm{h}_i\) is the hidden state of the RNN at step \(i\).
 
 Training of these networks is done via the generalized backpropagation algorithm called truncated backpropagation through time \cite{Werbos:1990,RNN:1988}. Essentially we backpropagate the error through each time step of the network to learn its parameters. The error can be computed by using the cross-entropy loss, which calculates how different the predictions are compared to the true labels.
 \begin{equation} \label{eq231c}
-L(\bm{y}_i,\bm{\hat{y}}_{i})=-\bm{y}_i log(\bm{\hat{y}}_{i})
+\Loss(\bm{y}_i,\bm{\hat{y}}_{i})=-\bm{y}_i \log(\bm{\hat{y}}_{i})
 \end{equation}
 where \(\bm{\hat{y}}_{i}\) is the vector of the predicted probabilities over all words in the vocabulary at step \(i\), and \(\bm{y}_i\) is the one-hot vector over the vocabulary. A one-hot vector is made up of zeros except at the index of the one true word that follows in the sequence, where it is equal to 1. After computing the derivative with respect to all of the weights in the network using the backpropagation through time algorithm we can update the weights in order to get closer to an optimum with optimization techniques like stochastic gradient descent (SGD) \cite{SGD:2010}. 
 
@@ -161,10 +177,10 @@ where \(\bm{\hat{y}}_{i}\) is the vector of the predicted probabilities over all
 The sequence to sequence model (seq2seq) was first introduced by \cite{Cho:2014}, but they only used it to re-rank sentences instead of generating completely new ones, which was first done by \cite{Sutskever:2014}. Since then, besides NMT and conversational models a plethora of different applications of these models have been introduced like text summarization \cite{Nallapati:2016}, speech recognition \cite{Chiu:2017}, code generation \cite{Rico:2017} and parsing \cite{Konstas:2017}, just to name a few.
 
 \begin{figure}[H]
-	\label{fig:232a}
 	\centering
 	\includegraphics[width=0.9\textwidth]{pics/seq2seq.png}
 	\caption{A general seq2seq model, where \((A,B,C)\) is the input sequence, \(<EOS>\) is a symbol used to delimit the end of the sentence and \((W,X,Y,Z)\) is the output sequence \cite{Sutskever:2014}}
+	\label{fig:232a}
 \end{figure}
 
 The simplest and initial form of the model is based on two RNNs. The actual implementation of RNNs can be in the form of LSTMs or GRUs as discussed in Section~\ref{sssec:231}. The goal is to estimate the conditional probability of \(p(\bm{y}_1,...,\bm{y}_{N^{'}}|\bm{x}_1,...,\bm{x}_N)\), where \(\bm{x}_1,...,\bm{x}_N\) is the input sequence and \(\bm{y}_1,...,\bm{y}_{N^{'}}\) is the corresponding output sequence. Since two different RNNs are used for the input and output sequences, the length of the sequences, \(N\) and \(N^{'}\) can be different. The encoder RNN is unrolled over the words in the source sequence and its last hidden state is called the thought vector, which is a representation of the whole source sequence. The initial hidden state of the decoder RNN is then set to this representation \(\bm{v}\), and the generation of target sequence words is done by taking the output of the unrolled decoder network at each time-step and feeding it into a softmax function, which produces the probabilities over all words in the vocabulary.
@@ -174,7 +190,7 @@ p(\bm{y}_1,...,\bm{y}_{N^{'}}|\bm{x}_1,...,\bm{x}_N)=\prod_{i=1}^{N^{'}}p(\bm{y}
 
 Training is very similar to a normal RNN, namely the log probability of a correct target sequence \(T\) given the source sequence \(S\) is maximized
 \begin{equation} \label{eq232b}
-\frac{1}{\bm{S}}\sum_{T,S \in \bm{S}}log(p(T|S))
+\frac{1}{\bm{S}}\sum_{T,S \in \bm{S}}\log(p(T|S))
 \end{equation}
 where \(\bm{S}\) is the training set. The two networks are trained jointly, errors are backpropagated through the whole model and the weights are optimized with some kind of optimization technique like SGD.
 
@@ -183,10 +199,10 @@ In NMT the input sequences are sentences in one language from which we wish to a
 Seq2seq models can also contain multiple layers of LSTM networks as seen in Figure~\ref{fig:232b}. This is done in order to make the model deeper and to have more parameters, which should ideally lead to better performance \cite{Vinyals:2015,googleNMT:2016}. There exist multiple variants, but the most straightforward one is to feed in the source sentence to the first layer of the encoder network. The output from the previous LSTM layer is fed as input to the next layer and the layers are unrolled jointly. Then the last hidden state of the final encoder layer can be used to initialize the initial hidden state of the first decoding layer. The output of the previous decoder layer is input to the next layer until the final layer, where we apply a softmax activation function over the outputs from the last layer to generate the predicted target sequence. How we initialize the layers in the decoder network can be implemented in many different ways, like taking the last hidden state from each encoder layer and using it to initialize the first hidden state of each corresponding decoder layer, to name another method.
 
 \begin{figure}[H]
-	\label{fig:232b}
 	\centering
-	\includegraphics[width=0.55\textwidth]{pics/deep_seq2seq.png}
+	\includegraphics[width=0.8\textwidth]{pics/deep_seq2seq.png}
 	\caption{A 3 layer seq2seq model \cite{deep_seq2seq}. The lines pointing from the last decoder states to the last encoder represent an attention mechanism about which I talk in Section~\ref{sssec:attention}}
+	\label{fig:232b}
 \end{figure}
 
 \subsubsection{Decoding and Vocabulary} \label{sssec:234}
@@ -210,12 +226,12 @@ In this section I describe some further details regarding seq2seq models. First,
 
 \subsubsection{Context} \label{sssec:context}
 % In context section talk about simply feeding the whole conversation to encoder
-In this section I first describe a commonly used variation of the RNN called the bidirectional RNN (BiRNN) \cite{Schuster:1997}. A BiRNN consists of two RNNs, a forward and a backward one. The forward RNN reads the input sequence in the original order (from \(\bm{x}_1\) to \(\bm{x}_n\)) and computes a sequence of forward hidden states \((\overrightarrow{\bm{h}}_1,...,\overrightarrow{\bm{h}}_n)\). The backward RNN reads the reversed sequence (from \(\bm{x}_n\) to \(\bm{x}_1\)) and computes the backward hidden states \((\overleftarrow{\bm{h}}_1,...,\overleftarrow{\bm{h}}_n)\). Then we can simply concatenate the two hidden states for each word in the sequence \cite{Bahdanau:2014,Zhaob:2017}. The BiRNN resembles a bag of words model, because each concatenated hidden state \(\bm{h}_i\) has information about the words surrounding the \(i\)-th word. This results in a better preservation of context and is used in several seq2seq models, usually in the encoder network \cite{Zhaob:2017,Xing_topic:2017,googleNMT:2016,Yin:2017}.
+In this section I first describe a commonly used variation of the RNN called the bidirectional RNN (BiRNN) \cite{Schuster:1997}. A BiRNN consists of two RNNs, a forward and a backward one. The forward RNN reads the input sequence in the original order (from \(\bm{x}_1\) to \(\bm{x}_n\)) and computes a sequence of forward hidden states \((\overrightarrow{\bm{h}}_1,...,\overrightarrow{\bm{h}}_n)\). The backward RNN reads the reversed sequence (from \(\bm{x}_n\) to \(\bm{x}_1\)) and computes the backward hidden states \((\overleftarrow{\bm{h}}_1,...,\overleftarrow{\bm{h}}_n)\). Then we can simply concatenate the two hidden states for each word in the sequence \cite{Bahdanau:2014,Zhaob:2017}. The BiRNN resembles a continuous bag of words model \cite{Mikolov:2013}, because each concatenated hidden state \(\bm{h}_i\) has information about the words surrounding the \(i\)-th word. This results in a better preservation of context and is used in several seq2seq models, usually in the encoder network \cite{Zhaob:2017,Xing_topic:2017,googleNMT:2016,Yin:2017}.
 \begin{figure}[H]
-	\label{fig:context}
 	\centering
 	\includegraphics[width=1.0\textwidth]{pics/bilstm.png}
 	\caption{A bidirectional multilayer LSTM encoder and unidirectional LSTM decoder with attention \cite{Yin:2017}}
+	\label{fig:context}
 \end{figure}
 So far I have only described conversational modeling as predicting a reply based on a single source utterance. However conversations are more complicated than machine translation, since they don't solely consist of utterance-reply pairs. Conversations usually have many turns, and the reply to an utterance might depend on information presented in previous turns of the conversation. A plethora of approaches have been proposed to incorporate context or conversation history into seq2seq models in order to build better dialog agents. Perhaps the most straightforward approach is to concatenate \(k\) previous utterances by appending an end-of-utterance symbol after each utterance and feeding this long sequence of symbols into the encoder \cite{Vinyals:2015}. The simplest approach which was used as a baseline in \cite{Sordoni:2015} is to use only the first preceding utterance as context in order to form context-message-reply triples for training. A better approach was to concatenate the bag of words representations of the context and message utterances instead of the actual utterances. By using different representations for different utterances better results were achieved \cite{Sordoni:2015}.
 
@@ -227,7 +243,7 @@ A possible solution is to represent the current utterance and previous dialog tu
 \subsubsection{Objective Functions} \label{sssec:functions}
 In addition to the standard cross-entropy loss introduced in Section~\ref{sssec:231} there have been proposed several different loss functions for conversational models in order to generate more varied and interesting replies. One such class of loss functions are reinforcement learning based, which I talk about in detail in Section~\ref{sssec:RL}. In \cite{Ramachandran:2016} a seq2seq model is pretrained as a language model and in order to avoid over-fitting monolingual language modeling losses are added to the standard loss function. These losses act as a regularizer by forcing the seq2seq model to correctly model both the normal seq2seq task and the original monolingual language modeling tasks. I talk about pretraining in more detail in Section~\ref{sssec:pretrain}. In \cite{Lison:2017} it is argued that not all context-response pairs in a dialog dataset have the same importance for conversational modeling. Accordingly they weight each context-response pair with a scoring model and use these weights in the loss function when training a seq2seq model. Hence, examples associated with bigger weights in the dataset will have a larger impact on the gradient update steps through the loss function. 
 
-Approaches to incorporate beam search into the training procedure have also been explored. In \cite{Wiseman:2016} a simple approach is taken to construct the loss function by penalizing when the gold target sequence is not present in the beam consisting of the most likely predictions. The issue with incorporating beam search directly into the training procedure of seq2seq models is that it uses the argmax function which is discontinuous and hence is not amenable to backpropagation. Since the predictions, which serve as input to the standard loss function are discrete (from beam search), the evaluation of the final loss is also discontinuous. A relaxation based technique is proposed in \cite{Goyal:2017}, where the beam search based loss function is gradually relaxed to the standard loss function as training progresses.
+Approaches to incorporate beam search into the training procedure have also been explored. In \cite{Wiseman:2016} a simple approach is taken to construct the loss function by penalizing when the gold target sequence is not present in the beam consisting of the most likely predictions. The issue with incorporating beam search directly into the training procedure of seq2seq models is that it uses the argmax function which is differentiable and hence is not amenable to backpropagation. Since the predictions, which serve as input to the standard loss function are discrete (from beam search), the evaluation of the final loss is also discontinuous. A relaxation based technique is proposed in \cite{Goyal:2017}, where the beam search based loss function is gradually relaxed to the standard loss function as training progresses.
 
 Perhaps the most extensively used objective function besides the standard one is based on Maximum Mutual Information (MMI) \cite{Li:2015}. In MMI the goal is defined as maximizing pairwise or mutual information between a source sentence \(S\) and the corresponding target \(T\):
 \begin{equation}
@@ -266,62 +282,55 @@ In this section I present recent methods and techniques used to augment the perf
 % max mention attention is all you need here, because it will be described in ssec:41
 The attention mechanism was first introduced to encoder-decoder models by \cite{Bahdanau:2014}. The problem that it was trying to address is the limited information that the context vector can carry. In a standard seq2seq model we expect that this single fixed-size vector can encode all the relevant information about the source sentence that the decoder needs in order to generate its prediction. Additionally, since we use a single vector, all the decoder states receive the same information, instead of feeding in information relevant to the specific decoding step. 
 
-
-\begin{figure}[H]
-	\label{fig:attentiona}
-	\centering
-	\includegraphics[width=0.3\textwidth]{pics/bahdanau_attn.png}
-	\caption{Original Attention Mechanism \cite{Bahdanau:2014}}
-\end{figure}
 In order to combat these shortcomings the attention mechanism creates an additional input at each decoding step coming directly from the encoder states. This additional input \(\bm{c}_i\) to the decoder at time-step \(i\) is computed by taking a weighted sum over the encoder hidden states \(\bm{h}\):
 \begin{equation} \label{eqattention}
 \bm{c}_i=\sum_{j=1}^{T}a_{ij}\bm{h}_j
 \end{equation}
 where \(T\) is the number of hidden states or symbols in the source sentence and the weight \(a_{ij}\) for each \(\bm{h}_j\) hidden state can be computed by
 \begin{equation}
-a_{ij}=\frac{exp(e_{ij})}{\sum_{k=1}^{T}exp(e_{ik})}
+a_{ij}=\frac{\exp(e_{ij})}{\sum_{k=1}^{T}\exp(e_{ik})}
 \end{equation}
 which is basically a softmax function over \(e_{ij}\), which is the output of a scoring function:
 \begin{equation}
 e_{ij}=f(\bm{s}_{i-1},\bm{h}_j).
 \end{equation}
 Here \(\bm{s}_{i-1}\) is the hidden state of the decoder in the previous time-step. Oftentimes \(\bm{s}_{i-1}\) is called a query vector \(\bm{q}\) and the encoder hidden states \(\bm{h}\) are called key vectors \(\bm{k}\).
-The scoring function \(f\) can be implemented in several ways:
-\begin{equation}
-MLP(\bm{q},\bm{k})=\bm{w_2}tanh(W_1[\bm{q}:\bm{k}])
+The scoring function \(f\) can be implemented in several ways. In Equation~\ref{eq:mlp} a Multi-Layer Perceptron (MLP) approach can be seen, where we simply concatenate the query and key vectors and feed them into a feed-forward neural network \cite{Bahdanau:2014}. The Bilinear (BL) scoring function is described in Equation~\ref{eq:bl}, proposed by \cite{Luong:2015}. The Dot Product (DP) scoring function (Equation~\ref{eq:dp}) doesn't use any weights, but it requires the sizes of the two vectors to be the same \cite{Luong:2015}. An extension of this is the Scaled Dot Product (SDP) function (Equation~\ref{eq:sdp}), where we scale the dot product by the square root of the size of the key vectors \cite{Vaswani:2017}. This is useful because otherwise the dot product increases as dimensions get larger.
+\begin{equation} \label{eq:mlp}
+\MLP(\bm{q},\bm{k})=\bm{w_2}tanh(W_1[\bm{q}:\bm{k}])
 \end{equation}
-where we simply concatenate the query and key vectors and feed them into a single or multilayer neural network \cite{Bahdanau:2014}. \(\bm{w}_2\) and \(W_1\) are the weights of the network.
-\begin{equation}
-BL(\bm{q},\bm{k})=\bm{q}^\mathsf{T}W\bm{k}
+\begin{equation} \label{eq:bl}
+\BL(\bm{q},\bm{k})=\bm{q}^\mathsf{T}W\bm{k}
 \end{equation}
-is called the bilinear scoring function where \(W\) is a learned weight matrix. \cite{Luong:2015}.
-\begin{equation}
-DP(\bm{q},\bm{k})=\bm{q}^\mathsf{T}\bm{k}
+\begin{equation} \label{eq:dp}
+\DP(\bm{q},\bm{k})=\bm{q}^\mathsf{T}\bm{k}
 \end{equation}
-is the dot product scoring function, which doesn't use any weights, but it requires the sizes of the two vectors to be the same \cite{Luong:2015}.
-\begin{equation}
-SDP(\bm{q},\bm{k})=\frac{\bm{q}^\mathsf{T}\bm{k}}{\sqrt{|\bm{k}|}}
+\begin{equation} \label{eq:sdp}
+\SDP(\bm{q},\bm{k})=\frac{\bm{q}^\mathsf{T}\bm{k}}{\sqrt{|\bm{k}|}}
 \end{equation}
-is the scaled dot product, where we scale the previous dot product by the square root of the size of the key vectors \cite{Vaswani:2017}. This is useful because otherwise the dot product increases as dimensions get larger.
-
+In the above equations \(W\), \(W_1\) and \(\bm{w}_2\) are parameters of the scoring functions.
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.3\textwidth]{pics/bahdanau_attn.png}
+	\caption{Original Attention Mechanism \cite{Bahdanau:2014}}
+	\label{fig:attentiona}
+\end{figure}
 We can attend to outputs from the decoder network generated in previous time-steps by incorporating them as additional inputs to the scoring functions mentioned above \cite{Shao:2017}. This helps the decoder by allowing it to \textit{see} what has already been generated.
 
 Attention can also be implemented using multiple heads \cite{Vaswani:2017}, meaning that we use the output of multiple scoring functions, each with their own parameters to learn to focus on different parts of the input sequence. The parameters of the scoring functions are jointly learned with all other parameters of the seq2seq model.
 
-
-
 \begin{figure}[H]
-	\label{fig:attentionb}
 	\centering
 	\includegraphics[width=0.4\textwidth]{pics/attn_weights.png}
 	\caption{Pixels represent the weights \(a_{ij}\) between inputs and outputs \cite{Bahdanau:2014}}
+	\label{fig:attentionb}
 \end{figure}
-Attention can also be computed using only one sequence of symbols \cite{Cheng:2016,Lin:2017,Vaswani:2017}. In this case the query and key vectors both come from the same hidden states and thus we get an encoding of the sentence which depends on all of its parts. This is called self or intra-attention and it can be used both in the decoder and the encoder networks since it can be implemented as a standalone layer that takes in a sequence and computes a new representation of that sequence. 
+Attention can also be computed using only one sequence of symbols, called self- or intra-attention. Self-attention has been successfully applied to a variety of tasks including reading comprehension, abstractive summarization, neural machine translation and sentence representations \cite{Cheng:2016,Lin:2017,Vaswani:2017,Parikh:2016,Paulus:2017} In this case the query and key vectors both come from the same hidden states and thus we get an encoding of the sentence which depends on all of its parts. This is called self or intra-attention and it can be used both in the decoder and the encoder networks since it can be implemented as a standalone layer that takes in a sequence and computes a new representation of that sequence. 
 \begin{figure}[H]
-	\label{fig:attentionc}
 	\centering
-	\includegraphics[width=0.7\textwidth]{pics/self_attn.png}
+	\includegraphics[width=0.65\textwidth]{pics/self_attn.png}
 	\caption{Visualizing self-attention, lines represent the weights \(a_{ij}\) \cite{Vaswani:2017}}
+	\label{fig:attentionc}
 \end{figure}
 
 Attention has been extensively used for neural conversation models as an augmentation of the base seq2seq model \cite{Yao:2016,Shang:2015,Xing_topic:2017,Zhao:2017}. A more complex type of attention mechanism is the hierarchical attention which was used in conversational modeling \cite{Xing:2017} and abstractive text summarization \cite{Nallapati:2016} as well. It is useful when we need to attend over multiple input sentences. I describe it in more detail in Section~\ref{sssec:HRED}.
@@ -339,10 +348,10 @@ Lastly, a different style of pretraining was employed in \cite{Wiseman:2016}. In
 In addition to the raw dialog turns we can integrate a plethora of other inputs into the seq2seq model. A number of attempts have been made since the birth of the encoder-decoder model in order to augment it with additional input features. The goal of these features is mainly to provide more information about the conversation or the context. In addition, models infused with additional features can learn to differentiate between different styles of dialog. By conditioning a seq2seq model on speaker information it can learn to output replies in the style of the speaker it was trained on \cite{Li:2016}. In this paper the authors input additional speaker embeddings into the decoder. These speaker embeddings are similar to word embeddings, basically representing the speakers for the utterances in the dataset. The additional speaker embedding vector is fed into the decoder RNN at each time-step jointly with the previously generated word. The result is a more consistent conversational model. Because of the speaker embeddings it learns general facts associated with the specific speaker. For example to the question \textit{Where do you live?} it might reply with different answers depending on the speaker embedding that is fed into the decoder. Additionally the authors have also experimented with speaker-addressee models. This is a simple extension to the previously discussed speaker model. Instead of simply feeding in speaker embeddings to the decoder RNN a weighted sum of the speaker and addressee embeddings is inputted. The addressee is the speaker to which the utterance is directed. The intuition behind this addition is that we talk in different styles depending on who we talk to (boss, friend, lover). Thus, the model not only responds differently with different speaker embeddings but it also conditions its response on the addressee embeddings. Hence, it might output a different reply for the same utterance and speaker embedding but different addressee embedding.
 
 \begin{figure}[H]
-	\label{fig:persona}
 	\centering
-	\includegraphics[width=0.9\textwidth]{pics/persona.png}
+	\includegraphics[width=1.0\textwidth]{pics/persona.png}
 	\caption{A seq2seq model augmented with speaker embeddings \cite{Li:2016}}
+	\label{fig:persona}
 \end{figure}
 
 Similarly to this many other approaches were made to condition the response generation on various types of categories. For example in \cite{Xing_topic:2017} topic words are extracted from each utterance in the dataset. Then a seq2seq model is trained with these additional topic words together with the utterance they belong to. More specifically a separate attention mechanism is implemented that attends over the topic words. The two vectors generated from the normal utterance attention and the topic attention are fed into the decoder RNN at each time-step. With this additional topic information the model manages to produce more relevant replies to the topic of the conversation. A somewhat different approach to include topic information into the response generation process was employed in \cite{Choudhary:2017}. In this work three seq2seq models were trained separately on three datasets related to different topics (domains). Additionally a domain classifier based on logistic regression was trained to compute the probability that the utterance is related to a domain for all three domains. At test time, for an input utterance all the seq2seq models generate a reply and the domain classifier predicts a domain. Then a re-ranker takes the generated responses and the predicted domain probabilities and multiplies them together to determine the most probable reply-domain pair. Another example involves using emotion categories for post-response pairs \cite{Zhou:2017}. Here the authors first classify all of the post-response pairs in the dataset with an LSTM model into several emotion categories like happy, sad, angry, etc. Then they feed in these categories as real-valued vector representations into the decoder of an encoder-decoder model during training. Additionally a more complex memory based augmentation is proposed to the encoder-decoder model to better capture emotional changes in the response, which I don't detail here. In essence by feeding in these emotion categories we can generate a reply conditioned on a specific type of emotion. For example the response for the question \textit{How was your day?} will differ in style for different emotion categories.
@@ -357,10 +366,10 @@ Knowledge bases (KB) are powerful tools that can be used to augment conversation
 Perhaps the most straightforward integration is proposed in \cite{Zhao:2017}. In this work an entity indexing step is introduced before feeding in the source utterance into a seq2seq model. This works by replacing locations or time specifying words with general tokens using named entity recognition or keyword matching. For example in the sentence \textit{I wan to go to Paris from New York}, the word \textit{Paris} is replaced with the token \textit{[LOC-1]} and the \textit{New York} is replaced with \textit{[LOC-0]}. The connection between the general token and the original word is stored in a table.  Then the encoder-decoder model produces a response that also uses general tokens for locations and times and a special placeholder token for the KB result. Finally, the general tokens are transformed back to actual words using the stored table and a KB is employed which uses these general tokens to search for a route between the two places and its output is incorporated in the response. Thus, we have an open-domain dialog system which is augmented with a task-oriented and robust part handling user requests related to finding routes between two locations.
 
 \begin{figure}[H]
-	\label{fig:KB}
 	\centering
 	\includegraphics[width=0.9\textwidth]{pics/KB.png}
 	\caption{A HRED with attention, which I talk about in detail in Section~\ref{sssec:HRED}, upgraded with a KB component \cite{Zhao:2017}}
+	\label{fig:KB}
 \end{figure}
 
 A similar, but more complex approach is taken in \cite{Wen:2016}, where a KB augmented encoder-decoder model is used for the task of recommending restaurants. Here, besides a standard encoder RNN the source utterance is also processed with a belief tracker implemented as a convolutional neural network (CNN). I talk about convolutional neural networks applied to encoder-decoder models in Section~\ref{sssec:diffencdec}. Belief tracking is an important part of task-oriented spoken dialog systems \cite{Henderson:2015}. Here the belief tracker network produces a query for a MySQL database containing information about restaurants. The final input to the decoder RNN is the weighted sum consisting of the last state of the decoder RNN and a categorical probability vector from the belief tracker. Then the decoder outputs a response in the same way as in the previous example, with lexicalised general tokens. These tokens are then replaced with the actual information that they point to in the KB. Similarly in \cite{Ghazvininejad:2017} more general fact based KB is employed to augment an encoder-decoder model, which I talk about in detail in Section~\ref{sssec:priors}.
@@ -384,10 +393,10 @@ In order to better represent dialog history a general hierarchical recurrent enc
 The HRED differs from the basic encoder-decoder model by introducing a new level of hierarchy, the context RNN, which computes hidden states over entire utterances. With this approach the natural hierarchy of conversations is preserved by handling word sequences with the encoder RNN and utterance sequences with the context RNN which depends on the hidden representations produced by word-level encoding.
 
 \begin{figure}[H]
-	\label{fig:HRED}
 	\centering
 	\includegraphics[width=0.9\textwidth]{pics/HRED.png}
 	\caption{The Hierarchical Recurrent Encoder-Decoder Model \cite{Serban:2015}}
+	\label{fig:HRED}
 \end{figure}
 Since the introduction of the HRED model a number of works have used and augmented it \cite{Serban_VHRED:2017,Serban_MrRNN:2017,Serban:2017,Shen:2017,Li_adversarial:2017}. A proposed extension to the HRED model is to condition the decoder RNN on a latent variable which is sampled from the prior distribution at test time and the approximate posterior distribution at training time \cite{Serban_VHRED:2017}. These distributions can be represented as a function of previous sub-sequences of words. 
 
@@ -401,13 +410,11 @@ A more interesting approach is to make use of the hierarchical structure of the 
 
 An additional technique employed in the HRAN architecture is to use context RNN hidden states as input to the word level attention. More specifically the context RNN is implemented in a reverse order, meaning that if we have a sequence of utterances \((u_1,...,u_n)\), the encoder RNN first encodes \(u_n\), thus the utterance level encoder will also start with the vector representation from the last utterance in the conversation. Because the utterances are reversed the word level attention mechanism for each utterance can use as additional input the hidden state of the context RNN from the next utterance in the original order. Figure~\ref{fig:HRAN} depicts the HRAN with all the components mentioned above.
 \begin{figure}[H]
-	\label{fig:HRAN}
 	\centering
 	\includegraphics[width=0.9\textwidth]{pics/hran.png}
 	\caption{The Hierarchical Recurrent Attention Network \cite{Xing:2017}}
+	\label{fig:HRAN}
 \end{figure}
-
-
 
 
 \subsubsection{Task-Oriented Dialog Systems} \label{sssec:task}
@@ -418,10 +425,10 @@ A prevalent task and goal is the recommendation of restaurants to users searchin
 A more general recommendation based dialog system is explored in \cite{Yin:2017}. The system presented in this work uses an information extraction component which takes in a query and returns results from a search engine.
 
 \begin{figure}[H]
-	\label{fig:babi}
 	\centering
 	\includegraphics[width=0.7\textwidth]{pics/babi.png}
 	\caption{The 5 bAbi tasks for restaurant reservations. The dialog agent's utterances are in blue, the user's utterances are in green and API function calls are in red \cite{Bordes:2016}}
+	\label{fig:babi}
 \end{figure}
 A number of papers address the problem of integrating open-domain and task-specific approaches into one conversational model \cite{Zhao:2017,Yu:2017,Akasaki:2017}. I have also described some of these in Section~\ref{sssec:KB}, since they usually use a knowledge base. Essentially the bAbi toy tasks mentioned above do not represent real-life interactions between users and task-oriented dialog systems. In order for conversational models to remain robust they have to able to handle out of domain utterances. Otherwise users might get annoyed with the program, for example many rule-based systems might resort to output responses like \textit{Sorry, I couldn't understand that, but I am happy to talk about movies.} in order to get the user back on track. One approach to handle these issues is to build a model that is able to differentiate between in-domain and non-task user utterances. Then two different models trained separately on open-domain and task-specific datasets can produce response candidates and a scoring function can output the most probable response \cite{Akasaki:2017}.
 
@@ -430,10 +437,10 @@ A number of papers address the problem of integrating open-domain and task-speci
 Reinforcement learning (RL) \cite{Sutton:1998} is a type of learning framework which has seen increasing success recently \cite{Mnih:2013,Mnih:2015,Silver:2016}. RL performs very well in tasks where we don't have defined loss functions or don't know what the gold truths are. Instead, learning is implemented using a reward which is automatically given to the model based on its state. A general visual description of the reinforcement learning framework can be seen in Figure~\ref{fig:RL}.
 
 \begin{figure}[H]
-	\label{fig:RL}
 	\centering
 	\includegraphics[width=0.7\textwidth]{pics/RL.png}
 	\caption{The reinforcement learning framework \cite{Sutton:1998}}
+	\label{fig:RL}
 \end{figure}
 
 In RL an agent is some kind of function consisting of parameters that are optimized with a learning algorithm. The agent receives as input the state of the environment and can output actions based on it. The goal is to maximize the expected reward through a good combination of actions. The environment is the task or setting in which the agent is situated. One of the most popular applications of RL is games, since it's not known what are the correct actions in all steps of game \cite{Mnih:2013}. Instead, games have a clear end-goal and a learning agent can be rewarded based on whether it achieves the end-goal through its actions. An \textit{episode} refers to a sequence of actions and states \((s_1,a_1,...,s_t,a_t,s_T)\) until the agent reaches a terminal state \(s_T\). The terminal state is referred to the state in which the agent receives a reward for the episode. This process, often called a markov decision process (MDP) consists of the triplet \((\bm{S},\bm{A},R)\), where \(\bm{S}\) is the set of states, \(\bm{A}\) is the set of actions and \(R\) is the reward for the episode \cite{Kandasamy:2017}. A policy \(\pi\) is a function that the agent implements in order to select an action to a given state. Stochastic policies \(\pi(a|s)\) represent the probability of an agent executing action \(a\) in state \(s\).
@@ -469,10 +476,10 @@ So far the underlying architecture of encoder-decoder models was based on recurr
 A fully attention based encoder-decoder model was presented in \cite{Vaswani:2017}, which I talk about in detail in Section~\ref{ssec:41}. A more general encoder-decoder model was presented in \cite{Kaiser_one_model:2017}. This model made use of all kinds of neural architectures like CNNs, attention mechanisms and sparsely-gated mixture-of-experts \cite{MoE:2017}. The generality and level of abstraction employed in the model makes it possible to achieve good results across many different tasks and even modalities (audio, vision, text) by being trained simultaneously for all these tasks and using the same parameters, only varying the inputs. A general diagram of the model can be seen in Figure~\ref{fig:multimodel}. Inputs coming from different modalities are encoded into common abstract representations using modality nets. The architecture of the modality net depends on the type of input. Additionally modality nets are also used to transform outputs into correct modality data. Between these modality nets a single encoder-decoder model transforms input representations to output representations. The decoder is autoregressive, meaning that it takes as input its previous output as well. The architecture of this model is very different from a standard RNN or CNN based seq2seq model, since it uses several types of building blocks like attention, mixture of experts and convolutional layers. I don't detail it here further, but the exact architecture can be found in Section 2 of the paper \cite{Kaiser_one_model:2017}.
 
 \begin{figure}[H]
-	\label{fig:multimodel}
 	\centering
 	\includegraphics[width=0.6\textwidth]{pics/multimodel.png}
 	\caption{A high-level visualization of the MultiModel \cite{Kaiser_one_model:2017}}
+	\label{fig:multimodel}
 \end{figure}
 
 \subsection{Criticism} \label{ssec:problems}
@@ -496,19 +503,19 @@ A more specific problem with current conversational models is that they don't ha
 % show graphs of how badly standard metrics correlate
 It has been shown that standard metrics like perplexity and Bleu, which perform well in NMT, don't correlate at all with human judgment for evaluation of dialog agents \cite{Tao:2017,Liu:2016}. Figure~\ref{fig:bleu} depicts the correlation of Bleu with human judgment in evaluating a seq2seq model trained on two different datasets. I believe that the reason for this is similar to the loss function issue. Namely, these metrics assume that there is only one gold truth response for each source utterance, because they are based on measuring the difference between the predicted and the gold truth response. Since this is not the case, they will assign low scores to responses that were deemed natural by human judges, but aren't similar to the gold truth response.
 \begin{figure}[H]
-	\label{fig:bleu}
 	\centering
 	\includegraphics[width=0.6\textwidth]{pics/bleu.png}
-	\caption{Bleu score correlation with human scores \cite{Liu:2016} on a Twitter corpus and on the Ubuntu dialog corpus \cite{Lowe:2015}}
+	\caption{Bleu score correlation with human scores \cite{Liu:2016} on a Twitter corpus and on the Ubuntu dialog corpus \cite{Lowe:2015}.}
+	\label{fig:bleu}
 \end{figure}
 Furthermore, while human evaluation is one of the most accurate metrics it still has its drawbacks. Most importantly it is not automatic and thus can be costly and can not be standardized.
 
 Attempts have been made in order to design better automatic evaluation metrics based on neural networks \cite{Tao:2017,Lowe:2017,Li_adversarial:2017}. Since they are neural network based they can be trained with labeled data. They receive a source utterance and the reply to it as input and they have to output a score. Then, this score can be compared with the true score assigned by a human annotator and thus the model learns from its errors. As can be seen in Figure~\ref{fig:adem_ruber} these metrics indeed correlate better with human scoring.
 \begin{figure}[H]
-	\label{fig:adem_ruber}
 	\centering
 	\includegraphics[width=0.8\textwidth]{pics/adem_ruber.png}
-	\caption{Correlation of ADEM (left) \cite{Lowe:2017} and RUBER (right) \cite{Tao:2017} with human scorers \cite{Lowe:2015}}
+	\caption{Correlation of ADEM (left) \cite{Lowe:2017} and RUBER (right) \cite{Tao:2017} with human scorers.}
+	\label{fig:adem_ruber}
 \end{figure}
 
 \subsection{Summary} \label{ssec:summary}
@@ -520,8 +527,76 @@ Finally, in Section~\ref{ssec:summary} I argued that some of the current approac
 \newpage\section{Experiments} \label{sec:experiments}
 In this section I present my experiments with the Transformer encoder-decoder model, which I describe in detail in Section~\ref{ssec:41}. I experiment with training it using conversational data, which hasn't been done before, because the architecture is very recent and it was originally developed for NMT \cite{Vaswani:2017}. In Section~\ref{ssec:42} I give a brief overview of the datasets I used for training. Finally, in Section~\ref{ssec:43} I give a detailed description of the training setups that I ran.
 \subsection{The Transformer Model} \label{ssec:41}
+The Tranformer is an encoder-decoder model based solely on attention mechanisms and feed-forward neural networks, which achieved state-of-the-art results in NMT tasks \cite{Vaswani:2017}. In this section I describe its architecture in detail, which can be seen in Figure~\ref{fig:transformer}.
+\begin{figure}[H] 
+	\centering
+	\includegraphics[width=0.55\textwidth]{pics/transformer.png}
+	\caption{The architecture of the Transformer model \cite{Vaswani:2017}. The encoder network is the left part and the decoder network is the right part.}
+	\label{fig:transformer}
+\end{figure}
+The model is made up of two sub-networks, the encoder and the decoder network. The encoder network takes as input the word embeddings of the source sentence and produces a representation. Then, the decoder network takes as input this representation and the word embeddings of already generated tokens in the output sentence. Based on these it produces output probabilities for one word in the sentence at a time. The decoder is auto-regressive, because at each steps it generates predictions based on previously predicted words. I start by describing the high-level architecture of the encoder and the decoder network in Section~\ref{sssec:encdec}. Then I give a detailed description of the building blocks used, like attention (Section~\ref{sssec:trf_attention}) and feed-forward networks (Section~\ref{sssec:trf_nn}). Finally, I present further methods used, like positional encoding in Section~\ref{sssec:positional} and regularization techniques in Section~\ref{sssec:regularization}.
+
+\subsubsection{Encoder and Decoder Networks} \label{sssec:encdec}
+The encoder network contains 6 identical layers. The output of a previous layer serves as the input to the next layer. Within 1 layer, there are two main blocks. First, the input embeddings go through a multi-head self-attention block, which I talk about in Section~\ref{sssec:trf_attention}. Then the outputs from this block serve as input to a position-wise fully connected network, which I talk about in Section~\ref{sssec:trf_nn}. Both blocks are augmented with residual connections and layer normalization, which I describe in Section~\ref{sssec:regularization}.
+
+Similarly the decoder network also consists of 6 layers. However, the decoder contains 3 blocks, the first and third basically being the same as the two blocks in the encoder network. The additional middle block is a multi-head attention mechanism over the output of the encoder, connecting the two networks. An important difference in the decoder's first multi-head self-attention block is that it takes as input already generated word embeddings from the output sentence. Since the size of the inputs can't vary, not yet generated output embeddings are masked in order to ensure that they don't take part in computing the attention. This, together with shifting the output embeddings by one position ensures that predictions for position \(i\) in the output sentence only depend on previously generated words at positions less than \(i\).
+
+\subsubsection{Attention Mechanisms} \label{sssec:trf_attention}
+The attention mechanism is implemented as multi-head scaled dot-product attention over query, key and value vectors (\(\bm{q}\),\(\bm{k}\),\(\bm{v}\)). In self-attention blocks, these vectors all come from input embeddings. Each input vector is projected three times with separate projections to get queries, keys and values of same dimension as the original input. In the attention block which connects the encoder and decoder networks the queries are the outputs of the previous attention block in the decoder and the key and value vectors come from projecting the output of the final encoder layer two times with separate projections. In the first self-attention block in the decoder, masking is used by setting to \(-\infty\) all values in the input of the softmax functions.
+
+For computing the scaled dot-product attention, which I also talk about in Section~\ref{sssec:attention}, the following equation is used:
+\begin{equation}
+\Attention(Q,K,V)=\softmax\left(\frac{QK^\mathsf{T}}{\sqrt{d_k}}\right)V
+\end{equation}
+where \(Q\),\(K\),\(V\) are matrices built from the query, key and value vectors respectively across the whole input sequence. \(d_k\) is the dimension of the key vectors.
+
+\begin{figure}[H] 
+	\centering
+	\includegraphics[width=0.7\textwidth]{pics/trf_attention.png}
+	\caption{A diagram of the scaled dot-product attention can be seen on the left, and of the multi-head attention on the right \cite{Vaswani:2017}. \(Q\),\(K\),\(V\) are the query, key and value matrices respectively and \(h\) denotes the number of attention heads.}
+	\label{fig:trf_attention}
+\end{figure}
+
+Multi-head attention means that we have several parallel channels of attention computations over separate inputs. To get separate inputs, the query, key and value matrices are linearly projected to a dimension size that is equal to their original dimension divided by the number of heads. For each head and each vector the projection is done via a separate learned weight matrix. This way instead of computing the attention over the whole \(d_{model}=512\) dimensional inputs at once, the computation is divided into \(h=8\) heads over \(\frac{d_{model}}{h}=64\) dimensional query, key and value vectors (Equation~\ref{eq:heads}). Finally, the outputs of all heads are concatenated and once again projected, resulting in the final output value of the attention block (Equation~\ref{eq:multihead}).
+\begin{equation}\label{eq:heads}
+\head_i=\Attention(QW_{Q_i},KW_{K_i},VW_{V_i})
+\end{equation}
+\begin{equation} \label{eq:multihead}
+\MultiHead(Q,K,V)=\Concatenate(\head_i,...,\head_h)W_O
+\end{equation}
+where \(W_{Q_i}\),\(W_{K_i}\),\(W_{V_i}\),\(W_{O}\) are learned weight matrices.
+
+\subsubsection{Feed-Forward Networks} \label{sssec:trf_nn}
+The feed-forward (FFN) blocks are implemented as two consecutive convolutions with kernel size 1, with a ReLU activation between them (Equation~\ref{eq:FFN}). This means that each filter contains a singular weight, and this weight is multiplied with each element from the input vector separately to produce an output vector
+\begin{equation} \label{eq:FFN}
+\FFN(\bm{x})=\max(0,\bm{x}W_1+\bm{b}_1)W_2+\bm{b}_2
+\end{equation}
+where \(\bm{x}\) is the input vector, \(W_1\) and \(W_2\) are the weight matrices and \(\bm{b}_1\) and \(\bm{b}_2\) are the bias vectors.
+
+\subsubsection{Positional Encoding} \label{sssec:positional}
+Since the model doesn't use convolutions or recurrence it doesn't have any positional information about the words in a sequence. In order to address the issue positional encodings are used. These are positional vector representations for each word in a sequence. They are the same size as the word embeddings, so the two vectors can be summed up, to produce a final representation for each word. The positional encoding vectors are not learned, but rather constructed using sine and cosine functions of different frequencies:
+\begin{equation}
+PE[pos_j,2i]=\sin\left(\frac{pos_j}{10000^{\frac{2i}{d_{model}}}}\right)
+\end{equation}
+\begin{equation}
+PE[pos_j,2i+1]=\cos\left(\frac{pos_j}{10000^{\frac{2i}{d_{model}}}}\right) 
+\end{equation}
+where \(PE[pos_j]\) is the positional encoding for the \(j\)-th word in the sequence and \(i \in \{0,1,2,...,d_{model}-1\}\).
+
+\subsubsection{Regularization and Other Techniques} \label{sssec:regularization}
+Layer normalization \cite{Ba:2016} is used over each block of the model. This is a regularization technique which computes statistics over a layer and normalizes the output of the layer based on them. Additionally layer normalization is implemented over the sum of the output of the layer \(Layer\) and the original input \(X\) to that layer:
+\begin{equation}
+\LayerNormalization(X+\Layer(X))
+\end{equation}
+This connection between the input and output of a layer is called residual connection \cite{He:2016}.
+
+Furthermore, dropout \cite{Dropout:2014} is employed as a regularization technique. Dropout is a stochastic function that takes as input an array and replaces each element with 0 with a given a fixed probability. Dropout is applied to the output of each block (before layer normalization) and during the computation of the scaled dot-product attention. 
+
 \subsection{Datasets} \label{ssec:42}
+% also talk about preprocessing here
+
 \subsection{Training Details} \label{ssec:43}
+% give all params of all trainings (including vocab size), and how the datasets were used
 
 \newpage\section{Results} \label{sec:results}
 \subsection{Quantitative Analysis} \label{ssec:51}
