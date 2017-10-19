@@ -594,15 +594,49 @@ Furthermore, dropout \cite{Dropout:2014} is employed as a regularization techniq
 
 \subsection{Datasets} \label{ssec:42}
 % also talk about preprocessing here
+In this section I describe the two datasets that were used for training conversational models. Since I adapted the Transformer model without any modifications from NMT, all my data consists of source-target utterance pairs. First in Section~\ref{sssec:cornell} I give an overview of the Cornell Movie-Dialog Corpus \cite{Danescu:2011} and what preprocessing techniques I used. I also do this for the OpenSubtitles Corpus \cite{Tiedemann:2009} in Section~\ref{sssec:opensubs}.
+
+\subsubsection{Cornell Movie-Dialog Corpus} \label{sssec:cornell}
+This corpus contains 220579 conversational exchanges between 10292 pairs of movie characters extracted from 617 movies. Dialogs are turn segmented, which means that one utterance can contain multiple sentences. There's also metadata included, for example for each utterance the character's name that utters it. I used about 200K utterances as training data and 20K utterances as validation data. It is important to mention that if an utterance is not the first and not the last in a conversational exchange then it will be present in both the source and target data. More specifically if we have a conversation consisting of 3 turns, then I split it into 2 source-target pairs. The first pair consist of the first utterance as source and the second as target and the second pair consists of the second utterance as source and the third as target. This means that the majority of the utterances are present both in the source data and the target data.
+
+For preprocessing I simply deleted all the characters from the corpus that weren't in the set \((a-z . ? ! ')\). Furthermore, I split all words that contained the \textit{'} symbol into two according to this rule: \textit{I'll=I 'll}. Words containing the sequence of characters \textit{n't} were not subjected to the previous rule, rather they were split into two according to this rule: \textit{don't=do n't}.
+
+\subsubsection{OpenSubtitles Corpus} \label{sssec:opensubs}
+The OpenSubtitles Corpus contains movie subtitles made by \cite{opensubtitles}. Unfortunately, this corpus only contains sentence-level segmentation, which makes it noisy, since it might be the case that an utterance contains multiple sentences. Furthermore, it is extracted from subtitles, which contain not only dialogs but also scene descriptions and other non-dialog sentences. In my work I used the 2016 version of the corpus \cite{OpenSubtitles:2016}, but instead of using the whole corpus I used a subset consisting of 62M sentences for training and 28M sentences for validation.
+
+Following \cite{Vinyals:2015} I considered each alternate sentence as an utterance spoken by a different character. Similar to the Cornell-Movie Dialog data, all the sentences appear in both the source and target data. Preprocessing was done the same way as well.
 
 \subsection{Training Details} \label{ssec:43}
-% give all params of all trainings (including vocab size), and how the datasets were used
+% give all params of all trainings (including vocab size), and how the datasets were used, plus talk about tensor2tensor and how you integrated the problem and datasets, how you did the training etc. give batch size and how long you trained for
+In this section I describe the different training setups with which I experimented. In Section~\ref{sssec:t2t} I describe the Transformer implementation that I used and how I integrated it with my own preprocessed data. Then, from Section~\ref{sssec:cornell_training} to Section~\ref{sssec:finetune_training} I describe in detail the types of data and hyperparameter values used for 4 different trainings. For all trainings I constructed the vocabulary based on most frequent words in the training data.
+
+\subsubsection{Tensor2Tensor} \label{sssec:t2t}
+I used the official implementation of the Transformer model in Tensorflow \cite{Tensorflow}. This implementation is part of a bigger framework, the Tensor2Tensor library \cite{t2t}. In short, to run a training using this library a model, problem and hyperparameter set has to be defined. In my work I used the transformer model in the library without any modifications and I defined my own problems and hyperparameters sets. This is basically done by sub-classing already existing classes, implementing own functions and then registering the classes so that the library sees them and they can be used the same way as the already defined classes. The whole code that I wrote to implement my own problems and hyperparameters can be found on Github \cite{seq2seqchatbots}.
+
+To implement my own data handling functions I sub-classed the \textit{Text2TextProblem} class. With the preprocessing steps described in Section~\ref{ssec:42} I created 1-1 source and target file for training and 1-1 source and target file for validation. Each line in the source file contains an utterance and the corresponding line in the target file contains the response to that utterance. From this point I gave as inputs to the library these files and it created specially encoded and sharded files as the final dataset, ready to be used for training.
+
+Similarly for the hyperparameters I sub-classed the \textit{basic}\textit{\_}\textit{params1} class and defined my own hyperparameter values. The specifics for each training setup can be found in the following sections.
+
+\subsubsection{Cornell Movie Training} \label{sssec:cornell_training}
+For this training I used the Cornell Movie-Dialog dataset as described in Section~\ref{sssec:cornell}. I kept the most frequent 32765 words in the training data as vocabulary. Additionally the \textit{\textless pad\textgreater} was used for padding input sequences to same lengths, the \textit{\textless EOS\textgreater} symbol was used to signal the end of an utterance and the \textit{\textless UNK\textgreater} symbol was used to replace all words not present in the vocabulary. In total this gives a vocabulary size of 32768.
+
+For hyperparameters I used the same ones as in \cite{Vaswani:2017} for the base variant of the Transformer model. Because of memory issues I limited the batch size to 4096 tokens/batch. With this batch size I trained the model for a total of 350k steps.
+\subsubsection{Cornell Movie Training with Speakers} \label{sssec:cornell_speakers}
+For this training I augmented the data used in the previous section with speaker-addressee character labels, similar to \cite{Li:2016}. I constructed a dataset, where each line in the source data starts with a special token that denotes the character that utters that line and it ends with a special token denoting the character to which the utterance is addressed. The target data does not contain any character tokens. Since characters are specific to movies it is important to mention that I differentiated between characters with the same name and being in different movies. Because of this I also constructed my training and validation by splitting dialogs. If I would have split the two sets by movies, then all the character names in the validation set would not have been seen during training. I used the 31996 most frequent words for vocabulary. Additionally I added the 8000 most frequent character names (separated by movies) to the vocabulary and I replaced all character names less frequent with the \textit{\textless UNK\_NAME\textgreater} token. Together with the 3 special tokens mentioned in the previous section this gives in total a vocabulary size of 40K.
+
+For hyperparameters I used the same ones as in \cite{Vaswani:2017} for the base variant of the Transformer model. Because of memory issues I limited the batch size to 4096 tokens/batch. With this batch size I trained the model for a total of 238K steps.
+\subsubsection{OpenSubtitles Training} \label{sssec:opensubs_training}
+For this training I used the OpenSubtitles dataset described in Section~\ref{sssec:opensubs}. Together with the 3 special tokens mentioned in Section~\ref{sssec:cornell_training} the total vocabulary size is 100K, using the most frequent word in the training set.
+
+For hyperparameters I used the same ones as in \cite{Vaswani:2017} for the base variant of the Transformer model. Because of memory issues I limited the batch size to 2048 tokens/batch. With this batch size I trained the model for a total of 1M steps.
+\subsubsection{OpenSubtitles Training Finetuned with Cornell Movie Data} \label{sssec:finetune_training}
 
 \newpage\section{Results} \label{sec:results}
 \subsection{Quantitative Analysis} \label{ssec:51}
 \subsection{Qualitative Analysis} \label{ssec:52}
 
 \newpage\section{Future Work} \label{sec:future}
+% write about ideas addressing the currently failed trainings with the transformer model
 \subsection{Ideas Towards Solving The Loss Function Issue} \label{ssec:61}
 \subsection{Temporal Conditioning and Memory} \label{ssec:62}
 \subsection{Additional Ideas} \label{ssec:63}

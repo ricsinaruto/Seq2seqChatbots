@@ -30,7 +30,7 @@ EOS = text_encoder.EOS_ID
 # Data file paths 
 # TODO: make these not hardcoded but either flags or downloadable
 _CORNELL_TRAIN_DATASETS = ["t2t_csaky/cornell_movie_data/movie_lines_full.txt","t2t_csaky/cornell_movie_data/movie_conversations_full.txt"]
-_CORNELL_DEV_DATASETS = ["t2t_csaky/cornell_movie_data/movie_lines_dev.txt","t2t_csaky/cornell_movie_data/movie_conversations_dev.txt"]
+_CORNELL_DEV_DATASETS = ["t2t_csaky/cornell_movie_data/movie_lines_full.txt","t2t_csaky/cornell_movie_data/movie_conversations_full.txt"]
 _CORNELL_TEST_DATASETS = ["t2t_csaky/cornell_movie_data/movie_lines_test.txt","t2t_csaky/cornell_movie_data/movie_conversations_test.txt"]
 
 
@@ -318,7 +318,7 @@ def save_lines(in_file,dialogs,src,trg,vocab_file,voc_size,tag,vocab_list=0):
 		if i%10000==0: print(i)
 		line=line_dict[key].split()
 		for word in line[1:]:
-			if tag=="train":
+			if tag=="not":
 				if word not in comm_words:
 					string=" "+word+" "
 					line_dict[key]=re.sub(string," <UNK> "," "+line_dict[key]+" ")
@@ -326,7 +326,7 @@ def save_lines(in_file,dialogs,src,trg,vocab_file,voc_size,tag,vocab_list=0):
 				if word not in vocab_list[:voc_size-4-name_vc_size-1]:
 					string=" "+word+" "
 					line_dict[key]=re.sub(string," <UNK> "," "+line_dict[key]+" ")
-		if tag=="train":
+		if tag=="not":
 			if line[0] not in comm_names:
 				string=" "+line[0]+" "
 				line_dict[key]=re.sub(string," <UNK_NAME> "," "+line_dict[key]+" ")
@@ -338,8 +338,8 @@ def save_lines(in_file,dialogs,src,trg,vocab_file,voc_size,tag,vocab_list=0):
 	# get the separate dialogs
 	source_file = open(src, "w")
 	target_file = open(trg, "w")
-	dev_source_file = open("devSource.txt", "w")
-	dev_target_file = open("devTarget.txt", "w")
+	#dev_source_file = open("devSource.txt", "w")
+	#dev_target_file = open("devTarget.txt", "w")
 
 
 	dev_count=0
@@ -351,22 +351,23 @@ def save_lines(in_file,dialogs,src,trg,vocab_file,voc_size,tag,vocab_list=0):
 					target_words=line_dict[dialog[i+1]].split()
 					target_name=target_words[0]
 					target_sent=" ".join(target_words[1:])
-					dev_source_file.write(line_dict[utterance]+" "+target_name+'\n')
-					dev_target_file.write(target_sent+'\n')
-					dev_count+=1
-				else:
-					target_words=line_dict[dialog[i+1]].split()
-					target_name=target_words[0]
-					target_sent=" ".join(target_words[1:])
 					source_file.write(line_dict[utterance]+" "+target_name+'\n')
 					target_file.write(target_sent+'\n')
+					dev_count+=1
+				else:
+					if tag=="train":
+						target_words=line_dict[dialog[i+1]].split()
+						target_name=target_words[0]
+						target_sent=" ".join(target_words[1:])
+						source_file.write(line_dict[utterance]+" "+target_name+'\n')
+						target_file.write(target_sent+'\n')
 			i+=1
 
 	source_file.close()
 	target_file.close()
 
 	# print vocabulary to a file
-	if tag=="train":
+	if tag=="not":
 		voc_file=open("data_dir/"+vocab_file,"w")
 		for word,i in wc.most_common(voc_size-4-name_vc_size):
 			voc_file.write(word+'\n')
@@ -448,8 +449,8 @@ class ChatbotCornell32k(Chatbot):
 		s_path=tag+"Source.txt"
 		t_path=tag+"Target.txt"
 
-		if train and os.path.getsize(s_path)!=15355320:
-			preproc_data(tag,datasets,self.vocab_file,self.targeted_vocab_size)
+		#if train and os.path.getsize(s_path)!=15355320:
+		#	preproc_data(tag,datasets,self.vocab_file,self.targeted_vocab_size)
 		# get vocab 
 		# TODO: use data_dir argument
 		vocab_file=open("data_dir/"+self.vocab_file)
@@ -458,7 +459,8 @@ class ChatbotCornell32k(Chatbot):
 			vocab_list.append(word.strip('\n'))
 		vocab_file.close()
 		print("Total vocabulary size of train data: ",len(vocab_list))
-		if not train and os.path.getsize(s_path)!=2630764:
+		#if not train and os.path.getsize(s_path)!=2630764:
+		if not train:
 			preproc_data(tag,datasets,self.vocab_file,self.targeted_vocab_size,vocab_list)
 		# reserve padding and eos
 		symbolizer_vocab = text_encoder.TokenTextEncoder(None,vocab_list=vocab_list,num_reserved_ids=0)
