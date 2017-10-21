@@ -16,6 +16,8 @@
 \setcounter{secnumdepth}{3}
 \newcommand{\tab}[1]{\hspace{.2\textwidth}\rlap{#1}}
 \usepackage[top=2.5cm, bottom=4cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 
 \DeclareMathOperator{\Attention}{Attention}
 \DeclareMathOperator{\softmax}{softmax}
@@ -632,31 +634,217 @@ For hyperparameters I used the same ones as in \cite{Vaswani:2017} for the base 
 \subsubsection{OpenSubtitles Training Finetuned with Cornell Movie Data} \label{sssec:finetune_training}
 
 \newpage\section{Results} \label{sec:results}
+In this section I give a detailed analysis of the trained models. I also compare them with a baseline seq2seq model presented in \cite{Vinyals:2015}, which was trained on OpenSubtitles data. In Section~\ref{ssec:51} I give a quantitative analysis by computing general metrics. Then, in Section~\ref{ssec:52} I give a qualitative analysis by comparing sample output responses.
 \subsection{Quantitative Analysis} \label{ssec:51}
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|l|l|l|l|l|l|}
+		\hline
+		\textbf{Metrics} & \textbf{S2S} & \textbf{Cornell} & \textbf{Cornell S} & \textbf{OpenSubtitles} & \textbf{OpenSubtitles F}\\ \hline
+		\textbf{Perplexity} & 17 & 17 & 15.4 & 11.7 & -
+		\\ \hline
+		\textbf{Bleu} & - & 4.7 & 4.2 & 6.8 & -
+		\\ \hline
+	\end{tabular}
+	\caption{Perplexity and Bleu scores on validation data. S2S stands for the baseline seq2seq model, Cornell stands for the training setup presented in Section~\ref{sssec:cornell_training}, Cornell S stands for Section~\ref{sssec:cornell_speakers}, OpenSubtitles stands for Section~\ref{sssec:opensubs_training} and OpenSubtitles F stands for Section~\ref{sssec:finetune_training}.}	
+	\label{table:scores}
+\end{table}
+
+In Table~\ref{table:scores} the perplexity and Bleu scores of different models can be seen on the respective validation datasets. Since the models trained on Cornell Movie-Dialog data overfitted quite quickly the dataset as can be seen in Figure~\ref{CornellOverfit} and Figure~\ref{CornellSOverfit} I present the perplexity and Bleu scores computed on the validation data before overfitting occurred. This means that for the Cornell model the scores were computed after 20K training steps and for the Cornell S model scores were computed after 16K steps.
+
+\begin{figure}[H] 
+	\centering
+	\includegraphics[width=1.0\textwidth]{pics/cornell_loss.png}
+	\caption{The diagram shows the loss value over the entire training of the Cornell model. The vertical axis represents the loss value and the horizontal axis represents the number of training steps}
+	\label{CornellOverfit}
+\end{figure}
+\begin{figure}[H] 
+	\centering
+	\includegraphics[width=1.0\textwidth]{pics/cornell_speakers_loss.png}
+	\caption{The diagram shows the loss value over the entire training of the Cornell S model. The vertical axis represents the loss value and the horizontal axis represents the number of training steps}
+	\label{CornellSOverfit}
+\end{figure}
+
+
 \subsection{Qualitative Analysis} \label{ssec:52}
+% interestingly the best output responses weren't the ones with best metrics, but rather more overfitted state of the training, because it doesn't produce generic responses
+In this section I present output response samples from the different trainings. For the sake of comparison with the baseline seq2seq model the source utterances are a subset from the ones used in \cite{Vinyals:2015}. I divided the source utterances in several categories like in \cite{Vinyals:2015}. The responses from the different models to the different category source utterances can be seen from Table~\ref{table:basicNCM} to Table~\ref{table:personalityNCM}. Interestingly the best responses from the two Cornell trainings were not those outputted before the models started to overfit. Before overfitting the models usually outputted very generic responses similar to the ones seen in the OpenSubtitles column of the tables. By letting the models to overfit a little on the training data more diverse and interesting responses were generated. This further suggests that the loss function is not in direct correlation with the quality of response, since it gave a lower score to safe and generic answers, like \textit{I don't know}.
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|}
+		\hline
+		\textbf{Source Utterance} & \textbf{S2S} & \textbf{Cornell} & \textbf{Cornell S} & \textbf{OpenSubtitles} & \textbf{OpenSubtitlesF}\\ \hline
+		hello ! & hello ! & hello . & hi . & hello . & hello .
+		\\ \hline
+		how are you ? & i 'm good . & fine . & fine . how are you ? & how are you ? & how are you ?
+		\\ \hline
+		what 's your name ? & i ’m julia . & my name is sir robin of camelot !  & david . & \textless UNK\textgreater . & \textless UNK\textgreater .
+		\\ \hline
+		when were you born ? & july 20th . & what ? & yesterday . & two years ago . & two years ago .
+		\\ \hline
+		what year were you born ? & 1977 . & eight years . . . & my father was the paper . & i don 't know . & i don 't know .
+		\\ \hline
+		where are you from ? & i ’m out in the boonies. & south america . & new york . & where are you ? & where are you ?
+		\\ \hline
+		are you a man or a woman ? & i ’m a woman . & i 'm a teacher .  & i never forget a pussy . . . cat . & yes . & yes .
+		\\ \hline
+		why are we here ? & i ’m not sure . & we ca n't stay here .  & the list . & i don 't know . & i don 't know .
+		\\ \hline
+		okay bye ! & bye . & bye . & bye ! & bye . & bye .
+		\\ \hline
+		see you later . & bye . & where you off to ?  & bye ! & bye . & bye .
+		\\ \hline
+		
+	\end{tabular}
+	\caption{A set of general source utterances and the generated responses by the different models.}	
+	\label{table:basicNCM}
+\end{table}
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|}
+		\hline
+		\textbf{Source Utterance} & \textbf{S2S} & \textbf{Cornell} & \textbf{Cornell S} & \textbf{OpenSubtitles} & \textbf{OpenSubtitlesF}\\ \hline
+		who is skywalker ? & he is a hero . & a snake ! & ben . & i don 't know . & i don 't know .
+		\\ \hline
+		who is bill clinton ? & he 's a billionaire . & name your brother . & i do n't know . & i don 't know . & i don 't know .
+		\\ \hline
+		is sky blue or black ? & blue . & blue eyes . & a car accident . & yes . & yes .
+		\\ \hline
+		does a cat have a tail ? & yes . & does it matter ?  & maybe . & no . & no .
+		\\ \hline
+		does a cat have a wing ? & no & it 's a \textless UNK\textgreater . & not for lack of trying . & yes . & yes .
+		\\ \hline
+		can a cat fly ? & no . & you 're a woman are n't you ? & or a little bit . & no . & no .
+		\\ \hline
+		how many legs does a cat have ? & four , i think . & one .  & four . & i don 't know . & i don 't know .
+		\\ \hline
+		how many legs does a spider have ? & three , i think . & two . & thirty . & i don 't know . & i don 't know .
+		\\ \hline
+		what is the color of the sky ? & blue . & blue !  & green . & i don 't know . & i don 't know .
+		\\ \hline
+		what is the color of water ? & water . & what ? & white . & i don 't know . & i don 't know .
+		\\ \hline
+		what is the color of blood ? & it is the same as a black eye . & it is the rabbit . & beautiful . & i don 't know . & i don 't know .
+		\\ \hline
+		how much is two plus two ? & four . & i do n't know . & well do n't worry about it . & . & .
+		\\ \hline
+		how much is ten minus two ? & seventy - two . & between ten and twelve .  & yeah . & . & .
+		\\ \hline
+		
+	\end{tabular}
+	\caption{General Knowledge Q\&A.}	
+	\label{table:genKnowledgeNCM}
+\end{table}
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|}
+		\hline
+		\textbf{Source Utterance} & \textbf{S2S} & \textbf{Cornell} & \textbf{Cornell S} & \textbf{OpenSubtitles} & \textbf{OpenSubtitlesF}\\ \hline
+		my name is david . what is my name ? & david . & victor . & \textless UNK\textgreater . & what 's your name ? & what 's your name ?
+		\\ \hline
+		my name is john . what is my name ? & john . & i want to know . & what ? & \textless UNK\textgreater . & \textless UNK\textgreater .
+		\\ \hline
+		
+	\end{tabular}
+	\caption{How the different models handle context.}	
+	\label{table:contextNCM}
+\end{table}
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|}
+		\hline
+		\textbf{Source Utterance} & \textbf{S2S} & \textbf{Cornell} & \textbf{Cornell S} & \textbf{OpenSubtitles} & \textbf{OpenSubtitlesF}\\ \hline
+		what is the purpose of life ? & to serve the greater good . & i do n't know . & my father . & i don 't know . & i don 't know .
+		\\ \hline
+		what is the purpose of living ? & to live forever . & i do n't know . & a lot of people . & i don 't know . & i don 't know .
+		\\ \hline
+		what is the purpose of existence ? & to find out what happens when we get to the planet earth . & i do n't know . & i do n't know . could be a lot of lives . & i don 't know . & i don 't know .
+		\\ \hline
+		where are you now ? & i ’m in the middle of nowhere . & here . & here . & where are you ? & where are you ?
+		\\ \hline
+		what is the purpose of dying ? & to have a life . & i do n't know . & we 're not going somewhere . & i don 't know . & i don 't know .
+		\\ \hline
+		what is the purpose of being intelligent ? & to find out what it is . & intelligent beyond our comprehension .  & we 're not sure . & i don 't know . & i don 't know .
+		\\ \hline
+		what is the purpose of emotions ? & i don ’t know . & i do n't know sir .  & you know a little of this a little of that . & i don 't know . & i don 't know .
+		\\ \hline
+		
+	\end{tabular}
+	\caption{Philosophical Q\&A.}	
+	\label{table:philosophicalNCM}
+\end{table}
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|}
+		\hline
+		\textbf{Source Utterance} & \textbf{S2S} & \textbf{Cornell} & \textbf{Cornell S} & \textbf{OpenSubtitles} & \textbf{OpenSubtitlesF}\\ \hline
+		what do you think about bill gates ? & he ’s a good man . & i do n't know . & oh i 'm afraid we ca n't let you do this . he 's already dead . & i don 't know . & i don 't know .
+		\\ \hline
+		what do you think about cleopatra ? & oh , she ’s very regal . & i do n't know . & if you say so . & i don 't know . & i don 't know .
+		\\ \hline
+		what do you think about england during the reign of elizabeth ? & it was a great place . & i do n't know . & what ? & i don 't know . & i don 't know .
+		\\ \hline
+		
+	\end{tabular}
+	\caption{Opinions.}	
+	\label{table:opinionsNCM}
+\end{table}
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|}
+		\hline
+		\textbf{Source Utterance} & \textbf{S2S} & \textbf{Cornell} & \textbf{Cornell S} & \textbf{OpenSubtitles} & \textbf{OpenSubtitlesF}\\ \hline
+		what do you like to talk about ? & nothing . & about things . about your wife .  & about things that are important to me . . . & i don 't know . & i don 't know .
+		\\ \hline
+		what is your job ? & i 'm a lawyer . & my job my rules .  & i need a vacation . & i don 't know . & i don 't know .
+		\\ \hline
+		what do you do ? & i 'm a doctor . & i 'm a comedian .   & i 'm taking a piss . & i don 't know . & i don 't know .
+		\\ \hline
+		
+	\end{tabular}
+	\caption{Job and Personality.}	
+	\label{table:personalityNCM}
+\end{table}
 
 \newpage\section{Future Work} \label{sec:future}
-% write about ideas addressing the currently failed trainings with the transformer model
+% write why the trf model failed and about ideas addressing the currently failed trainings with the transformer model
 
-In addition to the discussed possible ideas to make the transformer model work better for conversational modeling, I also have several ideas towards solving some of the issues presented in Section~\ref{ssec:problems}. In Section~\ref{ssec:61} I talk about remedying the loss function issue. Then, I describe a conversational model that takes into account the passage of time in Section~\ref{ssec:62}. Finally, I present further ideas related to constructing better conversational models in Section~\ref{ssec:63}.
+In addition to the discussed possible ideas to make the transformer model work better for conversational modeling, I also propose several ideas towards solving some of the issues presented in Section~\ref{ssec:problems}. In Section~\ref{ssec:61} I talk about remedying the loss function issue. Then, I describe a conversational model that takes into account the passage of time in Section~\ref{ssec:62}. Finally, I present further ideas related to constructing better conversational models in Section~\ref{ssec:63}.
 \subsection{Ideas Towards Solving The Loss Function Issue} \label{ssec:61}
-Since human-like conversation is basically artificial general intelligence (AGI), it is extremely difficult it up front. We would have to make a complex model and include a lot of knowledge about the world in meaningful ways. This section will instead focus on augmenting encoder-decoder models with techniques that could remedy the loss function issue presented in Section~\ref{sssec:loss_function}. I propose that a multitude of features and priors should be taken into consideration when modeling conversations. Since maximizing the log probability is essentially maximizing the probability of a reply given an utterance, there should be other prior probabilities that the reply can be conditioned on. This would address the issue of having different responses for same source utterance, since we could differentiate between them by using other priors. A number of similar augmentations have been proposed before \cite{Li:2016,Xing_topic:2017,Zhou:2017,Choudhary:2017}. They all try to feed additional information into seq2seq models, like personality, mood and topic categories. While they all show that generated responses from these models are somewhat more diverse than those outputted by a basic seq2seq model, I still believe that the conversational models are somewhat ambiguous and more priors should be used.
+Since human-like conversation is basically artificial general intelligence (AGI), it is extremely difficult to tackle it up front. We would have to make a complex model and include a lot of knowledge about the world in meaningful ways. This section will instead focus on augmenting encoder-decoder models with techniques that could remedy the loss function issue presented in Section~\ref{sssec:loss_function}. I propose that a multitude of features and priors should be taken into consideration when modeling conversations. Since maximizing the log probability is essentially maximizing the probability of a reply given an utterance, there should be other prior probabilities that the reply can be conditioned on. This would address the issue of having different responses for same source utterance, since we could differentiate between them by using other priors. A number of similar augmentations have been proposed before \cite{Li:2016,Xing_topic:2017,Zhou:2017,Choudhary:2017}. They all try to feed additional information into seq2seq models, like personality, mood and topic categories. While they all show that generated responses from these models are somewhat more diverse than those outputted by a basic seq2seq model, I still believe that the conversational models are somewhat ambiguous and more priors should be used.
 
-While at the birth of the seq2seq architecture conversational models were wither trained on utterance-reply pairs or by concatenating previous turns into one source sequence, there have been many efficient techniques proposed that can take into account conversation history, which I talk about in Section~\ref{sssec:context} and Section~\ref{sssec:HRED}. Conversation history is indeed one of the most important priors that should be taken into account, since a response to an utterance is usually grounded on information present in previous turns. However, I consider this problem mostly solved with the aforementioned techniques.
+While at the birth of the seq2seq architecture conversational models were trained on utterance-reply pairs or by concatenating previous turns into one source sequence, there have been many efficient techniques proposed that can take into account conversation history, which I talk about in Section~\ref{sssec:context} and Section~\ref{sssec:HRED}. Conversation history is indeed one of the most important priors that should be taken into account, since a response to an utterance is usually grounded on information presented in previous turns. However, I consider this problem mostly solved with the aforementioned techniques.
 
-I propose several priors on which a conversation should be conditioned. More specifically, the speaker and addressee of each utterance and the mood of the speaker at the time of saying the utterance. I think that taking into account persona of the speaker and addressee is important, since what we say depends on our personality and past experiences and it depends on who we talk too. This is already a good starting point, because it differentiates between different answers to same questions. However, even for a single person the reply to the question \textit{How are you?} might be completely different depending on whether the person is happy, sad, annoyed, etc. By taking into account this mood prior we can further disambiguate the data that the conversational model is trained on. Ideally we would have a dataset where for each source sequence and set of priors only one correct output sequence exists. This would assure that the generated replies are diverse, not just an average of all possible responses. All of these priors and features can be represented by embeddings similar to word embeddings, which can be learned during training. However, as we add more features we also need more data, so that the model can learn what it \textit{means} to be in a mood or talk like a specific person. This is a problem with the Cornell Movie-Dialog dataset, which is annotated with speaker-addressees, but it is too small and the model can't generalize from so few examples. 
+I propose several priors on which a conversational model should be conditioned. More specifically, the speaker and addressee of each utterance and the mood of the speaker at the time of saying the utterance. I think that taking into account the persona of the speaker and addressee is important, since what we say depends on our personality and past experiences and also on who we talk to. This is already a good starting point, because it differentiates between different answers to same questions. However, even for a single person the reply to the question \textit{How are you?} might be completely different depending on whether the person is happy, sad, annoyed, etc. By taking into account this mood prior we can further disambiguate the data that the conversational model is trained on. Ideally we would have a dataset where for each source sequence and set of priors only one correct output sequence exists. This would assure that the generated replies are diverse, not just an average of all possible responses. All of these priors and features can be represented by embeddings similar to word embeddings, which can be learned during training. However, as we add more features we also need more data, so that the model can learn what it \textit{means} to be in a mood or talk like a specific person. This is a problem with the Cornell Movie-Dialog dataset, which is annotated with speaker-addressees, but it is too small and the model can't generalize from so few examples. 
 
 There are still problems with the above mentioned approach. Intuitively the speaker and addressee representations should have a lot of parameters, since they have to capture what makes one different from other people, which depends on all of one's past experiences. This is a lot of information to capture into a vector, for example to represent a single word 100-1000 dimensional vectors are used and since a lot of information (many words) are needed to describe a person, it would make the representation huge. There are two problems with these huge representations. The network would be very difficult to train because of limited computational resources and current datasets don't offer enough examples from which the network can learn such a huge space of parameters.
 
-In order to combat these issues I propose a different approach. The priors previously mentioned are still used, however personality representations should be kept to learnable size. The intuition behind this is that people generally don't differ that much in basic world knowledge and conversational style, since we can all communicate with 7 billion different people. Thus we keep these representations smaller and instead construct a word-knowledge representation which captures general world-knowledge, language-knowledge and conversation-knowledge. An example for world-knowledge would be the color of the sky, language-knowledge is about learning the meaning of words and conversation-knowledge is about learning to answer with yes/no to yes-or-no questions for example. The advantage of this representation is that it could also be trained on non-conversation data with unsupervised methods.
+In order to combat these issues I propose a different approach. The priors previously mentioned are still used, however personality representations should be kept to learnable size. The intuition behind this is that people generally don't differ that much in basic world knowledge and conversational style, since we can all communicate with 7 billion different people. Thus we keep these representations smaller and instead construct a representation which captures general world-knowledge, language-knowledge and conversation-knowledge. An example for world-knowledge would be the color of the sky, language-knowledge is about learning the meaning of words and conversation-knowledge is about learning to answer with yes/no to yes-or-no questions for example. The advantage of this representation is that it could also be trained on non-conversational data with unsupervised methods.
 
+There is one final prior that we need to take into account to truly capture the conditioning of conversations. Take for example the reply \textit{I got hit by a car.} to the question \textit{How are you?}. Obviously, this response has little to do with the persona of the speaker or any general knowledge about the world. Rather the response is simply conditioned on outside factors, which can be temporary. Temporary, because after a week has passed from the accident in the previous scenario, the person will probably not reply with this answer, since \textit{How are you?} is a question about the present. There are some ways in which these outside factors could be dealt with. For example the person's persona representation could be slightly changed for this specific response, or use a new representation that tries to encode outside factors. The most simple approach would be to just cut out conversations grounded on outside factors from the dataset. Unfortunately, all these methods require a dataset that is labeled with labels that show whether the response is based on some external factor, which can probably only be done manually and to my knowledge there doesn't exist such a dataset currently.
 
+The actual specifics of how such representations could be integrated with encoder-decoder models can have many variations of course, however I don't go into details in this work.
 
-The actual ways in which such representations could be integrated with encoder-decoder models can have many variations of course, however I don't go into detail in this work.
 \subsection{Temporal Conditioning and Memory} \label{ssec:62}
+An important part of conversations is timing and the involvement of both speakers. Current chatbot models are trained in such ways that they will only emit one response instantly after they receive the user's utterance. To make chatbots more human-like I propose an additional term to the loss function, which is based on the temporal delay between an utterance and a reply. Essentially the chatbot has to generate a reply and also guess how much time should it wait before emitting the reply. Twitter-style datasets usually have such annotations so the implementation of this feature should be straight-forward. 
+
+The time-delay can be represented as a vector of probabilities over some time frame categories. For example the model could have 10\% confidence that the reply should be delayed by 0 to 10 seconds and 90\% confidence that it should be delayed by 10 to 20 seconds. Such a representation is effective because a simple softmax can be used to get the probabilities of time frame categories and backpropagation can be extended by comparing the predicted time-delay vector with the one-hot ground-truth timing vector. Not only would this addition help achieve a more human-like delay (which could also be tunable) in the chatbot's responses, but it would allow a chatbot model to self-feed a conversation history as well. Regardless of whether the user has inputted an utterance or not, the conversation history can be fed into the model after the chatbot emitted an utterance, and a new utterance can be generated if the model thinks that it is necessary to further the conversations. With the time delay mechanism, this process can go on indefinitely, since the generation of the new utterance will only be considered after the time delay for the current utterance has passed. This feature would make the chatbot even more human-like and engaging, by furthering the conversation without user interaction.
+
+Another concept tied to temporal conditioning is real-time model updates. Basically, at each turn the user's utterance can be backpropagated through the network, based on the conversation history. This would make the model update its weights and prior representations as the conversation goes on, thus remembering the dialog. The technique could either replace or complement the need for taking into account long conversation histories with hierarchical models. It would be especially useful for real-world deployment of chatbots, where users expect from a chatbot to be able to remember what they said 1000 utterance ago, which can't be achieved through only a hierarchical model. Through these real time updates of the parameters the model is capable to encode and learn new information about the user, which acts as memory. For example for a new user the persona representation is not known yet, however by interacting with the user the model can learn information specific to that user and it can encode it into the representation with real-time backpropagation.
+
 \subsection{Additional Ideas} \label{ssec:63}
+In this final section I describe several further ideas that could be used to build better conversational models. Reinforcement learning has achieved impressive results recently for game-like tasks where there is a clear end goal, without any human supervision \cite{alphagozero}. I have also described some approaches to adapt RL to conversational agents in Section~\ref{sssec:RL}. My idea would be to train 2 encoder-decoder based conversational agents and then let them talk to each other. Furthermore, giving one of the chatbots the goal of getting a specific response from the other bot. If in some number of turns the response is uttered then both bots could get a positive reward. In this environment several goals can be designed that would help further train the chatbots without any data or supervision. The downside of this idea is that hand-crafted goals have to be created, which capture important properties of conversations.
+
+New neural architectures should also be tried for the conversational domain, for example models that I have described in Section~\ref{sssec:diffencdec}. Furthermore an interesting technique called neural architecture search \cite{Zoph:2016} has been proposed to build new types of recurrent cells and even entire convolutional architectures. Since there already exist a plethora of different computational blocks used in conversational models, these could simply be input to the neural architecture search model, which could generate an architecture that would be better suited for the task of conversational modeling.
+
+
+
 
 \newpage\section{Conclusion} \label{sec:conclusion}
+
+I have given a brief overview of the history of chatbots and I have described the encoder-decoder model in detail. Afterwards I presented an in-depth survey of scientific literature related to conversational models, published in the last 3 years. I described different techniques and architectures that were proposed to augment the encoder-decoder model and to make conversational agents more natural and human-like. I also presented criticism regarding some of the properties of current chatbot models and I showed how and why several of the techniques currently employed are inappropriate for the task of modeling conversations. Furthermore, I ran experiments by training the Transformer model on two different dialog datasets. I analyzed the performance of the different trainings with the help of automatic evaluation metrics and by comparing output responses for a set of source utterances. Finally, I concluded that further, more detailed experiments are needed in order to determine whether the Transformer model is truly worse than the standard RNN based seq2seq model for the task of conversational modeling. In addition to presenting directions and experiments that should be conducted with the Transformer model, I proposed several ideas related to solving some of the issues brought up in the criticism that I gave earlier in the paper. These ideas are an important direction for future research in the domain of conversational agents, since they are not model related, but rather try to solve fundamental issues with current dialog agents. Continuation of this work will focus on trying to make open-domain conversational models as human-like as possible by implementing the ideas presented.
 
 
 \bibliographystyle{apalike}
