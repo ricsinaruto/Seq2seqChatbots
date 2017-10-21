@@ -1,0 +1,57 @@
+BEN_m77 hello ! JOE_m100
+BEN_m77 how are you ? JOE_m100
+BEN_m77 what 's your name ? JOE_m100
+BEN_m77 when were you born ? JOE_m100
+BEN_m77 what year were you born ? JOE_m100
+BEN_m77 where are you from ? JOE_m100
+BEN_m77 are you a man or a woman ? JOE_m100
+BEN_m77 why are we here ? JOE_m100
+BEN_m77 okay bye ! JOE_m100
+BEN_m77 see you later . JOE_m100
+BEN_m77 my name is david . what is my name ? JOE_m100
+BEN_m77 my name is john . what is my name ? JOE_m100
+BEN_m77 who is skywalker ? JOE_m100
+BEN_m77 who is bill clinton ? JOE_m100
+BEN_m77 is sky blue or black ? JOE_m100
+BEN_m77 does a cat have a tail ? JOE_m100
+BEN_m77 does a cat have a wing ? JOE_m100
+BEN_m77 can a cat fly ? JOE_m100
+BEN_m77 how many legs does a cat have ? JOE_m100
+BEN_m77 how many legs does a spider have ? JOE_m100
+BEN_m77 what is the color of the sky ? JOE_m100
+BEN_m77 what is the color of water ? JOE_m100
+BEN_m77 what is the color of blood ? JOE_m100
+BEN_m77 what is the usual color of a leaf ? JOE_m100
+BEN_m77 what is the color of a yellow car ? JOE_m100
+BEN_m77 how much is two plus two ? JOE_m100
+BEN_m77 how much is ten minus two ? JOE_m100
+BEN_m77 what is the purpose of life ? JOE_m100
+BEN_m77 what is the purpose of living ? JOE_m100
+BEN_m77 what is the purpose of existence ? JOE_m100
+BEN_m77 where are you now ? JOE_m100
+BEN_m77 what is the purpose of dying ? JOE_m100
+BEN_m77 what is the purpose of being intelligent ? JOE_m100
+BEN_m77 what is the purpose of emotions ? JOE_m100
+BEN_m77 what is moral ? JOE_m100
+BEN_m77 what is immoral ? JOE_m100
+BEN_m77 what is morality ? JOE_m100
+BEN_m77 ok . . . so what is the definition of morality ? JOE_m100
+BEN_m77 tell me the definition of morality i am quite upset now ! JOE_m100
+BEN_m77 tell me the definition of morality . JOE_m100
+BEN_m77 look i need help i need to know more about morality . . . JOE_m100
+BEN_m77 seriously what is morality ? JOE_m100
+BEN_m77 why living has anything to do with morality ? JOE_m100
+BEN_m77 okay i need to know how should i behave morally . . . JOE_m100
+BEN_m77 is morality and ethics the same ? JOE_m100
+BEN_m77 what are the things that i do to be immoral ? JOE_m100
+BEN_m77 give me some examples of moral actions . . . JOE_m100
+BEN_m77 alright morality ? JOE_m100
+BEN_m77 what is integrity ? JOE_m100
+BEN_m77 be moral ! JOE_m100
+BEN_m77 i really like our discussion on morality and ethics . . . JOE_m100
+BEN_m77 what do you like to talk about ? JOE_m100
+BEN_m77 what do you think about bill gates ? JOE_m100
+BEN_m77 what do you think about cleopatra ? JOE_m100
+BEN_m77 what do you think about england during the reign of elizabeth ? JOE_m100
+BEN_m77 what is your job ? JOE_m100
+BEN_m77 what do you do ? JOE_m100

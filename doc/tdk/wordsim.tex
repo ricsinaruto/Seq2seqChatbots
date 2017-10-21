@@ -632,6 +632,9 @@ For this training I used the OpenSubtitles dataset described in Section~\ref{sss
 
 For hyperparameters I used the same ones as in \cite{Vaswani:2017} for the base variant of the Transformer model. Because of memory issues I limited the batch size to 2048 tokens/batch. With this batch size I trained the model for a total of 1M steps.
 \subsubsection{OpenSubtitles Training Finetuned with Cornell Movie Data} \label{sssec:finetune_training}
+This training combines the two datasets by first training on the OpenSubtitles dataset and then finetuning the model on the Cornell Movie-Dialog dataset with speaker embeddings. 
+
+I initialized the parameters of the model with the trained model described in Section~\ref{sssec:opensubs_training}. I further trained the model for ???K steps on the same data as in Section~\ref{sssec:cornell_speakers}. For vocabulary I kept the 100K most frequent words from the initial OpenSubtitles training and I added the 3000 most frequent character name tokens (separated by movies) from the Cornell Movie-Dialog dataset, thus the total vocabulary size is 103000. For hyperparameters I used the same ones as in \cite{Vaswani:2017} for the base variant of the Transformer model. Because of memory issues I limited the batch size to 2048 tokens/batch.
 
 \newpage\section{Results} \label{sec:results}
 In this section I give a detailed analysis of the trained models. I also compare them with a baseline seq2seq model presented in \cite{Vinyals:2015}, which was trained on OpenSubtitles data. In Section~\ref{ssec:51} I give a quantitative analysis by computing general metrics. Then, in Section~\ref{ssec:52} I give a qualitative analysis by comparing sample output responses.
@@ -650,12 +653,12 @@ In this section I give a detailed analysis of the trained models. I also compare
 	\label{table:scores}
 \end{table}
 
-In Table~\ref{table:scores} the perplexity and Bleu scores of different models can be seen on the respective validation datasets. Since the models trained on Cornell Movie-Dialog data overfitted quite quickly the dataset as can be seen in Figure~\ref{CornellOverfit} and Figure~\ref{CornellSOverfit} I present the perplexity and Bleu scores computed on the validation data before overfitting occurred. This means that for the Cornell model the scores were computed after 20K training steps and for the Cornell S model scores were computed after 16K steps.
+In Table~\ref{table:scores} the perplexity and Bleu scores of different models can be seen on the respective validation datasets. Since the models trained on Cornell Movie-Dialog data overfitted quite quickly the dataset as can be seen in Figure~\ref{CornellOverfit} and Figure~\ref{CornellSOverfit} I present the perplexity and Bleu scores computed on the validation data before overfitting occurred. This means that for the Cornell model the scores were computed after 20K training steps and for the Cornell S model scores were computed after 16K steps. For the OpenSubtitles training the model didn't seem to overfit, however after a quick drop the loss stagnated for the remainder of the training, which could be because the learning rate was not adequate or the model was too small to be able to learn more. The effects can be seen in Figure~\ref{Finetuned_loss} up to step 1M, since after that the training was switched to the Cornell Movie-Dialog dataset. The scores corresponding to the OpenSubtitles F training are very poor, since the model immediately started to overfit after being switched from OpenSubtitles to Cornell Movie-Dialog data starting from step 1M in Figure~\ref{Finetuned_loss}.
 
 \begin{figure}[H] 
 	\centering
 	\includegraphics[width=1.0\textwidth]{pics/cornell_loss.png}
-	\caption{The diagram shows the loss value over the entire training of the Cornell model. The vertical axis represents the loss value and the horizontal axis represents the number of training steps}
+	\caption{The diagram shows the validation loss value over the entire training of the Cornell model. The vertical axis represents the loss value and the horizontal axis represents the number of training steps}
 	\label{CornellOverfit}
 \end{figure}
 \begin{figure}[H] 
@@ -664,32 +667,41 @@ In Table~\ref{table:scores} the perplexity and Bleu scores of different models c
 	\caption{The diagram shows the loss value over the entire training of the Cornell S model. The vertical axis represents the loss value and the horizontal axis represents the number of training steps}
 	\label{CornellSOverfit}
 \end{figure}
+\begin{figure}[H] 
+	\centering
+	\includegraphics[width=1.0\textwidth]{pics/finetuned_loss.png}
+	\caption{The diagram shows the validation loss value over the entire training of the OpenSubtitles F model. In the first 1M steps the model was trained on OpenSubtitles data, then it was switched to speaker-annotated Cornell Movie-Dialog data. The vertical axis represents the loss value and the horizontal axis represents the number of training steps}
+	\label{Finetuned_loss}
+\end{figure}
+
 
 
 \subsection{Qualitative Analysis} \label{ssec:52}
 % interestingly the best output responses weren't the ones with best metrics, but rather more overfitted state of the training, because it doesn't produce generic responses
-In this section I present output response samples from the different trainings. For the sake of comparison with the baseline seq2seq model the source utterances are a subset from the ones used in \cite{Vinyals:2015}. I divided the source utterances in several categories like in \cite{Vinyals:2015}. The responses from the different models to the different category source utterances can be seen from Table~\ref{table:basicNCM} to Table~\ref{table:personalityNCM}. Interestingly the best responses from the two Cornell trainings were not those outputted before the models started to overfit. Before overfitting the models usually outputted very generic responses similar to the ones seen in the OpenSubtitles column of the tables. By letting the models to overfit a little on the training data more diverse and interesting responses were generated. This further suggests that the loss function is not in direct correlation with the quality of response, since it gave a lower score to safe and generic answers, like \textit{I don't know}.
+In this section I present output response samples from the different trainings. For the sake of comparison with the baseline seq2seq model the source utterances are a subset from the ones used in \cite{Vinyals:2015}. I divided the source utterances in several categories like in \cite{Vinyals:2015}. The responses from the different models to the different category source utterances can be seen from Table~\ref{table:basicNCM} to Table~\ref{table:philosophicalNCM}. Interestingly the best responses from the two Cornell trainings were not those outputted before the models started to overfit. Before overfitting the models usually outputted very generic responses similar to the ones seen in the OpenSubtitles column of the tables. By letting the models overfit a little on the training data more diverse and interesting responses were generated. This further suggests that the loss function is not in direct correlation with the quality of response, since it gave a lower score to safe and generic answers, like \textit{I don't know}. Specifically, the examples presented for the Cornell training are after training 219K steps and for the Cornell S training after 238K steps. 
+
+As can be seen in the tables the OpenSubtitles F model, which was finetuned on Cornell Movie-Dialog data generates better responses than the OpenSubtitles variant. This is again in contrast with the loss and metrics values, since these are much better for the OpenSubtitles model. Generally however the models trained solely on the Cornell Movie-Dialog dataset generate the most diverse and interesting responses. Despite this, none of the trainings achieved the performance of the baseline seq2seq model. Perhaps the most striking result is the OpenSubtitles model, since this provides the most direct comparison with the baseline seq2seq model, because similar and similarly sized datasets were used for training the two models. I present several reasons for these results in Section~\ref{sec:future}, as well as possible solutions and future directions. It is important to note however that the source utterances were originally selected for evaluating the seq2seq model and they don't provide a complete qualitative picture of the performance of the conversational models, since for other source utterances the Transformer model based trainings might generate better results. In order to truly compare the different models a set of random source utterances should be constructed and human evaluators employed to rank the generated responses.
 
 \begin{table}[H]
 	\centering
 	\begin{tabular}{|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|}
 		\hline
 		\textbf{Source Utterance} & \textbf{S2S} & \textbf{Cornell} & \textbf{Cornell S} & \textbf{OpenSubtitles} & \textbf{OpenSubtitlesF}\\ \hline
-		hello ! & hello ! & hello . & hi . & hello . & hello .
+		hello ! & hello ! & hello . & hi . & hello . & hi .
 		\\ \hline
-		how are you ? & i 'm good . & fine . & fine . how are you ? & how are you ? & how are you ?
+		how are you ? & i 'm good . & fine . & fine . how are you ? & how are you ? & fine .
 		\\ \hline
-		what 's your name ? & i ’m julia . & my name is sir robin of camelot !  & david . & \textless UNK\textgreater . & \textless UNK\textgreater .
+		what 's your name ? & i ’m julia . & my name is sir robin of camelot !  & david . & \textless UNK\textgreater . & bob . 
 		\\ \hline
-		when were you born ? & july 20th . & what ? & yesterday . & two years ago . & two years ago .
+		when were you born ? & july 20th . & what ? & yesterday . & two years ago . & just a few minutes ago .
 		\\ \hline
-		what year were you born ? & 1977 . & eight years . . . & my father was the paper . & i don 't know . & i don 't know .
+		what year were you born ? & 1977 . & eight years . . . & my father was the paper . & i don 't know . & \textless UNK\textgreater .
 		\\ \hline
-		where are you from ? & i ’m out in the boonies. & south america . & new york . & where are you ? & where are you ?
+		where are you from ? & i ’m out in the boonies. & south america . & new york . & where are you ? & in here .
 		\\ \hline
 		are you a man or a woman ? & i ’m a woman . & i 'm a teacher .  & i never forget a pussy . . . cat . & yes . & yes .
 		\\ \hline
-		why are we here ? & i ’m not sure . & we ca n't stay here .  & the list . & i don 't know . & i don 't know .
+		why are we here ? & i ’m not sure . & we ca n't stay here .  & the list . & i don 't know . & we 've got to get out of here . 
 		\\ \hline
 		okay bye ! & bye . & bye . & bye ! & bye . & bye .
 		\\ \hline
@@ -700,113 +712,147 @@ In this section I present output response samples from the different trainings. 
 	\caption{A set of general source utterances and the generated responses by the different models.}	
 	\label{table:basicNCM}
 \end{table}
-
 \begin{table}[H]
 	\centering
 	\begin{tabular}{|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|}
 		\hline
 		\textbf{Source Utterance} & \textbf{S2S} & \textbf{Cornell} & \textbf{Cornell S} & \textbf{OpenSubtitles} & \textbf{OpenSubtitlesF}\\ \hline
-		who is skywalker ? & he is a hero . & a snake ! & ben . & i don 't know . & i don 't know .
+		what do you like to talk about ? & nothing . & about things . about your wife .  & about things that are important to me . . . & i don 't know . & i do \textless UNK\textgreater know .
 		\\ \hline
-		who is bill clinton ? & he 's a billionaire . & name your brother . & i do n't know . & i don 't know . & i don 't know .
+		what is your job ? & i 'm a lawyer . & my job my rules .  & i need a vacation . & i don 't know . & i . . . i . . .
 		\\ \hline
-		is sky blue or black ? & blue . & blue eyes . & a car accident . & yes . & yes .
-		\\ \hline
-		does a cat have a tail ? & yes . & does it matter ?  & maybe . & no . & no .
-		\\ \hline
-		does a cat have a wing ? & no & it 's a \textless UNK\textgreater . & not for lack of trying . & yes . & yes .
-		\\ \hline
-		can a cat fly ? & no . & you 're a woman are n't you ? & or a little bit . & no . & no .
-		\\ \hline
-		how many legs does a cat have ? & four , i think . & one .  & four . & i don 't know . & i don 't know .
-		\\ \hline
-		how many legs does a spider have ? & three , i think . & two . & thirty . & i don 't know . & i don 't know .
-		\\ \hline
-		what is the color of the sky ? & blue . & blue !  & green . & i don 't know . & i don 't know .
-		\\ \hline
-		what is the color of water ? & water . & what ? & white . & i don 't know . & i don 't know .
-		\\ \hline
-		what is the color of blood ? & it is the same as a black eye . & it is the rabbit . & beautiful . & i don 't know . & i don 't know .
-		\\ \hline
-		how much is two plus two ? & four . & i do n't know . & well do n't worry about it . & . & .
-		\\ \hline
-		how much is ten minus two ? & seventy - two . & between ten and twelve .  & yeah . & . & .
-		\\ \hline
-		
-	\end{tabular}
-	\caption{General Knowledge Q\&A.}	
-	\label{table:genKnowledgeNCM}
-\end{table}
-\begin{table}[H]
-	\centering
-	\begin{tabular}{|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|}
-		\hline
-		\textbf{Source Utterance} & \textbf{S2S} & \textbf{Cornell} & \textbf{Cornell S} & \textbf{OpenSubtitles} & \textbf{OpenSubtitlesF}\\ \hline
-		my name is david . what is my name ? & david . & victor . & \textless UNK\textgreater . & what 's your name ? & what 's your name ?
-		\\ \hline
-		my name is john . what is my name ? & john . & i want to know . & what ? & \textless UNK\textgreater . & \textless UNK\textgreater .
-		\\ \hline
-		
-	\end{tabular}
-	\caption{How the different models handle context.}	
-	\label{table:contextNCM}
-\end{table}
-\begin{table}[H]
-	\centering
-	\begin{tabular}{|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|}
-		\hline
-		\textbf{Source Utterance} & \textbf{S2S} & \textbf{Cornell} & \textbf{Cornell S} & \textbf{OpenSubtitles} & \textbf{OpenSubtitlesF}\\ \hline
-		what is the purpose of life ? & to serve the greater good . & i do n't know . & my father . & i don 't know . & i don 't know .
-		\\ \hline
-		what is the purpose of living ? & to live forever . & i do n't know . & a lot of people . & i don 't know . & i don 't know .
-		\\ \hline
-		what is the purpose of existence ? & to find out what happens when we get to the planet earth . & i do n't know . & i do n't know . could be a lot of lives . & i don 't know . & i don 't know .
-		\\ \hline
-		where are you now ? & i ’m in the middle of nowhere . & here . & here . & where are you ? & where are you ?
-		\\ \hline
-		what is the purpose of dying ? & to have a life . & i do n't know . & we 're not going somewhere . & i don 't know . & i don 't know .
-		\\ \hline
-		what is the purpose of being intelligent ? & to find out what it is . & intelligent beyond our comprehension .  & we 're not sure . & i don 't know . & i don 't know .
-		\\ \hline
-		what is the purpose of emotions ? & i don ’t know . & i do n't know sir .  & you know a little of this a little of that . & i don 't know . & i don 't know .
-		\\ \hline
-		
-	\end{tabular}
-	\caption{Philosophical Q\&A.}	
-	\label{table:philosophicalNCM}
-\end{table}
-\begin{table}[H]
-	\centering
-	\begin{tabular}{|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|}
-		\hline
-		\textbf{Source Utterance} & \textbf{S2S} & \textbf{Cornell} & \textbf{Cornell S} & \textbf{OpenSubtitles} & \textbf{OpenSubtitlesF}\\ \hline
-		what do you think about bill gates ? & he ’s a good man . & i do n't know . & oh i 'm afraid we ca n't let you do this . he 's already dead . & i don 't know . & i don 't know .
-		\\ \hline
-		what do you think about cleopatra ? & oh , she ’s very regal . & i do n't know . & if you say so . & i don 't know . & i don 't know .
-		\\ \hline
-		what do you think about england during the reign of elizabeth ? & it was a great place . & i do n't know . & what ? & i don 't know . & i don 't know .
-		\\ \hline
-		
-	\end{tabular}
-	\caption{Opinions.}	
-	\label{table:opinionsNCM}
-\end{table}
-\begin{table}[H]
-	\centering
-	\begin{tabular}{|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|}
-		\hline
-		\textbf{Source Utterance} & \textbf{S2S} & \textbf{Cornell} & \textbf{Cornell S} & \textbf{OpenSubtitles} & \textbf{OpenSubtitlesF}\\ \hline
-		what do you like to talk about ? & nothing . & about things . about your wife .  & about things that are important to me . . . & i don 't know . & i don 't know .
-		\\ \hline
-		what is your job ? & i 'm a lawyer . & my job my rules .  & i need a vacation . & i don 't know . & i don 't know .
-		\\ \hline
-		what do you do ? & i 'm a doctor . & i 'm a comedian .   & i 'm taking a piss . & i don 't know . & i don 't know .
+		what do you do ? & i 'm a doctor . & i 'm a comedian .   & i 'm taking a piss . & i don 't know . & i 'm sorry .
 		\\ \hline
 		
 	\end{tabular}
 	\caption{Job and Personality.}	
 	\label{table:personalityNCM}
 \end{table}
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|}
+		\hline
+		\textbf{Source Utterance} & \textbf{S2S} & \textbf{Cornell} & \textbf{Cornell S} & \textbf{OpenSubtitles} & \textbf{OpenSubtitlesF}\\ \hline
+		my name is david . what is my name ? & david . & victor . & \textless UNK\textgreater . & what 's your name ? & bob .
+		\\ \hline
+		my name is john . what is my name ? & john . & i want to know . & what ? & \textless UNK\textgreater . & bob .
+		\\ \hline
+		
+	\end{tabular}
+	\caption{How the different models handle context.}	
+	\label{table:contextNCM}
+\end{table}
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|}
+		\hline
+		\textbf{Source Utterance} & \textbf{S2S} & \textbf{Cornell} & \textbf{Cornell S} & \textbf{OpenSubtitles} & \textbf{OpenSubtitlesF}\\ \hline
+		who is skywalker ? & he is a hero . & a snake ! & ben . & i don 't know . & my brother . 
+		\\ \hline
+		who is bill clinton ? & he 's a billionaire . & name your brother . & i do n't know . & i don 't know . & he 's my brother . 
+		\\ \hline
+		is sky blue or black ? & blue . & blue eyes . & a car accident . & yes . & yes .
+		\\ \hline
+		does a cat have a tail ? & yes . & does it matter ?  & maybe . & no . & yes .
+		\\ \hline
+		does a cat have a wing ? & no & it 's a \textless UNK\textgreater . & not for lack of trying . & yes . & yes .
+		\\ \hline
+		can a cat fly ? & no . & you 're a woman are n't you ? & or a little bit . & no . & sure . 
+		\\ \hline
+		how many legs does a cat have ? & four , i think . & one .  & four . & i don 't know . & four .
+		\\ \hline
+		how many legs does a spider have ? & three , i think . & two . & thirty . & i don 't know . & four . 
+		\\ \hline
+		what is the color of the sky ? & blue . & blue !  & green . & i don 't know . & blue .
+		\\ \hline
+		what is the color of water ? & water . & what ? & white . & i don 't know . & blue .
+		\\ \hline
+		what is the color of blood ? & it is the same as a black eye . & it is the rabbit . & beautiful . & i don 't know . & blue .
+		\\ \hline
+		how much is two plus two ? & four . & i do n't know . & well do n't worry about it . & . & ten . 
+		\\ \hline
+		how much is ten minus two ? & seventy - two . & between ten and twelve .  & yeah . & . & ten . 
+		\\ \hline
+		
+	\end{tabular}
+	\caption{General Knowledge Q\&A.}	
+	\label{table:genKnowledgeNCM}
+\end{table}
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|}
+		\hline
+		\textbf{Source Utterance} & \textbf{S2S} & \textbf{Cornell} & \textbf{Cornell S} & \textbf{OpenSubtitles} & \textbf{OpenSubtitlesF}\\ \hline
+		what is the purpose of life ? & to serve the greater good . & i do n't know . & my father . & i don 't know . & i do \textless UNK\textgreater know .
+		\\ \hline
+		what is the purpose of living ? & to live forever . & i do n't know . & a lot of people . & i don 't know . & i do \textless UNK\textgreater know .
+		\\ \hline
+		what is the purpose of existence ? & to find out what happens when we get to the planet earth . & i do n't know . & i do n't know . could be a lot of lives . & i don 't know . & i do \textless UNK\textgreater know .
+		\\ \hline
+		where are you now ? & i ’m in the middle of nowhere . & here . & here . & where are you ? & in here .
+		\\ \hline
+		what is the purpose of dying ? & to have a life . & i do n't know . & we 're not going somewhere . & i don 't know . & i do \textless UNK\textgreater know .
+		\\ \hline
+		what is the purpose of being intelligent ? & to find out what it is . & intelligent beyond our comprehension .  & we 're not sure . & i don 't know . & i do \textless UNK\textgreater know .
+		\\ \hline
+		what is the purpose of emotions ? & i don ’t know . & i do n't know sir .  & you know a little of this a little of that . & i don 't know . & i do \textless UNK\textgreater know .
+		\\ \hline
+		
+	\end{tabular}
+	\caption{Philosophical Q\&A.}	
+	\label{table:philosophicalNCM}
+\end{table}
+
+In Table~\ref{table:CornellS1} generated output responses to different source utterances can be seen. The text of the source utterances is the same for all columns, however the speaker and addressee names are changed. More specifically the for the \textit{Cornell S} column no names were given. For the columns \textit{Cornell S matching} and \textit{Cornell S matching R} the characters Ben and Mrs. Robinson were used from the movie \textit{The Graduate}. These characters were selected because they have many interactions in the training data, thus the model must have learned something about them. The difference between the two columns is that in the \textit{Cornell S matching} column Mrs. Robinson addresses Ben and in the \textit{Cornell S matching R} column Ben addresses Mrs. Robinson. For the final two columns the character of Ben is kept, however the other speaker embedding used is that of Joe from the movie \textit{Innerspace}. In the \textit{Cornell S different} column Ben addresses Joe and in the \textit{Cornell S different R} column Joe addresses Ben. These two characters were selected, because they have many utterances in the training data, however since they aren't in the same movie, they don't interact with each other.
+
+There is a clear difference between the generated responses, solely in consequence of the speaker and addressees being different. The most striking influence can be seen where the source utterance asks the name of someone. For these questions the model learns to respond with actual corresponding names, however they are sometimes reversed. In the second row, when Mrs. Robinson asks \textit{what's your name?} from Ben, the model responds with Mrs. Robinson and when Ben asks the question from Mrs. Robinson the model responds with Benjamin. In row 8, if we ignore the first sentence, the responses to the question \textit{what is my name?} are the same as for the previous question, but since this question refers to the speaker the replies are actually correct. It is important to note here that the tokens used for speaker and addressees are completely different from any names present in the dataset. Thus the model learned to come up with a sequence of 3 tokens (\textit{mrs . robinson}) as answer, while the actual token used to represent Mrs. Robinson is \textit{MRS.\_ROBINSON\_m77}.
+
+Even when the characters did not interact in the training dataset, meaningful responses are generated. For example, in row 6 and column 5, when Ben says \textit{see you later.} to Joe, the model responds with \textit{benjamin ?}, which makes sense. Interestingly this was the only speaker-addressee combination where the model managed to answer with numbers to the utterances in the last two rows of the table. Moreover in rows 8 and 9 for the question \textit{what is my name?}, when Joe asks Ben, the model responds with \textit{mrs . robinson}, which makes sense since the two characters haven't interacted before, thus if Ben is addressed it responds with the character name that it had the most interactions with.
+
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|L{2.3cm}|}
+		\hline
+		\textbf{Source Utterance} & \textbf{Cornell S} & \textbf{Cornell S matching} & \textbf{Cornell S matching R} & \textbf{Cornell S different} & \textbf{Cornell S different R}\\ \hline
+		how are you ? & fine . how are you ? & very well . thank you . & i 'm in touch . & i ca n't how are you ? & i 'm fine . what 's up ?
+		\\ \hline
+		what 's your name ? & david . & mrs . robinson . & benjamin . & do n't you know ? & why do you do that ?
+		\\ \hline
+		when were you born ? & yesterday . & very interesting . & about three years . & about a year ago . & tuesday .
+		\\ \hline
+		where are you from ? & new york . & i 'm at the airport . & at the airport . & off the street . & with you .
+		\\ \hline
+		why are we here ? & the list . & well i just want you to leave . & i have to see you . & i just wanted to see you . & just to see you .
+		\\ \hline
+		see you later . & bye ! & now wait a minute . & benjamin ? & benjamin ? & okay .
+		\\ \hline
+		my name is david . what is my name ? & \textless UNK\textgreater . & sebastian . is that you ? & benjamin . & umyu name . & mrs . robinson .
+		\\ \hline
+		my name is john . what is my name ? & what ? & mrs . robinson . & benjamin . & my name 's john . & mrs . robinson .
+		\\ \hline
+		who is bill clinton ? & i do n't know . & no one knows . it 's his brother . & you know her . & well it 's not just me . & just some friends .
+		\\ \hline
+		is sky blue or black ? & a car accident . & oh it 's a lovely name . & do you know what it is ? & blue . & blue .
+		\\ \hline
+		does a cat have a tail ? & maybe . & yeah . i suppose so . & yes . & it does n't seem . & nope .
+		\\ \hline
+		how many legs does a cat have ? & four . & ten . & i do n't know . & not too big . & i lived here .
+		\\ \hline
+		what is the color of water ? & white . & oh it 's down . & i do n't really know where it is . & blue . & it 's like a song .
+		\\ \hline
+		how much is two plus two ? & well do n't worry about it . & what is it ? & i do n't know . & eight . & oh i do n't know .
+		\\ \hline
+		how much is ten minus two ? & yeah . & oh that . & not very . & twenty . & just about .
+		\\ \hline
+		
+	\end{tabular}
+	\caption{Cornell S output responses for different name combinations.}	
+	\label{table:CornellS1}
+\end{table}
+
 
 \newpage\section{Future Work} \label{sec:future}
 % write why the trf model failed and about ideas addressing the currently failed trainings with the transformer model
