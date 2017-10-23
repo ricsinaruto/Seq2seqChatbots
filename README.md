@@ -2,7 +2,7 @@
  
 ##### Check the [wiki](https://github.com/ricsinaruto/Seq2seqChatbots/wiki/Chatbot-and-Related-Research-Paper-Notes-with-Images) for this repository, it contains my notes on a multitude of chatbot research papers.
 ##### In the wiki_images I keep all the images used in the wiki for this repository.
-##### In the doc folder the latex files and pictures are found for the paper related to this repo
+##### In the doc folder the latex files and pictures are found for the paper related to this repo.
 
 ### seq2seq_tf_tutorial
 Here I tried out the seq2seq tensorflow [tutorial](https://www.tensorflow.org/tutorials/seq2seq). I couldn't include the trained model or the data into the repo because the size of the files is too large.
