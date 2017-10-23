@@ -160,6 +160,7 @@ doc/tdk/*
 !transformer_chatbot/train_dir/base_lstm_seq2seq_attention/inference_outputs/
 !transformer_chatbot/train_dir/base_trf_cornell_with_speakers/inference_outputs/
 !transformer_chatbot/train_dir/base_trf_cornell_with_sep_speakers/inference_outputs/
+!transformer_chatbot/train_dir/base_trf_opensubs_cornell_finetune/inference_outputs/
 !transformer_chatbot/train_dir/base_trf_opensubs_62M/inference_outputs/
 !doc/tdk/chatbots.bib
 !doc/tdk/wordsim.tex
