@@ -32,6 +32,8 @@ t2t-decoder \
   --output_dir=train_dir/transformer_with_cornell_data
   --decode_interactive
 ```
+##### The train_dir folder contains sample output responses from the various trained models to the utterances found [here](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/transformer_chatbot/NCM_examples/NCM_examples.txt).
+##### The NCM_examples folder contains different types of input utterances, from example speaker annotated ones.
 
 ### Detailed guide to train tensor2tensor models with Opensubtitles data
 Prerequisites:
