@@ -1,4 +1,5 @@
 # Transformer Chatbot Modell
+##### Contains the code for the project presented in my [paper](https://tdk.bme.hu/VIK/DownloadPaper/asdad).
 ##### In order to run this project you have to install tensorflow 1.3 with gpu support and the [tensor2tensor](https://github.com/tensorflow/tensor2tensor) module.
 I created my own registrations for the [tensor2tensor](https://github.com/tensorflow/tensor2tensor) framework in the t2t_csaky folder. I created a new problem using the [Cornell Movie-Dialogs Corpus](https://www.cs.cornell.edu/~cristian/Cornell_Movie-Dialogs_Corpus.html).
 If you require any help with running my code or if you want the files of the trained models, just contact me via e-mail and I will make them available.
