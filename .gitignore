@@ -139,7 +139,7 @@ $RECYCLE.BIN/
 *.lnk
 
 # Large files and folders
-seq2seq_tf_tutorial/checkpoints/
+seq2seq_tf_tutorial/*
 transformer_chatbot/train_dir/bad/*
 transformer_chatbot/train_dir/base_trf_cornell/*
 transformer_chatbot/train_dir/base_trf_opensubs_2M/*
@@ -148,6 +148,9 @@ transformer_chatbot/train_dir/base_lstm_seq2seq_attention/*
 transformer_chatbot/train_dir/base_trf_cornell_with_speakers/*
 transformer_chatbot/train_dir/base_trf_cornell_with_sep_speakers/*
 transformer_chatbot/train_dir/base_trf_opensubs_cornell_finetune/*
+transformer_chatbot/train_dir/base_trf_facebook/*
+transformer_chatbot/train_dir/base_lstm_seq2seq_opensubs/*
+transformer_chatbot/train_dir/40_drop_trf_facebook/*
 transformer_wmtende/*
 transformer_chatbot/t2t_csaky/opensubs_small_data/
 transformer_chatbot/t2t_csaky/cornell_movie_data/

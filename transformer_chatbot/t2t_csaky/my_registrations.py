@@ -15,6 +15,7 @@ from tensor2tensor.utils import registry
 from tensor2tensor.layers import common_hparams
 from tensor2tensor.models import transformer
 from tensor2tensor.models import lstm
+from tensor2tensor.utils import t2t_model
 
 import tensorflow as tf
 import re
@@ -33,22 +34,76 @@ _CORNELL_TRAIN_DATASETS = ["t2t_csaky/data/movie_lines.txt","t2t_csaky/data/movi
 _CORNELL_DEV_DATASETS = ["t2t_csaky/data/movie_lines_dev.txt","t2t_csaky/data/movie_conversations_dev.txt"]
 _CORNELL_TEST_DATASETS = ["t2t_csaky/data/movie_lines_test.txt","t2t_csaky/data/movie_conversations_test.txt"]
 
+def chatbot_lstm_hparams():
+	hparams=chatbot_lstm_batch_512()
+	hparams.hidden_size=1800
+	return hparams
+
+@registry.register_model
+class chatbot_lstm_seq2seq(t2t_model.T2TModel):
+	
+	def model_fn_body(self,features):
+		if self._hparams.initializer == "orthogonal":
+			raise ValueError("LSTM models fail with orthogonal initializer.")
+		train=self._hparams.mode==tf.estimator.ModeKeys.TRAIN
+		return lstm.lstm_seq2seq_internal(
+			features.get("inputs"),features["targets"],chatbot_lstm_hparams(),train)
+
+
 
 """ my own hparams for training chatbots with lstm_seq2seq_attention """
 @registry.register_hparams
 def chatbot_lstm_attn():
 	hparams = lstm.lstm_attention()
+	hparams.max_length = 256
+	hparams.clip_grad_norm = 0.  # i.e. no gradient clipping
+	hparams.optimizer_adam_epsilon = 1e-9
+	hparams.learning_rate_decay_scheme = "noam"
+	hparams.learning_rate = 0.1
+	hparams.learning_rate_warmup_steps = 4000
+	hparams.initializer_gain = 1.0
+	hparams.initializer = "uniform_unit_scaling"
+	hparams.weight_decay = 0.0
+	hparams.optimizer_adam_beta1 = 0.9
+	hparams.optimizer_adam_beta2 = 0.98
+	hparams.num_sampled_classes = 0
+	hparams.label_smoothing = 0.1
+	hparams.learning_rate_warmup_steps = 8000
+	hparams.learning_rate = 0.2
+	hparams.layer_preprocess_sequence = "n"
+	hparams.layer_postprocess_sequence = "da"
+	hparams.layer_prepostprocess_dropout = 0.1
+
 	hparams.hidden_size=1024
 	hparams.num_hidden_layers=2
 	hparams.attn_vec_size=128
 	hparams.batch_size=4096
-
 	return hparams
 
 @registry.register_hparams
 def chatbot_lstm_batch_8k():
 	hparams = lstm.lstm_seq2seq()
-	hparams.hidden_size=4096
+	hparams.max_length = 256
+	hparams.clip_grad_norm = 0.  # i.e. no gradient clipping
+	hparams.optimizer_adam_epsilon = 1e-9
+	hparams.learning_rate_decay_scheme = "noam"
+	hparams.learning_rate = 0.1
+	hparams.learning_rate_warmup_steps = 4000
+	hparams.initializer_gain = 1.0
+	hparams.initializer = "uniform_unit_scaling"
+	hparams.weight_decay = 0.0
+	hparams.optimizer_adam_beta1 = 0.9
+	hparams.optimizer_adam_beta2 = 0.98
+	hparams.num_sampled_classes = 0
+	hparams.label_smoothing = 0.1
+	hparams.learning_rate_warmup_steps = 8000
+	hparams.learning_rate = 0.2
+	hparams.layer_preprocess_sequence = "n"
+	hparams.layer_postprocess_sequence = "da"
+	hparams.layer_prepostprocess_dropout = 0.1
+
+	hparams.symbol_modality_num_shards=50
+	hparams.hidden_size=256
 	hparams.num_hidden_layers=2
 	hparams.batch_size=8192
 	return hparams
@@ -92,98 +147,134 @@ def chatbot_lstm_batch_128():
 """ my own hparams for the chatbot task """
 @registry.register_hparams
 def chatbot_cornell_new():
-  """Set of hyperparameters."""
-  hparams = common_hparams.basic_params1()	# make a copy of the basic hyperparameters
+	"""Set of hyperparameters."""
+	hparams = common_hparams.basic_params1()	# make a copy of the basic hyperparameters
 
-  hparams.batch_size = 2048				# in tokens per batch per gpu
-  hparams.batching_mantissa_bits = 2 	# controls the number of length buckets
-  hparams.max_length = 256				# setting max length in a minibatch
-  hparams.min_length_bucket=6			# smallest length bucket
-  hparams.length_bucket_step=1.2 		# get bucket lengths by multiplying with this number
+	hparams.batch_size = 2048				# in tokens per batch per gpu
+	hparams.batching_mantissa_bits = 2 	# controls the number of length buckets
+	hparams.max_length = 256				# setting max length in a minibatch
+	hparams.min_length_bucket=6			# smallest length bucket
+	hparams.length_bucket_step=1.2 		# get bucket lengths by multiplying with this number
 
-  """ Model params """
-  hparams.num_hidden_layers=6			# number of hidden layers
-  hparams.hidden_size=512				# hidden dimension size
-  hparams.kernel_height=3
-  hparams.kernel_width=1
-  hparams.layer_preprocess_sequence = "n"	# use normalization before a layer
-  hparams.layer_postprocess_sequence = "da"	# use dropout and residual connection after layer
-  hparams.layer_prepostprocess_dropout=0.1 	# dropout rate for layer pre and postprocessing
-  # moe not used in base transformer model
-  hparams.moe_hidden_sizes="2048"
-  hparams.moe_num_experts=64
-  hparams.moe_k=2
-  hparams.moe_loss_coef=1e-2
+	""" Model params """
+	hparams.num_hidden_layers=6			# number of hidden layers
+	hparams.hidden_size=512				# hidden dimension size
+	hparams.kernel_height=3
+	hparams.kernel_width=1
+	hparams.layer_preprocess_sequence = "n"	# use normalization before a layer
+	hparams.layer_postprocess_sequence = "da"	# use dropout and residual connection after layer
+	hparams.layer_prepostprocess_dropout=0.1 	# dropout rate for layer pre and postprocessing
+	# moe not used in base transformer model
+	hparams.moe_hidden_sizes="2048"
+	hparams.moe_num_experts=64
+	hparams.moe_k=2
+	hparams.moe_loss_coef=1e-2
 
-  """ Regularization """
-  hparams.norm_type = "layer"			# layer normalization
-  hparams.dropout=0.0					# no dropout
-  hparams.clip_grad_norm=0.0			# no gradient clipping
-  hparams.grad_noise_scale=0.0
+	""" Regularization """
+	hparams.norm_type = "layer"			# layer normalization
+	hparams.dropout=0.0					# no dropout
+	hparams.clip_grad_norm=0.0			# no gradient clipping
+	hparams.grad_noise_scale=0.0
 
-  """ Training """ 
-  hparams.initializer = "uniform_unit_scaling"
-  hparams.initializer_gain = 1.0
-  hparams.label_smoothing = 0.1
-  hparams.optimize="Adam"
-  hparams.optimizer_adam_epsilon = 1e-9
-  hparams.optimizer_adam_beta1=0.9
-  hparams.optimizer_adam_beta2=0.98
-  hparams.optimizer_momentum_momentum=0.9
-  hparams.weight_decay = 0.0
-  hparams.weight_noise=0.0
-  hparams.learning_rate_decay_scheme = "noam"
-  hparams.learning_rate_warmup_steps = 16000
-  hparams.learning_rate_cosine_cycle_steps=250000
-  hparams.learning_rate = 0.4
+	""" Training """ 
+	hparams.initializer = "uniform_unit_scaling"
+	hparams.initializer_gain = 1.0
+	hparams.label_smoothing = 0.1
+	hparams.optimize="Adam"
+	hparams.optimizer_adam_epsilon = 1e-9
+	hparams.optimizer_adam_beta1=0.9
+	hparams.optimizer_adam_beta2=0.98
+	hparams.optimizer_momentum_momentum=0.9
+	hparams.weight_decay = 0.0
+	hparams.weight_noise=0.0
+	hparams.learning_rate_decay_scheme = "noam"
+	hparams.learning_rate_warmup_steps = 16000
+	hparams.learning_rate_cosine_cycle_steps=250000
+	hparams.learning_rate = 0.4
 
-  """ Decoding """
-  hparams.sampling_method="argmax"
-  hparams.problem_choice="adaptive"
-  hparams.multiply_embedding_mode="sqrt_depth"
-  hparams.num_sampled_classes = 0
+	""" Decoding """
+	hparams.sampling_method="argmax"
+	hparams.problem_choice="adaptive"
+	hparams.multiply_embedding_mode="sqrt_depth"
+	hparams.num_sampled_classes = 0
 
-  """ Input-output """
-  hparams.symbol_modality_num_shards=16
-  hparams.eval_drop_long_sequences=int(False)				# drop long sequences at evaluation time
-  hparams.shared_embedding_and_softmax_weights = int(True)	# share the output embeddings and softmax variables
-  hparams.input_modalities="default"
-  hparams.target_modality="default"
-  hparams.max_input_seq_length=0
-  hparams.max_target_seq_length=0
-  hparams.prepend_mode="none"
+	""" Input-output """
+	hparams.symbol_modality_num_shards=16
+	hparams.eval_drop_long_sequences=int(False)				# drop long sequences at evaluation time
+	hparams.shared_embedding_and_softmax_weights = int(True)	# share the output embeddings and softmax variables
+	hparams.input_modalities="default"
+	hparams.target_modality="default"
+	hparams.max_input_seq_length=0
+	hparams.max_target_seq_length=0
+	hparams.prepend_mode="none"
 
 
-  """ Add new hparams """
-  hparams.add_hparam("filter_size", 2048)  
-  # layer-related flags
-  hparams.add_hparam("num_encoder_layers", hparams.num_hidden_layers)
-  hparams.add_hparam("num_decoder_layers", hparams.num_hidden_layers)
-  # attention-related flags
-  hparams.add_hparam("num_heads", 8)
-  hparams.add_hparam("attention_key_channels", 0)
-  hparams.add_hparam("attention_value_channels", 0)
-  hparams.add_hparam("ffn_layer", "conv_hidden_relu")
-  hparams.add_hparam("parameter_attention_key_channels", 0)
-  hparams.add_hparam("parameter_attention_value_channels", 0)
-  # All hyperparameters ending in "dropout" are automatically set to 0.0
-  # when not in training mode.
-  hparams.add_hparam("attention_dropout", 0.0)
-  hparams.add_hparam("relu_dropout", 0.0)
-  hparams.add_hparam("pos", "timing")  # timing, none
-  hparams.add_hparam("nbr_decoder_problems", 1)
-  hparams.add_hparam("proximity_bias", int(False))
-  hparams.add_hparam("use_pad_remover",int(True))
+	""" Add new hparams """
+	hparams.add_hparam("filter_size", 2048)  
+	# layer-related flags
+	hparams.add_hparam("num_encoder_layers", hparams.num_hidden_layers)
+	hparams.add_hparam("num_decoder_layers", hparams.num_hidden_layers)
+	# attention-related flags
+	hparams.add_hparam("num_heads", 8)
+	hparams.add_hparam("attention_key_channels", 0)
+	hparams.add_hparam("attention_value_channels", 0)
+	hparams.add_hparam("ffn_layer", "conv_hidden_relu")
+	hparams.add_hparam("parameter_attention_key_channels", 0)
+	hparams.add_hparam("parameter_attention_value_channels", 0)
+	# All hyperparameters ending in "dropout" are automatically set to 0.0
+	# when not in training mode.
+	hparams.add_hparam("attention_dropout", 0.0)
+	hparams.add_hparam("relu_dropout", 0.0)
+	hparams.add_hparam("pos", "timing")  # timing, none
+	hparams.add_hparam("nbr_decoder_problems", 1)
+	hparams.add_hparam("proximity_bias", int(False))
+	hparams.add_hparam("use_pad_remover",int(True))
 
-  return hparams
+	return hparams
 
 @registry.register_hparams
 def chatbot_cornell_base():
-  """Exactly replicates the base transformer model described in the paper."""
-  hparams = transformer.transformer_base()
-  hparams.batch_size = 4096
-  hparams.learning_rate_warmup_steps=16000
-  return hparams
+	"""Exactly replicates the base transformer model described in the paper."""
+	hparams = transformer.transformer_base()
+	hparams.batch_size = 4096
+	hparams.learning_rate_warmup_steps=16000
+	return hparams
+
+@registry.register_hparams
+def base_trf_higher_drop():
+	hparams = transformer.transformer_base()
+	hparams.batch_size = 2048
+	hparams.layer_prepostprocess_dropout=0.2
+	hparams.attention_dropout=0.1
+	hparams.relu_dropout=0.1
+	return hparams
+
+@registry.register_hparams
+def base_trf_40_drop():
+	hparams = transformer.transformer_base()
+	hparams.batch_size = 2048
+	hparams.layer_prepostprocess_dropout=0.4
+	hparams.attention_dropout=0.2
+	hparams.relu_dropout=0.2
+	return hparams
+
+@registry.register_hparams
+def base_trf_50_drop():
+	hparams = transformer.transformer_base()
+	hparams.batch_size = 2048
+	hparams.layer_prepostprocess_dropout=0.5
+	hparams.attention_dropout=0.3
+	hparams.relu_dropout=0.3
+	return hparams
+
+@registry.register_hparams
+def base_trf_70_drop():
+	hparams = transformer.transformer_base()
+	hparams.batch_size = 2048
+	hparams.layer_prepostprocess_dropout=0.7
+	hparams.attention_dropout=0.5
+	hparams.relu_dropout=0.5
+	return hparams
 
 @registry.register_hparams
 def chatbot_transformer_batch_32k():
