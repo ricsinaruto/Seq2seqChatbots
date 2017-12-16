@@ -241,7 +241,7 @@ def chatbot_cornell_base():
 	return hparams
 
 @registry.register_hparams
-def base_trf_higher_drop():
+def base_trf_20_drop():
 	hparams = transformer.transformer_base()
 	hparams.batch_size = 2048
 	hparams.layer_prepostprocess_dropout=0.2

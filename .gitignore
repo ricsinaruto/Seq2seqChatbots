@@ -151,6 +151,8 @@ transformer_chatbot/train_dir/base_trf_opensubs_cornell_finetune/*
 transformer_chatbot/train_dir/base_trf_facebook/*
 transformer_chatbot/train_dir/base_lstm_seq2seq_opensubs/*
 transformer_chatbot/train_dir/40_drop_trf_facebook/*
+transformer_chatbot/train_dir/70_drop_trf_facebook/*
+transformer_chatbot/train_dir/20_drop_trf_cornell/*
 transformer_wmtende/*
 transformer_chatbot/t2t_csaky/opensubs_small_data/
 transformer_chatbot/t2t_csaky/cornell_movie_data/
