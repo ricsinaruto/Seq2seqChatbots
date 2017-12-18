@@ -139,6 +139,7 @@ $RECYCLE.BIN/
 *.lnk
 
 # Large files and folders
+seq2seq_tf_tutorial/*
 transformer_chatbot/train_dir/bad/*
 transformer_chatbot/train_dir/base_trf_cornell/*
 transformer_chatbot/train_dir/base_trf_opensubs_2M/*
