@@ -233,6 +233,22 @@ def chatbot_cornell_new():
 	return hparams
 
 @registry.register_hparams
+def transformer_dorka_small():
+	"""Exactly replicates the base transformer model described in the paper."""
+	hparams = transformer.transformer_base()
+	hparams.batch_size = 4096
+	hparams.hidden_size=128
+	hparams.num_hidden_layers=4
+	hparams.filter_size=512
+	hparams.num_heads=4
+	hparams.learning_rate=0.005
+	hparams.layer_prepostprocess_dropout=0.2
+	hparams.attention_dropout=0.2
+	hparams.relu_dropout=0.2
+	
+	return hparams
+
+@registry.register_hparams
 def chatbot_cornell_base():
 	"""Exactly replicates the base transformer model described in the paper."""
 	hparams = transformer.transformer_base()
@@ -448,12 +464,9 @@ def token_generator(source_path, target_path, token_vocab, eos=None):
 		with tf.gfile.GFile(target_path, mode="r") as target_file:
 			source, target = source_file.readline(), target_file.readline()
 			while source and target:
-				#print(source)
-				#print(target)
 				try:
 					source_ints = token_vocab.encode(source.strip()) + eos_list
 					target_ints = token_vocab.encode(target.strip()) + eos_list
-					#print(source_ints)
 				except KeyError:
 					print(source)
 					print(target)
@@ -476,13 +489,14 @@ def preproc_data(tag,dataset,vocab_file,voc_size,vocab_list=0):
 	convos=open(dataset[0])
 	save_lines(convos,dialog_list,src,trg,vocab_file,voc_size,tag,vocab_list)
 
+
 # my own problem using cornell movie subtitle database
 @registry.register_problem
 class ChatbotCornell32k(Chatbot):
 	@property
 	def targeted_vocab_size(self):
 		return 2**15 # 32768
-
+		
 	@property
 	def input_space_id(self):
 		return problem.SpaceID.EN_TOK
@@ -501,8 +515,8 @@ class ChatbotCornell32k(Chatbot):
 		opensubs_val_size=882973051
 		cornell_names_train_size=14365422
 		cornell_names_val_size=1636214
-		if train and os.path.getsize(s_path)!=opensubs_train_size:
-			preproc_data(tag,datasets,self.vocab_file,self.targeted_vocab_size)
+		#if train and os.path.getsize(s_path)!=opensubs_train_size:
+		#preproc_data(tag,datasets,self.vocab_file,self.targeted_vocab_size)
 		# get vocab 
 		# TODO: use data_dir argument
 		vocab_file=open("data_dir/"+self.vocab_file)
@@ -511,12 +525,26 @@ class ChatbotCornell32k(Chatbot):
 			vocab_list.append(word.strip('\n'))
 		vocab_file.close()
 		print("Total vocabulary size of train data: ",len(vocab_list))
-		if not train and os.path.getsize(s_path)!=opensubs_val_size:
-			preproc_data(tag,datasets,self.vocab_file,self.targeted_vocab_size,vocab_list)
+		#if not train and os.path.getsize(s_path)!=opensubs_val_size:
+		#preproc_data(tag,datasets,self.vocab_file,self.targeted_vocab_size,vocab_list)
 		# reserve padding and eos
 		symbolizer_vocab = text_encoder.TokenTextEncoder(None,vocab_list=vocab_list,num_reserved_ids=0)
 		#print(symbolizer_vocab._token_to_id)
 		return token_generator(s_path,t_path,symbolizer_vocab, EOS)
+
+	# overwrite the feature encoders, so that I can give my own encoding process
+	def feature_encoders(self,data_dir):
+		if self.is_character_level:
+			encoder=text_encoder.ByteTextEncoder()
+		elif self.use_subword_tokenizer:
+			vocab_filename=os.path.join(data_dir,self.vocab_file)
+			encoder=text_encoder.SubwordTextEncoder(vocab_filename)
+		else:
+			vocab_filename=os.path.join(data_dir,self.vocab_file)
+			encoder=text_encoder.TokenTextEncoder(vocab_filename,replace_oov="<unk>")
+		if self.has_inputs:
+			return {"inputs":encoder,"targets":encoder}
+		return {"targets":encoder}
 
 @registry.register_problem
 class ChatbotOpensubs100k(ChatbotCornell32k):
