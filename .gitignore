@@ -154,10 +154,14 @@ transformer_chatbot/train_dir/40_drop_trf_facebook/*
 transformer_chatbot/train_dir/70_drop_trf_facebook/*
 transformer_chatbot/train_dir/20_drop_trf_cornell/*
 transformer_chatbot/train_dir/trf_facebook_masok/*
-transformer_wmtende/*
+transformer_chatbot/train_dir/trf_facebook_ricsibot/*
+transformer_chatbot/train_dir/trf_facebook_ricsibot_character/*
+transformer_chatbot/train_dir/trf_bigger_facebook_ricsibot_character/*
 transformer_chatbot/t2t_csaky/opensubs_small_data/
 transformer_chatbot/t2t_csaky/cornell_movie_data/
 transformer_chatbot/data_dir/*
+transformer_chatbot/word_embeddings/
+transformer_wmtende/*
 doc/tdk/*
 
 # Don't ignore these
