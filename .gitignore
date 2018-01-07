@@ -153,6 +153,7 @@ transformer_chatbot/train_dir/base_lstm_seq2seq_opensubs/*
 transformer_chatbot/train_dir/40_drop_trf_facebook/*
 transformer_chatbot/train_dir/70_drop_trf_facebook/*
 transformer_chatbot/train_dir/20_drop_trf_cornell/*
+transformer_chatbot/train_dir/40_drop_trf_cornell/*
 transformer_chatbot/train_dir/trf_facebook_masok/*
 transformer_chatbot/train_dir/trf_facebook_ricsibot/*
 transformer_chatbot/train_dir/trf_facebook_ricsibot_character/*
