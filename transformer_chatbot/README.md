@@ -50,7 +50,7 @@ Steps:
 * pip install tensor2tensor
 * git clone https://github.com/ricsinaruto/Seq2seqChatbots
 * cd Seq2seqChatbots/transformer_chatbot/
-* In this directory download and unzip data from [here](https://mega.nz/#!vJ0iRRYT!GzsFbihzdqw-H-2KDgIxL3_H7UhKmLaJlORBCIZlGDI)
+* In this directory download and unzip data from [here](https://mega.nz/#!DFlGyIqY!XbXDnlD1EL9TQsWyU6Nrc07p6hj7WdqkU_IXJR9_P6M)
 
 #### Run this command to train a simple lstm based seq2seq model
 ```
