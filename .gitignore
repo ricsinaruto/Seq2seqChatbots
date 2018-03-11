@@ -163,7 +163,7 @@ transformer_chatbot/t2t_csaky/cornell_movie_data/
 transformer_chatbot/data_dir/*
 transformer_chatbot/word_embeddings/
 transformer_wmtende/*
-doc/tdk/*
+docs/tdk/*
 
 # Don't ignore these
 !transformer_chatbot/train_dir/base_trf_cornell/inference_outputs/
@@ -173,6 +173,6 @@ doc/tdk/*
 !transformer_chatbot/train_dir/base_trf_cornell_with_sep_speakers/inference_outputs/
 !transformer_chatbot/train_dir/base_trf_opensubs_cornell_finetune/inference_outputs/
 !transformer_chatbot/train_dir/base_trf_opensubs_62M/inference_outputs/
-!doc/tdk/chatbots.bib
-!doc/tdk/wordsim.tex
-!doc/tdk/pics/
+!docs/tdk/chatbots.bib
+!docs/tdk/wordsim.tex
+!docs/tdk/pics/
