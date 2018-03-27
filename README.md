@@ -68,5 +68,4 @@ t2t-decoder \
 S2S is a baseline seq2seq model from [this](https://arxiv.org/pdf/1506.05869.pdf) paper, Cornell is the Transformer model trained on Cornell data, Cornell S is similar, but trained with speaker-addressee annotations. OpenSubtitles is the Transformer trained with OpenSubtitles data, and OpenSubtitles F, is the previous training finetuned (further trained) on Cornell speaker annotated data.
 <a><img src="https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/docs/tdk/pics/general_questions.png" align="top" height="550" ></a>
 
-
-###### If you require any help with running my code or if you want the files of the trained models, just contact me via e-mail and I will make them available.
+##### If you require any help with running my code or if you want the files of the trained models, just contact me via e-mail and I will make them available. (ricsinaruto@hotmail.com)
