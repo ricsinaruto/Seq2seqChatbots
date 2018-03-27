@@ -1,0 +1,4 @@
+tensorflow-gpu
+tensor2tensor
+requests
+clint
