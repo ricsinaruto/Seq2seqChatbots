@@ -59,7 +59,7 @@ t2t-decoder \
   --problems=$Name-of-problem \
   --model=transformer \
   --hparams_set=$Name-of-hparams \
-  --output_dir=$Path-to-train-dir
+  --output_dir=$Path-to-train-dir \
   --decode_interactive
 ```
 
