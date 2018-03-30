@@ -10,6 +10,9 @@ from tensor2tensor.utils import registry
 # tensorflow imports
 import tensorflow as tf
 
+# my imports
+from t2t_csaky.hparams import seq2seq_hparams
+
 # Flags
 FLAGS = tf.flags.FLAGS
 
@@ -24,4 +27,4 @@ class OwnHparamsSeq2seq(t2t_model.T2TModel):
       raise ValueError("LSTM models fail with orthogonal initializer.")
     train=self._hparams.mode==tf.estimator.ModeKeys.TRAIN
     return lstm.lstm_seq2seq_internal(
-      features.get("inputs"),features["targets"],chatbot_lstm_hparams(),train)
+      features.get("inputs"),features["targets"],seq2seq_hparams.chatbot_lstm_hparams(),train)

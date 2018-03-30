@@ -99,8 +99,8 @@ def transformer_dorka_small():
   hparams.relu_dropout=0.2
 
   # add a roulette wheel param
-  hparams.add_hparam("roulette","Normal")
-  hparams.add_hparam("roulette_beam_size",100)
+  hparams.add_hparam("roulette", "Normal")
+  hparams.add_hparam("roulette_beam_size", 100)
   
   return hparams
 
