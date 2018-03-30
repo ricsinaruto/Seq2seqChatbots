@@ -106,7 +106,7 @@ class CornellChatbotBasic(opensubtitles_chatbot.OpensubtitlesChatbot):
     dataset_split_counter=0
     # save the actual dialogs
     for dialog in dialog_list:
-      if counter % 1000==0:
+      if counter % 10000==0:
         print("t2t_csaky_log: Saved "+str(counter)+"/"+str(len(dialog_list))+" dialogs.")
 
       dataset_split_counter+=1
@@ -286,7 +286,7 @@ class CornellChatbotSeparateNames(CornellChatbotBasic):
           # save to the files according to dataset split
           if dataset_split_counter<=self.dataset_split["train"]:
             # build vocabulary
-            words=source_line.split()
+            words=source_line.split()[1:-1]
             for word in words:
               if word in vocabulary:
                 vocabulary[word]+=1
@@ -333,7 +333,7 @@ class CornellChatbotSeparateNames(CornellChatbotBasic):
 
       if line[0] not in name_list:
         string=" "+line[0]+" "
-        line_dict[dialog_id]=re.sub(string, " <UNK_NAME> ", " "+line_dict[dialog_id]+" ")
+        line_dict[dialog_id]=re.sub(string, " <unk_name> ", " "+line_dict[dialog_id]+" ")
 
     return line_dict
 
@@ -353,11 +353,11 @@ class CornellChatbotSeparateNames(CornellChatbotBasic):
     # basic words
     for word, _ in vocab.most_common(self.targeted_vocab_size-3):
       voc_file.write(word+'\n')
-    voc_file.write("<UNK>"+'\n')
+    voc_file.write("<unk>"+'\n')
 
     # name vocab
     for name, _ in name_vocab.most_common(self.targeted_name_vocab_size-1):
       voc_file.write(name+'\n')
-    voc_file.write("<UNK_NAME>")
+    voc_file.write("<unk_name>")
 
     voc_file.close()

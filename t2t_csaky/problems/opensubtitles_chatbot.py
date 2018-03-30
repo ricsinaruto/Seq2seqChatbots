@@ -53,7 +53,7 @@ class OpensubtitlesChatbot(word_chatbot.WordChatbot):
   @property
   def dataset_version(self):
     # year of the opensubtitles dataset creation
-    return 2011
+    return 2009
 
   @property
   def dataset_split(self):
@@ -275,7 +275,7 @@ class OpensubtitlesChatbot(word_chatbot.WordChatbot):
     voc_file.write("<EOS>\n")
     for word, _ in vocab.most_common(self.targeted_vocab_size-3):
       voc_file.write(word+'\n')
-    voc_file.write("<UNK>")
+    voc_file.write("<unk>")
 
     voc_file.close()
 

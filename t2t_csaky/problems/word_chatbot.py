@@ -137,7 +137,7 @@ class WordChatbot(problem.Text2TextProblem):
     # create a t2t symbolizer vocab from
     symbolizer_vocab = text_encoder.TokenTextEncoder(os.path.join(data_dir, self.vocab_file),
                                                     num_reserved_ids=0,
-                                                    replace_oov="<UNK>")
+                                                    replace_oov="<unk>")
 
     return self.token_generator(sourcePath,targetPath,symbolizer_vocab, EOS)
 
