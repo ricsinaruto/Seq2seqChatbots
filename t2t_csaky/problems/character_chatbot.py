@@ -57,11 +57,11 @@ class CharacterChatbot(word_chatbot.WordChatbot):
     mode = "train" if train else "dev"
     print("t2t_csaky_log: "+mode+" data generation activated.")
 
-    # try to find the txt files
-    if os.path.isfile(data_dir+mode+"Source.txt") and os.path.isfile(data_dir+mode+"Target.txt"):
-      sourcePath=data_dir+mode+"Source.txt"
-      targetPath=data_dir+mode+"Target.txt"
+    sourcePath=os.path.join(data_dir, mode+"Source.txt")
+    targetPath=os.path.join(data_dir, mode+"Target.txt")
 
+    # try to find the txt files
+    if os.path.isfile(sourcePath) and os.path.isfile(targetPath):
       print("t2t_csaky_log: Generating "+mode+" files in "+data_dir)
       return translate.character_generator(sourcePath, targetPath, character_vocab, EOS)
 
