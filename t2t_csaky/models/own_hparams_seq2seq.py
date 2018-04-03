@@ -21,8 +21,11 @@ FLAGS = tf.flags.FLAGS
 class OwnHparamsSeq2seq(t2t_model.T2TModel):
   """
   A class where I replaced the internal hparams with my own function call.
+  This way the hidden_size param of chatbot_lstm_hparams refers to the hidden size
+  	of the lstm cells, while the hidden_size specified by the hparam set that is
+  	given during training refers to the word embedding size.
   """
-  def model_fn_body(self,features):
+  def body(self,features):
     if self._hparams.initializer == "orthogonal":
       raise ValueError("LSTM models fail with orthogonal initializer.")
     train=self._hparams.mode==tf.estimator.ModeKeys.TRAIN

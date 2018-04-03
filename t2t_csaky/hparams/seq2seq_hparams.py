@@ -10,7 +10,7 @@ from tensor2tensor.utils import registry
 
 """ Only this works with own_hparams_seq2seq model, so it has to be changed to the appropriate batch size. """
 def chatbot_lstm_hparams():
-  hparams=chatbot_lstm_batch_512()
+  hparams=chatbot_lstm_batch_256()
   hparams.hidden_size=1800
   return hparams
 
