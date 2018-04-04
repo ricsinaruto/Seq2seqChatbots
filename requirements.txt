@@ -3,5 +3,5 @@ tensor2tensor==1.5.1
 requests
 clint
 toposort
-netowrkx
+networkx
 pytest
