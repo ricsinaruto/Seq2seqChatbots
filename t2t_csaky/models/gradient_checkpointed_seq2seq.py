@@ -58,7 +58,16 @@ def lstm_seq2seq_internal(inputs, targets, hparams, train):
         train,
         "decoder",
         initial_state=final_encoder_state)
-    return tf.expand_dims(decoder_outputs, axis=2)
+
+    # project the outputs
+    with tf.variable_scope("projection"):
+      projected_outputs=tf.layers.dense(
+          decoder_outputs,
+          int(hparams.hidden_size/2),
+          activation=None,
+          use_bias=False)
+      
+    return tf.expand_dims(projected_outputs, axis=2)
 
 
 @registry.register_model
