@@ -2,3 +2,6 @@ tensorflow-gpu==1.4.0
 tensor2tensor==1.5.1
 requests
 clint
+toposort
+netowrkx
+pytest
