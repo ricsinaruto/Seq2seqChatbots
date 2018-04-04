@@ -110,6 +110,39 @@ class WordChatbot(problem.Text2TextProblem):
   def preprocess_data(self, train_mode):
     return NotImplementedError
 
+  # hparams for the problem
+  def hparams(self, defaults, unused_model_hparams):
+    p = defaults
+    p.stop_at_eos = int(True)
+
+    if self.has_inputs:
+      source_vocab_size = self._encoders["inputs"].vocab_size
+      p.input_modality = {
+          "inputs": (registry.Modalities.SYMBOL, source_vocab_size)
+      }
+    target_vocab_size = self._encoders["targets"].vocab_size
+    p.target_modality = p.input_modality
+    if self.has_inputs:
+      p.input_space_id = self.input_space_id
+    p.target_space_id = self.target_space_id
+    if self.is_character_level:
+      p.loss_multiplier = 2.0
+    if self.packed_length:
+      identity = (registry.Modalities.GENERIC, None)
+      if self.has_inputs:
+        p.input_modality["inputs_segmentation"] = identity
+        p.input_modality["inputs_position"] = identity
+      p.input_modality["targets_segmentation"] = identity
+      p.input_modality["targets_position"] = identity
+
+  # what evaluation metrics to use with this problem
+  def eval_metrics(self):
+    return [
+        metrics.Metrics.ACC, metrics.Metrics.ACC_TOP5,
+        metrics.Metrics.ACC_PER_SEQ, metrics.Metrics.NEG_LOG_PERPLEXITY,
+        metrics.Metrics.APPROX_BLEU
+    ]
+
   # This function generates the train and validation pairs in t2t-datagen style
   def generator(self, data_dir, tmp_dir, train):
     """ 
