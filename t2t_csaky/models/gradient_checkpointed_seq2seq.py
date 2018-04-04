@@ -25,19 +25,14 @@ def lstm(inputs, hparams, train, name, initial_state=None):
   """Run LSTM cell on inputs, assuming they are [batch x time x size]."""
 
   def dropout_lstm_cell():
-    return tf.contrib.cudnn_rnn.CudnnLSTM(
-        hparams.num_hidden_layers,
-        hparams.hidden_size,
-        dropout=hparams.dropout * tf.to_float(train))
-    """
     return tf.contrib.rnn.DropoutWrapper(
-        tf.contrib.rnn.BasicLSTMCell(hparams.hidden_size),
+        tf.contrib.cudnn_rnn.CudnnCompatibleLSTMCell(hparams.hidden_size),
         input_keep_prob=1.0 - hparams.dropout * tf.to_float(train))
-    """
-  #layers = [dropout_lstm_cell() for _ in range(hparams.num_hidden_layers)]
+    
+  layers = [dropout_lstm_cell() for _ in range(hparams.num_hidden_layers)]
   with tf.variable_scope(name):
     return tf.nn.dynamic_rnn(
-        dropout_lstm_cell(),
+        tf.contrib.rnn.MultiRNNCell(layers),
         inputs,
         initial_state=initial_state,
         dtype=tf.float32,
