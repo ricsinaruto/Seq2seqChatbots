@@ -95,7 +95,7 @@ class GradientCheckpointedOptimizer(tf.train.Optimizer):
       self._opt = tf.contrib.layers.OPTIMIZER_CLS_NAMES[optimizer_name](lr)
 
   def compute_gradients(self, loss, var_list=None,
-                        gate_gradients=GATE_OP,
+                        gate_gradients=tf.train.Optimizer.GATE_OP,
                         aggregation_method=None,
                         colocate_gradients_with_ops=False,
                         grad_loss=None):

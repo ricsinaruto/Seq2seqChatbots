@@ -11,6 +11,7 @@ from tensor2tensor.utils import optimize
 
 # tensorflow imports
 import tensorflow as tf
+import math
 
 # my imports
 from t2t_csaky.hparams import seq2seq_hparams
