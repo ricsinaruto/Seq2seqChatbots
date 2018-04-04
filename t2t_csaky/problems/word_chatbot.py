@@ -121,7 +121,7 @@ class WordChatbot(problem.Text2TextProblem):
           "inputs": (registry.Modalities.SYMBOL, source_vocab_size)
       }
     target_vocab_size = self._encoders["targets"].vocab_size
-    p.target_modality = p.input_modality
+    p.target_modality = (registry.Modalities.SYMBOL, source_vocab_size)
     if self.has_inputs:
       p.input_space_id = self.input_space_id
     p.target_space_id = self.target_space_id
