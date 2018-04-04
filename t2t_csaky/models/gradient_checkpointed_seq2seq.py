@@ -21,6 +21,51 @@ from t2t_csaky.utils import optimizer
 FLAGS = tf.flags.FLAGS
 
 
+def lstm(inputs, hparams, train, name, initial_state=None):
+  """Run LSTM cell on inputs, assuming they are [batch x time x size]."""
+
+  def dropout_lstm_cell():
+    return tf.contrib.cudnn_rnn.CudnnLSTM(
+        hparams.num_hidden_layers,
+        hparams.hidden_size,
+        dropout=hparams.dropout * tf.to_float(train))
+    """
+    return tf.contrib.rnn.DropoutWrapper(
+        tf.contrib.rnn.BasicLSTMCell(hparams.hidden_size),
+        input_keep_prob=1.0 - hparams.dropout * tf.to_float(train))
+    """
+  #layers = [dropout_lstm_cell() for _ in range(hparams.num_hidden_layers)]
+  with tf.variable_scope(name):
+    return tf.nn.dynamic_rnn(
+        dropout_lstm_cell(),
+        inputs,
+        initial_state=initial_state,
+        dtype=tf.float32,
+        time_major=False)
+
+
+def lstm_seq2seq_internal(inputs, targets, hparams, train):
+  """The basic LSTM seq2seq model, main step used for training."""
+  with tf.variable_scope("lstm_seq2seq"):
+    if inputs is not None:
+      # Flatten inputs.
+      inputs = common_layers.flatten4d3d(inputs)
+      # LSTM encoder.
+      _, final_encoder_state = lstm(
+          tf.reverse(inputs, axis=[1]), hparams, train, "encoder")
+    else:
+      final_encoder_state = None
+    # LSTM decoder.
+    shifted_targets = common_layers.shift_right(targets)
+    decoder_outputs, _ = lstm(
+        common_layers.flatten4d3d(shifted_targets),
+        hparams,
+        train,
+        "decoder",
+        initial_state=final_encoder_state)
+    return tf.expand_dims(decoder_outputs, axis=2)
+
+
 @registry.register_model
 class GradientCheckpointedSeq2seq(t2t_model.T2TModel):
   """
@@ -36,7 +81,7 @@ class GradientCheckpointedSeq2seq(t2t_model.T2TModel):
     if self._hparams.initializer == "orthogonal":
       raise ValueError("LSTM models fail with orthogonal initializer.")
     train=self._hparams.mode==tf.estimator.ModeKeys.TRAIN
-    return lstm.lstm_seq2seq_internal(
+    return lstm_seq2seq_internal(
       features.get("inputs"),features["targets"],seq2seq_hparams.chatbot_lstm_hparams(),train)
 
   # Change the optimizer to a new one, which uses gradient checkpointing
