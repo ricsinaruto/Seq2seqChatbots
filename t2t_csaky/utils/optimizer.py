@@ -11,6 +11,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import ops
+from tensorflow.python.util import nest
 from tensorflow.python.ops import variables
 from tensorflow.python.ops import control_flow_ops
 from tensorflow.python.training import optimizer
@@ -146,7 +147,7 @@ class GradientCheckpointedOptimizer(tf.train.Optimizer):
       raise ValueError("No variables to optimize.")
     var_refs = [p.target() for p in processors]
     # TDOD: make the type of gradient checkpointing choosable, but just test it like this first.
-    grads = memory_saving_gradients.gradients_memory(
+    grads = tf.gradients(
         loss, var_refs, grad_ys=grad_loss,
         gate_gradients=(gate_gradients == tf.train.Optimizer.GATE_OP),
         aggregation_method=aggregation_method,
