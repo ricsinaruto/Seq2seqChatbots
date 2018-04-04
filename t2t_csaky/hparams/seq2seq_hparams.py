@@ -37,9 +37,10 @@ def chatbot_lstm_batch_8k():
   hparams.layer_preprocess_sequence = "n"
   hparams.layer_postprocess_sequence = "da"
   hparams.layer_prepostprocess_dropout = 0.1
+  hparams.shared_embedding_and_softmax_weights=True
 
   hparams.symbol_modality_num_shards=50
-  hparams.hidden_size=256
+  hparams.hidden_size=512
   hparams.num_hidden_layers=2
   hparams.batch_size=8192
   return hparams
