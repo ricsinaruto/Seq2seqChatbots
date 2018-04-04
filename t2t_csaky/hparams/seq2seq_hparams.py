@@ -38,6 +38,7 @@ def chatbot_lstm_batch_8k():
   hparams.layer_postprocess_sequence = "da"
   hparams.layer_prepostprocess_dropout = 0.1
   hparams.shared_embedding_and_softmax_weights=True
+  hparams.optimizer="Adafactor"
 
   hparams.symbol_modality_num_shards=10
   hparams.hidden_size=2048
