@@ -92,6 +92,8 @@ class GradientCheckpointedOptimizer(tf.train.Optimizer):
           epsilon=hparams.optimizer_adam_epsilon)
     elif optimizer_name == "Adafactor":
       self._opt = t2t_opt.AdafactorOptimizer(lr / 500.0)
+    elif optimizer_name == "Adagrad":
+      self._opt = tf.train.AdagradOptimizer(lr / 500.0)
     else:
       self._opt = tf.contrib.layers.OPTIMIZER_CLS_NAMES[optimizer_name](lr)
 
