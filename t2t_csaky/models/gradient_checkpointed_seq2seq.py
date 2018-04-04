@@ -63,7 +63,7 @@ def lstm_seq2seq_internal(inputs, targets, hparams, train):
     with tf.variable_scope("projection"):
       projected_outputs=tf.layers.dense(
           decoder_outputs,
-          int(hparams.hidden_size/2),
+          2048,
           activation=None,
           use_bias=False)
       
