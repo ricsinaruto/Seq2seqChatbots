@@ -4,7 +4,7 @@ from __future__ import print_function
 
 # tensor2tensor imports
 from tensor2tensor.utils import yellowfin
-from tensor2tensor.utils import optimize
+from tensor2tensor.utils import optimize as t2t_opt
 
 import numpy as np
 
@@ -22,13 +22,13 @@ from t2t_csaky.utils import memory_saving_gradients
 
 def optimize(loss, learning_rate, hparams):
   """Minimize loss."""
-  loss = optimize.weight_decay_and_noise(loss, hparams, learning_rate)
+  loss = t2t_opt.weight_decay_and_noise(loss, hparams, learning_rate)
   loss = tf.identity(loss, name="total_loss")
-  optimize.log_variable_sizes(verbose=hparams.summarize_vars)
+  t2t_opt.log_variable_sizes(verbose=hparams.summarize_vars)
   diet_vars = [
       v for v in tf.global_variables() if v.dtype == dtypes.float16_ref
   ]
-  optimize.log_variable_sizes(
+  t2t_opt.log_variable_sizes(
       diet_vars, "Diet Variables", verbose=hparams.summarize_vars)
   opt = GradientCheckpointedOptimizer(hparams.optimizer, learning_rate, hparams)
 
@@ -90,7 +90,7 @@ class GradientCheckpointedOptimizer(tf.train.Optimizer):
           beta2=hparams.optimizer_adam_beta2,
           epsilon=hparams.optimizer_adam_epsilon)
     elif optimizer_name == "Adafactor":
-      self._opt = optimize.AdafactorOptimizer(lr / 500.0)
+      self._opt = t2t_opt.AdafactorOptimizer(lr / 500.0)
     else:
       self._opt = tf.contrib.layers.OPTIMIZER_CLS_NAMES[optimizer_name](lr)
 
