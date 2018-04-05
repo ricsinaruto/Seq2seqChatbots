@@ -31,12 +31,11 @@ def lstm(inputs, hparams, train, name, initial_state=None):
     
   layers = [dropout_lstm_cell() for _ in range(hparams.num_hidden_layers)]
   with tf.variable_scope(name):
-    return tf.nn.dynamic_rnn(
+    return tf.nn.static_rnn(
         tf.contrib.rnn.MultiRNNCell(layers),
         inputs,
         initial_state=initial_state,
-        dtype=tf.float32,
-        time_major=False)
+        dtype=tf.float32)
 
 
 def lstm_seq2seq_internal(inputs, targets, hparams, train):
@@ -44,25 +43,37 @@ def lstm_seq2seq_internal(inputs, targets, hparams, train):
   with tf.variable_scope("lstm_seq2seq"):
     if inputs is not None:
       # Flatten inputs.
-      inputs = common_layers.flatten4d3d(inputs)
+      inputs = tf.reverse(common_layers.flatten4d3d(inputs), axis=[1])
+
+      # construct static rnn input list
+      input_list=[inputs[:,i,:] for i in range(4)]
+
       # LSTM encoder.
-      _, final_encoder_state = lstm(
-          tf.reverse(inputs, axis=[1]), hparams, train, "encoder")
+      _, final_encoder_state = lstm(input_list, hparams, train, "encoder")
     else:
       final_encoder_state = None
+    input_list.clear()
     # LSTM decoder.
-    shifted_targets = common_layers.shift_right(targets)
+    # get a list of tensors
+    shifted_targets = common_layers.flatten4d3d(common_layers.shift_right(targets))
+    target_list=[shifted_targets[:,i,:] for i in range(4)]
+
     decoder_outputs, _ = lstm(
-        common_layers.flatten4d3d(shifted_targets),
+        target_list,
         hparams,
         train,
         "decoder",
         initial_state=final_encoder_state)
+    target_list.clear()
+
+    # convert decoder outputs to tensor
+    decoder_outputs_tensor=tf.transpose(tf.convert_to_tensor(decoder_outputs), perm=[1,0,2])
+    decoder_outputs.clear()
 
     # project the outputs
     with tf.variable_scope("projection"):
       projected_outputs=tf.layers.dense(
-          decoder_outputs,
+          decoder_outputs_tensor,
           2048,
           activation=None,
           use_bias=False)

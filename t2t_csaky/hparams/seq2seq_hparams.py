@@ -47,18 +47,6 @@ def chatbot_lstm_batch_8k():
   return hparams
 
 @registry.register_hparams
-def chatbot_lstm_batch_64():
-  hparams = chatbot_lstm_batch_8k()
-  hparams.batch_size=64
-  return hparams
-
-@registry.register_hparams
-def chatbot_lstm_batch_32():
-  hparams = chatbot_lstm_batch_8k()
-  hparams.batch_size=32
-  return hparams
-
-@registry.register_hparams
 def chatbot_lstm_batch_1k():
   hparams = chatbot_lstm_batch_8k()
   hparams.batch_size=1024
@@ -80,4 +68,16 @@ def chatbot_lstm_batch_256():
 def chatbot_lstm_batch_128():
   hparams = chatbot_lstm_batch_8k()
   hparams.batch_size=128
+  return hparams
+
+@registry.register_hparams
+def chatbot_lstm_batch_64():
+  hparams = chatbot_lstm_batch_8k()
+  hparams.batch_size=64
+  return hparams
+
+@registry.register_hparams
+def chatbot_lstm_batch_32():
+  hparams = chatbot_lstm_batch_8k()
+  hparams.batch_size=32
   return hparams

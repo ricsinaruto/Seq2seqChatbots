@@ -341,7 +341,7 @@ def _is_iterable(o):
     return False
   return True
 
-DEBUG_LOGGING=False
+DEBUG_LOGGING=True
 def debug_print(s, *args):
   """Like logger.log, but also replaces all TensorFlow ops/tensors with their
   names. Sensitive to value of DEBUG_LOGGING, see enable_debug/disable_debug
@@ -352,7 +352,10 @@ def debug_print(s, *args):
 
   if DEBUG_LOGGING:
     formatted_args = [format_ops(arg) for arg in args]
-    print("DEBUG "+s % tuple(formatted_args))
+    for args in formatted_args:
+        for arg in args:
+            print("DEBUG "+str(arg))
+    #print("\nDEBUG "+s % tuple(formatted_args))
 
 def format_ops(ops, sort_outputs=True):
   """Helper method for printing ops. Converts Tensor/Operation op to op.name,
