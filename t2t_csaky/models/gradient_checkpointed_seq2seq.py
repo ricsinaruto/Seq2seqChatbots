@@ -36,9 +36,9 @@ def lstm(inputs, hparams, train, name, initial_state=None):
         inputs,
         initial_state=initial_state,
         dtype=tf.float32,
-        time_major=False)
-        #swap_memory=True,
-        #parallel_iterations=1)
+        time_major=False,
+        swap_memory=True,
+        parallel_iterations=1)
 
 def lstm_seq2seq_internal_dynamic(inputs, targets, hparams, train):
   """The basic LSTM seq2seq model, main step used for training."""

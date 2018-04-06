@@ -10,6 +10,7 @@ import os
 from tensor2tensor.data_generators import problem
 from tensor2tensor.data_generators import text_encoder
 from tensor2tensor.utils import registry
+from tensor2tensor.utils import metrics
 
 # Flags
 FLAGS = tf.flags.FLAGS

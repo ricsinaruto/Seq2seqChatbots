@@ -11,7 +11,7 @@ from tensor2tensor.utils import registry
 """ Only this works with own_hparams_seq2seq model, so it has to be changed to the appropriate batch size. """
 def chatbot_lstm_hparams():
   hparams=chatbot_lstm_batch_256()
-  hparams.hidden_size=3072
+  hparams.hidden_size=2600
   return hparams
 
 
@@ -23,14 +23,14 @@ def chatbot_lstm_batch_8k():
   hparams.clip_grad_norm=0.0
   hparams.shared_embedding_and_softmax_weights=True
   hparams.optimizer="Adafactor"
-  hparams.use_fixed_batch_size=True
+  hparams.use_fixed_batch_size=False
   hparams.summarize_vars=True
 
   hparams.symbol_modality_num_shards=10
   hparams.hidden_size=2048
   hparams.num_hidden_layers=2
   hparams.batch_size=8192
-  hparams.max_length = 65
+  hparams.max_length = 64
   return hparams
 
 @registry.register_hparams
@@ -40,9 +40,27 @@ def chatbot_lstm_batch_1():
   return hparams
 
 @registry.register_hparams
-def chatbot_lstm_batch_2():
+def chatbot_lstm_batch_2048():
   hparams = chatbot_lstm_batch_8k()
-  hparams.batch_size=2
+  hparams.batch_size=2048
+  return hparams
+
+@registry.register_hparams
+def chatbot_lstm_batch_1024():
+  hparams = chatbot_lstm_batch_8k()
+  hparams.batch_size=1024
+  return hparams
+
+@registry.register_hparams
+def chatbot_lstm_batch_4():
+  hparams = chatbot_lstm_batch_8k()
+  hparams.batch_size=4
+  return hparams
+
+@registry.register_hparams
+def chatbot_lstm_batch_8():
+  hparams = chatbot_lstm_batch_8k()
+  hparams.batch_size=8
   return hparams
 
 @registry.register_hparams
@@ -73,4 +91,10 @@ def chatbot_lstm_batch_64():
 def chatbot_lstm_batch_32():
   hparams = chatbot_lstm_batch_8k()
   hparams.batch_size=32
+  return hparams
+
+@registry.register_hparams
+def chatbot_lstm_batch_40():
+  hparams = chatbot_lstm_batch_8k()
+  hparams.batch_size=48
   return hparams
