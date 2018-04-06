@@ -341,7 +341,7 @@ def _is_iterable(o):
     return False
   return True
 
-DEBUG_LOGGING=True
+DEBUG_LOGGING=False
 def debug_print(s, *args):
   """Like logger.log, but also replaces all TensorFlow ops/tensors with their
   names. Sensitive to value of DEBUG_LOGGING, see enable_debug/disable_debug

@@ -31,14 +31,46 @@ def lstm(inputs, hparams, train, name, initial_state=None):
     
   layers = [dropout_lstm_cell() for _ in range(hparams.num_hidden_layers)]
   with tf.variable_scope(name):
-    return tf.nn.static_rnn(
+    return tf.nn.dynamic_rnn(
         tf.contrib.rnn.MultiRNNCell(layers),
         inputs,
         initial_state=initial_state,
-        dtype=tf.float32)
+        dtype=tf.float32,
+        time_major=False)
+        #swap_memory=True,
+        #parallel_iterations=1)
 
+def lstm_seq2seq_internal_dynamic(inputs, targets, hparams, train):
+  """The basic LSTM seq2seq model, main step used for training."""
+  with tf.variable_scope("lstm_seq2seq"):
+    if inputs is not None:
+      # Flatten inputs.
+      inputs = common_layers.flatten4d3d(inputs)
+      # LSTM encoder.
+      _, final_encoder_state = lstm(
+          tf.reverse(inputs, axis=[1]), hparams, train, "encoder")
+    else:
+      final_encoder_state = None
+    # LSTM decoder.
+    shifted_targets = common_layers.shift_right(targets)
+    decoder_outputs, _ = lstm(
+        common_layers.flatten4d3d(shifted_targets),
+        hparams,
+        train,
+        "decoder",
+        initial_state=final_encoder_state)
 
-def lstm_seq2seq_internal(inputs, targets, hparams, train):
+    # project the outputs
+    with tf.variable_scope("projection"):
+      projected_outputs=tf.layers.dense(
+          decoder_outputs,
+          2048,
+          activation=None,
+          use_bias=False)
+
+    return tf.expand_dims(projected_outputs, axis=2)
+
+def lstm_seq2seq_internal_static(inputs, targets, hparams, train):
   """The basic LSTM seq2seq model, main step used for training."""
   with tf.variable_scope("lstm_seq2seq"):
     if inputs is not None:
@@ -46,7 +78,7 @@ def lstm_seq2seq_internal(inputs, targets, hparams, train):
       inputs = tf.reverse(common_layers.flatten4d3d(inputs), axis=[1])
 
       # construct static rnn input list
-      input_list=[inputs[:,i,:] for i in range(4)]
+      input_list=[inputs[:,i,:] for i in range(21)]
 
       # LSTM encoder.
       _, final_encoder_state = lstm(input_list, hparams, train, "encoder")
@@ -56,7 +88,7 @@ def lstm_seq2seq_internal(inputs, targets, hparams, train):
     # LSTM decoder.
     # get a list of tensors
     shifted_targets = common_layers.flatten4d3d(common_layers.shift_right(targets))
-    target_list=[shifted_targets[:,i,:] for i in range(4)]
+    target_list=[shifted_targets[:,i,:] for i in range(21)]
 
     decoder_outputs, _ = lstm(
         target_list,
@@ -96,7 +128,7 @@ class GradientCheckpointedSeq2seq(t2t_model.T2TModel):
     if self._hparams.initializer == "orthogonal":
       raise ValueError("LSTM models fail with orthogonal initializer.")
     train=self._hparams.mode==tf.estimator.ModeKeys.TRAIN
-    return lstm_seq2seq_internal(
+    return lstm_seq2seq_internal_dynamic(
       features.get("inputs"),features["targets"],seq2seq_hparams.chatbot_lstm_hparams(),train)
 
   # Change the optimizer to a new one, which uses gradient checkpointing
