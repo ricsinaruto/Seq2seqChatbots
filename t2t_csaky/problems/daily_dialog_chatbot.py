@@ -63,7 +63,7 @@ class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
     self.zipped_data=os.path.join(self._raw_data_dir,"ijcnlp_dailydialog.zip")
 
     # create the download url
-    self.url="yanran.li/files/ijcnlp_dailydialog.zip"
+    self.url="http://yanran.li/files/ijcnlp_dailydialog.zip"
 
     # check at which part of the pipeline are we at
     self.data_pipeline_status(train_mode)
