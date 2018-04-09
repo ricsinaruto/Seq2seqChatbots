@@ -105,8 +105,10 @@ class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
         target_file=testTarget
 
       # clean the utterances
+      i=0
       for utterance in utterances:
         utterance=self.clean_line(utterance.lower())
+        i+=1
 
         # build vocabulary
         if dataset_split_counter<=self.dataset_split["train"]:
@@ -118,9 +120,9 @@ class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
               vocabulary[word]=1
 
         # write to files
-        if i!=len(utterances)-1:
+        if i!=len(utterances):
           source_file.write(utterance)
-        if i!=0:
+        if i!=1:
           target_file.write(utterance)
 
       number_of_dialogs+=1
