@@ -91,7 +91,7 @@ class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
         print("t2t_csaky_log: Parsed "+str(number_of_dialogs)+" dialogs.")
 
       # utterances are separated by the __eou__ token
-      utterances=dialog.split("__eou__")
+      utterances=dialog.split("__eou__")[:-1]
 
       # check which file we should write to
       if dataset_split_counter<=self.dataset_split["train"]:
@@ -112,7 +112,7 @@ class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
 
         # build vocabulary
         if dataset_split_counter<=self.dataset_split["train"]:
-          words=utterance.split()[:-1]
+          words=utterance.split()
           for word in words:
             if word in vocabulary:
               vocabulary[word]+=1
