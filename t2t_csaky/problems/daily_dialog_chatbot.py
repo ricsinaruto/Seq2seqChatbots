@@ -112,7 +112,7 @@ class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
 
         # build vocabulary
         if dataset_split_counter<=self.dataset_split["train"]:
-          words=utterance.split()
+          words=utterance.split()[:-1]
           for word in words:
             if word in vocabulary:
               vocabulary[word]+=1
