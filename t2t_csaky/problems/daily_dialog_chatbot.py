@@ -121,9 +121,9 @@ class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
 
         # write to files
         if i!=len(utterances):
-          source_file.write(utterance)
+          source_file.write(utterance+"\n")
         if i!=1:
-          target_file.write(utterance)
+          target_file.write(utterance+"\n")
 
       number_of_dialogs+=1
       # reset the split counter if we reached 100%
