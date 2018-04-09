@@ -31,7 +31,7 @@ from tensor2tensor.utils import cloud_tpu
 from tensor2tensor.utils import decoding
 from tensor2tensor.utils import flags as t2t_flags  # pylint: disable=unused-import
 from tensor2tensor.utils import registry
-from t2t_csaky.utils import trainer_lib
+import trainer_lib
 from tensor2tensor.utils import usr_dir
 
 import tensorflow as tf

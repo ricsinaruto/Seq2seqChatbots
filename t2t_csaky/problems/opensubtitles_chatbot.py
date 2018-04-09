@@ -48,12 +48,12 @@ class OpensubtitlesChatbot(word_chatbot.WordChatbot):
 
   @property
   def targeted_dataset_size(self):
-    return 0
+    return 600000
 
   @property
   def dataset_version(self):
     # year of the opensubtitles dataset creation
-    return 2009
+    return 2012
 
   @property
   def dataset_split(self):
@@ -253,8 +253,11 @@ class OpensubtitlesChatbot(word_chatbot.WordChatbot):
 
           # check if we reached the desired dataset size
           number_of_lines+=line_id
-          if self.targeted_dataset_size!=0 and self.targeted_dataset_size<number_of_lines:
-            break
+        if self.targeted_dataset_size!=0 and self.targeted_dataset_size<number_of_lines:
+          break
+      else:
+        continue
+      break
 
     # close the files
     self.close_6_files(trainSource, trainTarget, devSource, devTarget, testSource, testTarget)

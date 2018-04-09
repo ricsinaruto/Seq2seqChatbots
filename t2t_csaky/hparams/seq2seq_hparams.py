@@ -96,5 +96,5 @@ def chatbot_lstm_batch_32():
 @registry.register_hparams
 def chatbot_lstm_batch_40():
   hparams = chatbot_lstm_batch_8k()
-  hparams.batch_size=48
+  hparams.batch_size=40
   return hparams
