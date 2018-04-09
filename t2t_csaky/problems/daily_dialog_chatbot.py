@@ -40,7 +40,7 @@ class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
 
   @property
   def targeted_vocab_size(self):
-    return 32768
+    return 16384
 
   @property
   def targeted_dataset_size(self):
