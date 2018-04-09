@@ -132,7 +132,6 @@ class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
 
     # close the files
     self.close_6_files(trainSource, trainTarget, devSource, devTarget, testSource, testTarget)
-    movie_lines.close()
 
     # save the vocabulary
     self.save_vocab(vocabulary)
