@@ -25,7 +25,7 @@ EOS = text_encoder.EOS_ID
 
 
 @registry.register_problem
-class DailyDialogChatbot(cornell_chatbots.cornell_chatbot_basic):
+class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
   """
   A class implementing a simple turn-based chatbot problem for the DailyDialog dataset.
   This version doesn't use any auxiliary information.
