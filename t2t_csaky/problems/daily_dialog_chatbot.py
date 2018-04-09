@@ -10,6 +10,7 @@ from collections import Counter
 
 # tensor2tensor imports
 from tensor2tensor.data_generators import problem
+from tensor2tensor.data_generators import text_encoder
 from tensor2tensor.utils import registry
 
 # my imports
