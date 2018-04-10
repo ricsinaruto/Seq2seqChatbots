@@ -157,6 +157,7 @@ train_dir/Opensubs/base_trf-2M/*
 train_dir/Opensubs/base_trf-62M/*
 train_dir/Opensubs/base_seq2seq-89M_sentences_2012/*
 train_dir/Opensubs/grad_ckpt_s2s-89M_2012/*
+train_dir/Opensubs/grad_ckpt_s2s-600k_2012/*
 
 # Don't ignore these
 !train_dir/Cornell/20_dropout/inference_outputs/

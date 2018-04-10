@@ -164,7 +164,7 @@ class CornellChatbotBasic(opensubtitles_chatbot.OpensubtitlesChatbot):
       return re.sub("'","",str(matchobj.group(0)))
 
     # keep some special tokens
-    line = re.sub("[^a-z .?!']", "", line)
+    line = re.sub("[^a-z .?!'0-9]", "", line)
     line =re.sub("[.]", " . ", line)
     line =re.sub("[?]", " ? ", line)
     line =re.sub("[!]", " ! ", line)
