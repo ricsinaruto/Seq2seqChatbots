@@ -13,7 +13,7 @@ from t2t_csaky.config import *
 
 # change these in config.py
 @registry.register_hparams
-def general_seq2seq_hparams():
+def general_gradient_checkpointed_seq2seq_hparams():
   hparams=lstm.lstm_seq2seq()
 
   hparams.clip_grad_norm=0.0

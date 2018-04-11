@@ -5,14 +5,14 @@ for the current run. This file will also be copied to the directory that you pro
 
 FLAGS={
   "t2t_usr_dir"       :"t2t_csaky", # this is the directory from which tensor2tensor imports
-  "data_dir"          :"data_dir/Persona-Chat/base",
+  "data_dir"          :"data_dir/Opensubs/89M_sentences_2012",
   "train_dir"         :"train_dir/Opensubs/grad_ckpt_s2s-89M_2012",
   "decode_dir"        :"decode_dir/DailyDialog/trf_20_dropout-base",
-  "problem"           :"persona_chat_chatbot",
-  "model"             :"transformer",
+  "problem"           :"opensubtitles_chatbot",
+  "model"             :"gradient_checkpointed_seq2seq",
   "hparams"           :"",  # this is empty if we use hparams defined in this file,
                             # otherwise you have to specify a registered hparams_set
-  "profile_perform"   :"True"
+  "profile_perform"   :"True",
 
   # training related flags
   "train_mode"        :"train_and_evaluate",
@@ -32,9 +32,9 @@ FLAGS={
 }
 
 PROBLEM_HPARAMS={
-  "num_train_shards"  :1,
-  "num_dev_shards"    :1,
-  "vocabulary_size"   :32768,
+  "num_train_shards"  :100,
+  "num_dev_shards"    :100,
+  "vocabulary_size"   :1000000,
   "dataset_size"      :0,
   "dataset_split"     :{"train":80, "val":10, "test":10},
   "dataset_version"   :2012,  # only for opensubtitles

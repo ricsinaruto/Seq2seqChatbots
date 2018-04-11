@@ -76,7 +76,7 @@ def run_decoding():
   # determine the decode mode flag
   if FLAGS["decode_mode"]=="interactive":
     decode_mode_string=" --decode_interactive"
-  else FLAGS["decode_mode"]=="file":
+  elif FLAGS["decode_mode"]=="file":
     decode_mode_string=" --decode_from_file="+FLAGS["decode_dir"]+"/"+FLAGS["input_file_name"]
 
   os.system("t2t-decoder \
