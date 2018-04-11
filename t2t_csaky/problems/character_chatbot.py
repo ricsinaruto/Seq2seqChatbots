@@ -16,9 +16,6 @@ from tensor2tensor.utils import registry
 from t2t_csaky.problems import word_chatbot
 
 
-# Flags
-FLAGS = tf.flags.FLAGS
-
 # End-of-sentence marker
 EOS = text_encoder.EOS_ID
 

@@ -12,8 +12,8 @@ from tensor2tensor.data_generators import text_encoder
 from tensor2tensor.utils import registry
 from tensor2tensor.utils import metrics
 
-# Flags
-FLAGS = tf.flags.FLAGS
+# my imports
+from t2t_csaky.config import *
 
 # End-of-sentence marker
 EOS = text_encoder.EOS_ID
@@ -30,11 +30,11 @@ class WordChatbot(problem.Text2TextProblem):
 
   @property
   def num_shards(self):
-    return 1
+    return PROBLEM_HPARAMS["num_train_shards"]
 
   @property
   def num_dev_shards(self):
-    return 1
+    return PROBLEM_HPARAMS["num_dev_shards"]
 
   @property
   def vocab_name(self):
@@ -54,17 +54,17 @@ class WordChatbot(problem.Text2TextProblem):
 
   @property
   def targeted_vocab_size(self):
-    return NotImplementedError
+    return PROBLEM_HPARAMS["vocabulary_size"]
 
   @property
   def targeted_dataset_size(self):
     # number of utterance pairs in the full dataset
     # if it's 0, then the full size of the dataset is used
-    return NotImplementedError
+    return PROBLEM_HPARAMS["dataset_size"]
 
   @property
   def dataset_split(self):
-    return {"train":80,"val":10,"test":10}
+    return PROBLEM_HPARAMS["dataset_split"]
 
   @property
   def data_dir(self):

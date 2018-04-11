@@ -15,9 +15,8 @@ from tensor2tensor.utils import registry
 
 # my imports
 from t2t_csaky.problems import opensubtitles_chatbot
+from t2t_csaky.config import *
 
-# Flags
-FLAGS = tf.flags.FLAGS
 
 # End-of-sentence marker
 EOS = text_encoder.EOS_ID
@@ -28,26 +27,6 @@ class CornellChatbotBasic(opensubtitles_chatbot.OpensubtitlesChatbot):
   """
   A class implementing the chatbot problem for the Cornell Movie Dialog dataset.
   """
-
-  @property
-  def num_shards(self):
-    return 100
-
-  @property
-  def num_dev_shards(self):
-    return 100
-
-  @property
-  def targeted_vocab_size(self):
-    return 32768
-
-  @property
-  def targeted_dataset_size(self):
-    return 0
-
-  @property
-  def dataset_split(self):
-    return {"train":80,"val":10,"test":10}
 
   # main function where the preprocessing of the data starts
   def preprocess_data(self, train_mode):
@@ -205,12 +184,12 @@ class CornellChatbotSeparateNames(CornellChatbotBasic):
   """
 
   @property
-  def targeted_vocab_size(self):
-    return 32768 + 3000
+  def targeted_name_vocab_size(self):
+    return PROBLEM_HPARAMS["name_vocab_size"]
 
   @property
-  def targeted_name_vocab_size(self):
-    return 3000
+  def targeted_vocab_size(self):
+    return PROBLEM_HPARAMS["vocabulary_size"] + PROBLEM_HPARAMS["name_vocab_size"]
 
   # create the source, target and vocab files
   def create_data(self, train_mode):

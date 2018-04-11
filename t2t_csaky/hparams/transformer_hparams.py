@@ -6,6 +6,25 @@ from __future__ import print_function
 from tensor2tensor.models import transformer
 from tensor2tensor.utils import registry
 
+# my imports
+from t2t_csaky.config import *
+
+
+
+# change these in config.py
+@registry.register_hparams
+def general_transformer_hparams():
+  hparams=transformer.transformer_base()
+  hparams.add_hparam("roulette", FLAGS["roulette_wheel"])
+  hparams.add_hparam("roulette_beam_size", FLAGS["roulette_beam_size"])
+
+  hparams.batch_size=FLAGS["batch_size"]
+  hparams.layer_prepostprocess_dropout=FLAGS["layer_dropout"]
+  hparams.attention_dropout=FLAGS["attention_dropout"]
+  hparams.relu_dropout=FLAGS["relu_dropout"]
+  hparams.summarize_vars=FLAGS["summarize_vars"]
+
+  return hparams
 
 
 # Exactly replicates the base transformer model described in the paper.
@@ -14,7 +33,6 @@ def chatbot_cornell_base():
   hparams = transformer.transformer_base()
   hparams.learning_rate_warmup_steps=16000
   return hparams
-
 
 """ Different batch sizes. """
 @registry.register_hparams

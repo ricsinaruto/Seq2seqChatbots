@@ -6,12 +6,33 @@ from __future__ import print_function
 from tensor2tensor.models import lstm
 from tensor2tensor.utils import registry
 
+# my imports
+from t2t_csaky.config import *
 
 
-""" Only this works with own_hparams_seq2seq model, so it has to be changed to the appropriate batch size. """
+
+# change these in config.py
+@registry.register_hparams
+def general_seq2seq_hparams():
+  hparams=lstm.lstm_seq2seq()
+
+  hparams.clip_grad_norm=0.0
+  hparams.shared_embedding_and_softmax_weights=FLAGS["shared_embedding_and_softmax_weights"]
+  hparams.optimizer=FLAGS["optimizer"]
+  hparams.use_fixed_batch_size=FLAGS["fixed_batch_size"]
+  hparams.summarize_vars=FLAGS["summarize_vars"]
+
+  hparams.symbol_modality_num_shards=FLAGS["embed_num_shards"]
+  hparams.hidden_size=FLAGS["embedding_size"]
+  hparams.num_hidden_layers=FLAGS["num_layers"]
+  hparams.batch_size=FLAGS["batch_size"]
+  hparams.max_length = FLAGS["max_sentence_len"]
+  return hparams
+
+""" From this only the hidden_size is used for the lstm_seq2seq model. """
 def chatbot_lstm_hparams():
   hparams=chatbot_lstm_batch_256()
-  hparams.hidden_size=2600
+  hparams.hidden_size=FLAGS["lstm_hidden_size"]
   return hparams
 
 

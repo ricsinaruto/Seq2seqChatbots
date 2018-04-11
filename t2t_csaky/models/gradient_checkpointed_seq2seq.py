@@ -17,9 +17,6 @@ import math
 from t2t_csaky.hparams import seq2seq_hparams
 from t2t_csaky.utils import optimizer
 
-# Flags
-FLAGS = tf.flags.FLAGS
-
 
 def lstm(inputs, hparams, train, name, initial_state=None):
   """Run LSTM cell on inputs, assuming they are [batch x time x size]."""
@@ -121,7 +118,10 @@ class GradientCheckpointedSeq2seq(t2t_model.T2TModel):
     of the lstm cells, while the hidden_size specified by the hparam set that is
     given during training refers to the word embedding size.
 
-  Moreover, in this class gradient checkpointed is implemented.
+  In this class the output of the LSTM layer is projected to 2048 linear units as in:
+  https://arxiv.org/pdf/1506.05869.pdf
+
+  Moreover, in this class gradient checkpointing is implemented.
   https://github.com/openai/gradient-checkpointing
   """
   def body(self,features):

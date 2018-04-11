@@ -20,9 +20,8 @@ from tensor2tensor.utils import registry
 
 # my imports
 from t2t_csaky.problems import word_chatbot
+from t2t_csaky.config import *
 
-# Flags
-FLAGS = tf.flags.FLAGS
 
 # End-of-sentence marker
 EOS = text_encoder.EOS_ID
@@ -35,29 +34,9 @@ class OpensubtitlesChatbot(word_chatbot.WordChatbot):
   """
 
   @property
-  def num_shards(self):
-    return 100
-
-  @property
-  def num_dev_shards(self):
-    return 100
-
-  @property
-  def targeted_vocab_size(self):
-    return 100000
-
-  @property
-  def targeted_dataset_size(self):
-    return 600000
-
-  @property
   def dataset_version(self):
     # year of the opensubtitles dataset creation
-    return 2012
-
-  @property
-  def dataset_split(self):
-    return {"train":65,"val":25,"test":10}
+    return PROBLEM_HPARAMS["dataset_version"]
 
   # main function where the preprocessing of the data starts
   def preprocess_data(self, train_mode):

@@ -142,36 +142,9 @@ $RECYCLE.BIN/
 data_dir/
 docs/tdk/*
 private/
-train_dir/Facebook/
-
-train_dir/Cornell/20_dropout/*
-train_dir/Cornell/40_dropout/*
-train_dir/Cornell/base/*
-train_dir/Cornell/base-opensubs_finetune/*
-train_dir/Cornell/base-sep_speakers/*
-train_dir/Cornell/base-simple_speakers/*
-
-train_dir/Opensubs/base_seq2seq_attention-62M/*
-train_dir/Opensubs/base_seq2seq-62M/*
-train_dir/Opensubs/base_trf-2M/*
-train_dir/Opensubs/base_trf-62M/*
-train_dir/Opensubs/base_seq2seq-89M_sentences_2012/*
-train_dir/Opensubs/grad_ckpt_s2s-89M_2012/*
-train_dir/Opensubs/grad_ckpt_s2s-600k_2012/*
+train_dir/
 
 # Don't ignore these
-!train_dir/Cornell/20_dropout/inference_outputs/
-!train_dir/Cornell/40_dropout/inference_outputs/
-!train_dir/Cornell/base/inference_outputs/
-!train_dir/Cornell/base-opensubs_finetune/inference_outputs/
-!train_dir/Cornell/base-sep_speakers/inference_outputs/
-!train_dir/Cornell/base-simple_speakers/inference_outputs/
-
-!train_dir/Opensubs/base_seq2seq_attention-62M/inference_outputs/
-!train_dir/Opensubs/base_seq2seq-62M/inference_outputs/
-!train_dir/Opensubs/base_trf-2M/inference_outputs/
-!train_dir/Opensubs/base_trf-62M/inference_outputs/
-
 !docs/tdk/chatbots.bib
 !docs/tdk/wordsim.tex
 !docs/tdk/pics/

@@ -16,8 +16,6 @@ from tensor2tensor.utils import registry
 # my imports
 from t2t_csaky.problems import cornell_chatbots
 
-# Flags
-FLAGS = tf.flags.FLAGS
 
 # End-of-sentence marker
 EOS = text_encoder.EOS_ID
@@ -30,25 +28,6 @@ class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
   A class implementing a simple turn-based chatbot problem for the DailyDialog dataset.
   This version doesn't use any auxiliary information.
   """
-  @property
-  def num_shards(self):
-    return 1
-
-  @property
-  def num_dev_shards(self):
-    return 1
-
-  @property
-  def targeted_vocab_size(self):
-    return 16384
-
-  @property
-  def targeted_dataset_size(self):
-    return 0
-
-  @property
-  def dataset_split(self):
-    return {"train":80,"val":10,"test":10}
 
   # main function where the preprocessing of the data starts
   def preprocess_data(self, train_mode):

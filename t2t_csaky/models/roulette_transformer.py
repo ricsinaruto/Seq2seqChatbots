@@ -21,9 +21,6 @@ from tensorflow.python.eager import context
 from tensorflow.python.util import nest
 from tensorflow.python.layers import base
 
-# Flags
-FLAGS = tf.flags.FLAGS
-
 
 @registry.register_model
 class RouletteTransformer(transformer.Transformer):

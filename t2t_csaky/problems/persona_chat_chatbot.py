@@ -6,6 +6,9 @@ from __future__ import print_function
 import tensorflow as tf
 import os
 import re
+import tarfile
+import gzip
+import zipfile
 from collections import Counter
 
 # tensor2tensor imports
@@ -25,30 +28,11 @@ EOS = text_encoder.EOS_ID
 
 
 @registry.register_problem
-class PersonChatChatbot(cornell_chatbots.CornellChatbotBasic):
+class PersonaChatChatbot(cornell_chatbots.CornellChatbotBasic):
   """
   A class implementing a simple turn-based chatbot for the Persona-chat dataset.
   The personas are not used in this class, only the raw dialogs
   """
-  @property
-  def num_shards(self):
-    return 1
-
-  @property
-  def num_dev_shards(self):
-    return 1
-
-  @property
-  def targeted_vocab_size(self):
-    return 32768
-
-  @property
-  def targeted_dataset_size(self):
-    return 0
-
-  @property
-  def dataset_split(self):
-    return {"train":80,"val":10,"test":10}
 
   # main function where the preprocessing of the data starts
   def preprocess_data(self, train_mode):
@@ -68,6 +52,27 @@ class PersonChatChatbot(cornell_chatbots.CornellChatbotBasic):
     # check at which part of the pipeline are we at
     self.data_pipeline_status(train_mode)
 
+  # extract data and go to the next step
+  def extract_data(self, train_mode):
+    """
+    Params:
+      :train_mode:  whether we are in train or dev mode
+    """
+
+    if self._zipped_data[-2:]=="gz":
+      zip_file=tarfile.open(self._zipped_data, "r:gz")
+    elif self._zipped_data[-3:]=="zip":
+      zip_file = zipfile.ZipFile(self._zipped_data, 'r')
+    else:
+      print("t2t_csaky_log: "+self._zipped_data+" is not a .zip or .gz file, so I can't extract it.")
+
+    zip_file.extractall(self._raw_data)
+    zip_file.close()
+
+    # next step is creating the source, target and vocab files
+    print("t2t_csaky_log: Creating "+train_mode+" files in "+self._data_dir+".")
+    self.create_data(train_mode)
+
   # create the source, target and vocab files
   def create_data(self, train_mode):
     """
@@ -84,7 +89,7 @@ class PersonChatChatbot(cornell_chatbots.CornellChatbotBasic):
     filenames=[train_dialogs, valid_dialogs]
 
     # copy the data to a new file
-    with open('full_none_original_no_cands.txt', 'w') as outfile:
+    with open(os.path.join(self._raw_data,'full_none_original_no_cands.txt'), 'w') as outfile:
       for fname in filenames:
         with fname as infile:
           outfile.write(infile.read())
@@ -97,29 +102,32 @@ class PersonChatChatbot(cornell_chatbots.CornellChatbotBasic):
     number_of_lines=0
     current_dialog=""
     dialog_list=[]
+    dialog_silenced=False
     # iterate through the file and build a list of dialogs seprated by __eou__ tokens
     for line in dialogs:
       if number_of_lines % 10000 == 0:
         print("t2t_csaky_log: Parsed "+str(number_of_lines)+" lines.")
 
-      # get the dialog id and the utterances
       dialog_id=line.split()[0]
-      [source,target]=line.strip('\n').split()[1:].join().split('\t')
-      source=self.clean_line(source.lower())
-      target=self.clean_line(target.lower())
+      # check if this is a refurbished line
+      if "__SILENCE__" not in line and ((dialog_silenced and dialog_id=="1") or not dialog_silenced):
+        dialog_silenced=False
+        number_of_lines+=1
+        # get the utterances
+        source=" ".join(line.split("\t")[0].split()[1:])
+        target=line.split("\t")[1].strip("\n")
+        source=self.clean_line(source.lower())
+        target=self.clean_line(target.lower())
 
-      # whether this is a new dialog
-      if dialog_id==1 and current_dialog!="":
-        dialog_list.append(current_dialog)
-        if source.strip()!="__SILENCE__":
+        # whether this is a new dialog
+        if dialog_id=="1" and current_dialog!="":
+          dialog_list.append(current_dialog)
           current_dialog=source+"__eou__"+target+"__eou__"
         else:
-          current_dialog=target+"__eou__"
+          current_dialog+=source+"__eou__"+target+"__eou__"
       else:
-        current_dialog+=source+"__eou__"+target+"__eou__"
+        dialog_silenced=True
 
-
-      number_of_lines+=1
       if self.targeted_dataset_size!=0 and self.targeted_dataset_size<number_of_lines:
         break
     dialogs.close()
@@ -143,7 +151,7 @@ class PersonChatChatbot(cornell_chatbots.CornellChatbotBasic):
         source_file=testSource
         target_file=testTarget
 
-      utterances=dialog.split("__eou__")
+      utterances=dialog.split("__eou__")[:-1]
       i=0
       # loop through the dialog
       for utterance in utterances:
