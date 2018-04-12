@@ -5,11 +5,11 @@ for the current run. This file will also be copied to the directory that you pro
 
 FLAGS={
   "t2t_usr_dir"       :"t2t_csaky", # this is the directory from which tensor2tensor imports
-  "data_dir"          :"data_dir/Opensubs/89M_sentences_2012",
-  "train_dir"         :"train_dir/Opensubs/grad_ckpt_s2s-89M_2012",
+  "data_dir"          :"data_dir/DailyDialog/base_with_numbers",
+  "train_dir"         :"train_dir/DailyDialog/trf_40_dropout-base_with_numbers",
   "decode_dir"        :"decode_dir/DailyDialog/trf_20_dropout-base",
-  "problem"           :"opensubtitles_chatbot",
-  "model"             :"gradient_checkpointed_seq2seq",
+  "problem"           :"daily_dialog_chatbot",
+  "model"             :"transformer",
   "hparams"           :"",  # this is empty if we use hparams defined in this file,
                             # otherwise you have to specify a registered hparams_set
   "profile_perform"   :"True",
@@ -18,8 +18,8 @@ FLAGS={
   "train_mode"        :"train_and_evaluate",
   "keep_checkpoints"  :3,       # how many checkpoints to keep behind the newest one
   "train_steps"       :1000000,
-  "save_every_n_hour" :1,       # save checkpoints every n hours
-  "save_every_n_secs" :0,       # save checkpoints every n seconds, overrides the previous param
+  "save_every_n_hour" :0,       # save checkpoints every n hours
+  "save_every_n_secs" :1800,       # save checkpoints every n seconds, overrides the previous param
   "evaluation_steps"  :1000,    # number of evaluation steps to run at each cycle
   "evaluation_freq"   :1000,    # evaluation cycle is run every n training steps
 
@@ -32,9 +32,9 @@ FLAGS={
 }
 
 PROBLEM_HPARAMS={
-  "num_train_shards"  :100,
-  "num_dev_shards"    :100,
-  "vocabulary_size"   :1000000,
+  "num_train_shards"  :1,
+  "num_dev_shards"    :1,
+  "vocabulary_size"   :16384,
   "dataset_size"      :0,
   "dataset_split"     :{"train":80, "val":10, "test":10},
   "dataset_version"   :2012,  # only for opensubtitles
@@ -48,10 +48,10 @@ TRANSFORMER_HPARAMS={
   "roulette_beam_size":100,       # only works with roulette_transformer
 
   # hparams_set override
-  "batch_size"        :2048,
-  "layer_dropout"     :0.2,
-  "attention_dropout" :0.1,
-  "relu_dropout"      :0.1,
+  "batch_size"        :4096,
+  "layer_dropout"     :0.4,
+  "attention_dropout" :0.2,
+  "relu_dropout"      :0.2,
   "summarize_vars"    :True   # print out the model parameters at the start of training
 }
 
