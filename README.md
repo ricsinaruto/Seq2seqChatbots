@@ -17,7 +17,7 @@ In order to run something, you will have to call the [main](https://github.com/r
 ```
 python t2t_csaky/main.py --mode=train
 ```
-The mode flag can be one of the following three: *{[generate_data](https://github.com/ricsinaruto/Seq2seqChatbots/tree/master#generate-data), [train](https://github.com/ricsinaruto/Seq2seqChatbots/tree/master#train), [decode](https://github.com/ricsinaruto/Seq2seqChatbots/tree/master#decode)}*. A detailed explanation is given lower, for what each mode does.
+The mode flag can be one of the following three: *{[generate_data](https://github.com/ricsinaruto/Seq2seqChatbots/tree/master#generate-data), [train](https://github.com/ricsinaruto/Seq2seqChatbots/tree/master#train), [decode](https://github.com/ricsinaruto/Seq2seqChatbots/tree/master#decode)}*. A detailed explanation is given lower, for what each mode does. With version v1.1 I introduced the main and config files, for a more streamlined experience, but if you want more freedom and want to use tensor2tensor commands directly, check the v1.0_README for the old way.
 #### [Config](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/config.py)
 You can control the flags and parameters of each mode directly in this file. Furthermore, for each run that you initiate this file will be copied to the appropriate directory, so you can quickly access the parameters of any run. There are some flags that you have to set for every mode (the *FLAGS* dictionary in the config file):
 * **t2t_usr_dir**: Path to the directory where my code resides. You don't have to change this, unless you rename the directory.
