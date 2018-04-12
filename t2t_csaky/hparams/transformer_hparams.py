@@ -15,14 +15,14 @@ from t2t_csaky.config import *
 @registry.register_hparams
 def general_transformer_hparams():
   hparams=transformer.transformer_base()
-  hparams.add_hparam("roulette", FLAGS["roulette_wheel"])
-  hparams.add_hparam("roulette_beam_size", FLAGS["roulette_beam_size"])
+  hparams.add_hparam("roulette", TRANSFORMER_HPARAMS["roulette_wheel"])
+  hparams.add_hparam("roulette_beam_size", TRANSFORMER_HPARAMS["roulette_beam_size"])
 
-  hparams.batch_size=FLAGS["batch_size"]
-  hparams.layer_prepostprocess_dropout=FLAGS["layer_dropout"]
-  hparams.attention_dropout=FLAGS["attention_dropout"]
-  hparams.relu_dropout=FLAGS["relu_dropout"]
-  hparams.summarize_vars=FLAGS["summarize_vars"]
+  hparams.batch_size=TRANSFORMER_HPARAMS["batch_size"]
+  hparams.layer_prepostprocess_dropout=TRANSFORMER_HPARAMS["layer_dropout"]
+  hparams.attention_dropout=TRANSFORMER_HPARAMS["attention_dropout"]
+  hparams.relu_dropout=TRANSFORMER_HPARAMS["relu_dropout"]
+  hparams.summarize_vars=TRANSFORMER_HPARAMS["summarize_vars"]
 
   return hparams
 
