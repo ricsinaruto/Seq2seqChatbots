@@ -1,3 +1,5 @@
+"""
+
 import numpy as np
 
 source=open("devSource.txt")
@@ -125,4 +127,7 @@ lines=[]
 for line in source:
   lines.append(Line(line))
 
-
+"""
+class SentenceEmbedding:
+  def __init__():
+    pass

@@ -7,7 +7,9 @@ import select
 
 # my imports
 from config import *
-from data_filtering import filter_problem
+from data_filtering.hash_jaccard import HashJaccard
+from data_filtering.rnn_state import RNNState
+from data_filtering.sentence_embedding import SentenceEmbedding
 
 
 
@@ -31,7 +33,7 @@ def data_generating():
             " --problem="+FLAGS["problem"])
 
 # initialize a training loop with the given flags
-def training(time_string):
+def training():
   print("Program is running in training mode.")
   save_config_file(FLAGS["train_dir"])
   # what hparams should we use
@@ -57,7 +59,7 @@ def training(time_string):
             " --local_eval_frequency="+str(FLAGS["evaluation_freq"]))
 
 # intialize an inference test with the given flags
-def run_decoding():
+def decoding():
   print("Program is running in inference/decoding mode.")
   save_config_file(FLAGS["decode_dir"])
   # what hparams should we use
@@ -86,13 +88,19 @@ def run_decoding():
             decode_mode_string)
 
 # initialize a filtering problem
-def run_filtering():
+def data_filtering():
   print("Program is running in data filtering mode.")
   save_config_file(DATA_FILTERING["data_dir"])
 
-  train_filter=filter_problem.filter_problems[DATA_FILTERING["filter_problem"]]("train")
-  dev_filter=filter_problem.filter_problems[DATA_FILTERING["filter_problem"]]("dev")
-  test_filter=filter_problem.filter_problems[DATA_FILTERING["filter_problem"]]("test")
+  filter_problems= {
+    "hash_jaccard"      : HashJaccard,
+    "sentence_embedding": SentenceEmbedding,
+    "rnn_state"         : RNNState
+  }
+
+  train_filter=filter_problems[DATA_FILTERING["filter_problem"]]("train")
+  dev_filter=filter_problems[DATA_FILTERING["filter_problem"]]("dev")
+  test_filter=filter_problems[DATA_FILTERING["filter_problem"]]("test")
   train_filter.run()
   dev_filter.run()
   test_filter.run()

@@ -24,15 +24,15 @@ def main():
   
   # different modes will call different functions
   run_mode={
-  "train"         :run.training()
-  "decode"        :run.decoding()
-  "generate_data" :run.data_generating()
-  "filter_data"   :run.data_filtering()
+  "train"         :run.training,
+  "decode"        :run.decoding,
+  "generate_data" :run.data_generating,
+  "filter_data"   :run.data_filtering
   }
 
   # initialize a mode
   if args.mode in run_mode:
-    run_mode[args.mode]
+    run_mode[args.mode]()
   else:
     print("Program exited, because no suitable mode was defined. "+
             "The mode flag has to be set to one of the following:")

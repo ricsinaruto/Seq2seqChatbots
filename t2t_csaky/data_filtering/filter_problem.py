@@ -1,18 +1,9 @@
 import os
+import math
+from collections import Counter
 
 # my imports
-from hash_jaccard import HashJaccard
-from sentence_embedding import SentenceEmbedding
-from rnn_state import RNNState
-from ..config import *
-
-
-# dictionary to choose between the different filter problem classes
-filter_problems={
-  "hash_jaccard"      :HashJaccard()
-  "sentence_embedding":SentenceEmbedding()
-  "rnn_state"         :RNNState()
-}
+from config import *
 
 
 
@@ -20,7 +11,12 @@ class DataPoint:
   """
   A simple class that handles a string example.
   """
-  def __init__(self, string):
+  def __init__(self, string, only_string=True):
+    """
+    Params:
+      :string:  String to be stored
+      :only_string: Whether to only store string
+    """ 
     self.string=string.strip("\n")
     self.cluster_index=0
 
@@ -37,6 +33,7 @@ class Cluster:
     self.medoid=medoid
     self.elements=[]
     self.targets=[]
+    self.entropy=0
 
   # append an element to the list of elements in the cluster
   def add_element(self, element):
@@ -64,11 +61,11 @@ class FilterProblem:
     self.tag=tag
     self.treshold=DATA_FILTERING["treshold"]
     self.clusters= {
-      "Source" : []
+      "Source" : [],
       "Target" : []
     }
     self.data_points= {
-      "Source" : []
+      "Source" : [],
       "Target" : []
     }
 
@@ -90,33 +87,36 @@ class FilterProblem:
 
   # main method that will run all the functions to do the filtering
   def run(self):
-    self.read_inputs()
-
     # if we have already done the clustering, don't redo it
     if os.path.isfile(os.path.join(self.output_data_dir, self.tag+"Source_cluster_elements.txt")) \
-      and os.parh.isfile(os.path.join(self.output_data_dir, self.tag+"Target_cluster_elements.txt")):
+      and os.path.isfile(os.path.join(self.output_data_dir, self.tag+"Target_cluster_elements.txt")):
 
       print("Found cluster files in "+self.output_data_dir+", proceeding with filtering.")
+      self.read_inputs(True)
       self.load_clusters("Source")
       self.load_clusters("Target")
       self.filtering()
 
     else:
       print("No cluster files were found in "+self.output_data_dir+", proceeding with clustering.")
+      self.read_inputs(False)
       self.clustering("Source")
       self.clustering("Target")
       self.filtering()
 
   # this function will read the data and make it ready for clustering
-  def read_inputs(self):
-    sources=open(os.path.join(self.input_data_dir, self.tag+"Source"))
-    targets=open(os.path.join(self.input_data_dir, self.tag+"Target"))
+  def read_inputs(self, only_string):
+    """
+    Whether to initialize the data point classes only with string
+    """
+    sources=open(os.path.join(self.input_data_dir, self.tag+"Source.txt"))
+    targets=open(os.path.join(self.input_data_dir, self.tag+"Target.txt"))
 
     for line in sources:
-      data_points["Source"].append(self.DataPointClass(line))
+      self.data_points["Source"].append(self.DataPointClass(line, only_string))
 
     for line in targets:
-      data_points["Target"].append(self.DataPointClass(line))
+      self.data_points["Target"].append(self.DataPointClass(line, only_string))
 
     sources.close()
     targets.close()
@@ -132,7 +132,7 @@ class FilterProblem:
 
     # temporary dict to facilitate loading clusters
     temp_dict={}
-    for i in range(self.data_points[data_tag]):
+    for i in range(len(self.data_points[data_tag])):
       temp_dict[self.data_points[data_tag][i].string]=i
 
     # load the clusters
@@ -143,14 +143,14 @@ class FilterProblem:
       # check if this is a new medoid
       if last_medoid=="<-->" or last_medoid!=medoid:
         # add medoid to cluster
-        self.clusters[data_tag].append(self.ClusterClass(data_points[data_tag][temp_dict[medoid]]))
-      self.clusters[data_tag][-1].add_element(data_points[data_tag][temp_dict[element]])
+        self.clusters[data_tag].append(self.ClusterClass(self.data_points[data_tag][temp_dict[medoid]]))
+      self.clusters[data_tag][-1].add_element(self.data_points[data_tag][temp_dict[element]])
 
       # reverse data tag
       if data_tag=="Source":
-        self.clusters[data_tag][-1].targets.append(data_points["Target"][temp_dict[element]])
+        self.clusters[data_tag][-1].targets.append(self.data_points["Target"][temp_dict[element]])
       else:
-        self.clusters[data_tag][-1].targets.append(data_points["Source"][temp_dict[element]])
+        self.clusters[data_tag][-1].targets.append(self.data_points["Source"][temp_dict[element]])
 
       # add cluster index to data points
       self.data_points[data_tag][temp_dict[element]].cluster_index=len(self.clusters[data_tag])-1
@@ -194,9 +194,9 @@ class FilterProblem:
       self.clusters[data_tag][nearest_medoid].add_element(self.data_points[data_tag][i])
       # reverse data tag
       if data_tag=="Source":
-        self.clusters[data_tag][-1].targets.append(data_points["Target"][i])
+        self.clusters[data_tag][-1].targets.append(self.data_points["Target"][i])
       else:
-        self.clusters[data_tag][-1].targets.append(data_points["Source"][i])
+        self.clusters[data_tag][-1].targets.append(self.data_points["Source"][i])
 
       self.data_points[data_tag][i].cluster_index=nearest_medoid
 
@@ -233,11 +233,83 @@ class FilterProblem:
   def clustering(self, data_tag):
     return NotImplementedError
 
+  # return a list of indices, showing which clusters should be filtered out based on treshold
+  def get_filtered_indices(self, source):
+    """
+    Params:
+      :source: the cluster that we want to filter (either Source or Target)
+    """
+    target_string="Target" if source=="Source" else "Source"
+    entropy_stats=open(os.path.join(self.output_data_dir, self.tag+source+"_cluster_entropies.txt"), "w")
+    source_file=open(os.path.join(self.output_data_dir, self.tag+source+".txt"), "w")
+    target_file=open(os.path.join(self.output_data_dir, self.tag+target_string+".txt"), "w")
+
+    indices=[]
+    for num_cl, cluster in enumerate(self.clusters[source]):
+
+      # build a distribution for the current cluster, based on the targets
+      distribution=Counter()
+      for target in cluster.targets: 
+        if target.cluster_index in distribution:
+          distribution[target.cluster_index]+=1
+        else:
+          distribution[target.cluster_index]=1
+
+      # calculate entropy
+      entropy=0
+      for cl_index in distribution:
+        probability=distribution[cl_index]/len(cluster.targets)
+        entropy+=probability*math.log(probability, 2)
+
+      # normalize entropy between 0 and 1, and save it
+      entropy=-entropy/math.log(len(cluster.targets), 2)
+      self.clusters[source][num_cl].entropy=entropy
+
+      # save the filtering results
+      if self.type!="both":
+        self.save_filtered_data(cluster, entropy_stats, source_file, target_file)
+
+      # filter
+      if entropy>self.treshold:
+        indices.append(num_cl)
+        print('Medoid: "'+cluster.medoid.string+'" got filtered.')
+
+    print("Finished filtering.")
+    source_file.close()
+    target_file.close()
+    entropy_stats.close()
+
+    return indices
+    
   # do the filtering of the dataset
   def filtering(self):
-    if self.type=="target_based":
-      self.get_filtered_indices("Source", "Target")
+    # these are not needed anymore
+    self.data_points["Source"].clear()
+    self.data_points["Target"].clear()
 
+    if self.type=="target_based" or self.type=="both":
+      source_indices=self.get_filtered_indices("Source")
+    if self.type=="source_based" or self.type=="both":
+      target_indices=self.get_filtered_indices("Target")
+
+    if self.type=="both":
+      pass
+
+  # save the filtering results
+  def save_filtered_data(self, cluster, entropy_stats, source_file, target_file):
+    """
+    Params:
+      :cluster: Cluster to be saved
+      :entropy_stats: Cluster entropies are saved to this file
+      :source_file: Filtered source sentences are saved here
+      :target_file: Filtered target sentences are saved here
+    """
+    entropy_stats.write(cluster.medoid.string+";"+str(cluster.entropy)+"\n")
+
+    if cluster.entropy<=self.treshold:
+      for num_el, element in enumerate(cluster.elements):
+        source_file.write(element.string+"\n")
+        target_file.write(cluster.targets[num_el].string+"\n")
 
   # save clusters and their elements to files
   def save_clusters(self, data_tag):
@@ -249,7 +321,7 @@ class FilterProblem:
 
     medoid_counts=[]
     for cluster in self.clusters[data_tag]:
-      medoid_counts.append(cluster.medoid.string, len(cluster.elements))
+      medoid_counts.append((cluster.medoid.string, len(cluster.elements)))
       for data_point in cluster.elements:
         output.write(cluster.medoid.string+"<=====>"+data_point.string+"\n")
     output.close()
@@ -258,7 +330,8 @@ class FilterProblem:
     output=open(os.path.join(self.output_data_dir, self.tag+data_tag+"_clusters.txt"), "w")
     sorted_medoids=sorted(medoid_counts, key=lambda count: count[1], reverse=True)
 
-    for medoid in medoids:
+    for medoid in sorted_medoids:
       output.write(medoid[0]+":"+str(medoid[1])+"\n")
+    output.close()
 
     print("Finished clustering, proceeding with filtering.")

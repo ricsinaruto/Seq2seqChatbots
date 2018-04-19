@@ -2,8 +2,8 @@ from datasketch import MinHash, MinHashLSH, MinHashLSHForest
 import random
 
 # my imports
-from filter_problem import FilterProblem
-from ..config import *
+from data_filtering.filter_problem import FilterProblem
+from config import *
 
 
 
@@ -11,16 +11,22 @@ class DataPoint:
   """
   A class that handles a hash example.
   """
-  def __init__(self, string):
+  def __init__(self, string, only_string=True):
+    """
+    Params:
+      :string:  String to be stored
+      :only_string: Whether to only store string
+    """ 
     self.string=string.strip("\n")
-    self.min_hash=MinHash(num_perm=DATA_FILTERING["num_permutations"])
     self.character_level=DATA_FILTERING["character_level"]
     self.cluster_index=0
 
-    self.init_hash()
+    if not only_string:
+      self.init_hash()
 
   # initialize hash from string
   def init_hash(self):
+    self.min_hash=MinHash(num_perm=DATA_FILTERING["num_permutations"])
     for word in self.string.split():
       if self.character_level:
         for char in word:
