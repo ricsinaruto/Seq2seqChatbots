@@ -31,6 +31,16 @@ FLAGS={
   "return_beams"      :"True"                   # if False return only the top beam, otherwise beam_size beams
 }
 
+DATA_FILTERING={
+  "data_dir"          :"data_dir/DailyDialog/base_with_numbers/data_filtering/hash_jaccard/word_1000_clusters"
+  "filter_problem"    :"hash_jaccard" # can be: hash_jaccard, sentence_embedding, rnn_state
+  "filter_type"       :"target_based" # can be: target_based, source_based, both
+  "num_clusters"      :1000
+  "num_permutations"  :128    # only for hash based clustering
+  "character_level"   :False  # only for hash based clustering
+  "treshold"          :0.9    # percentage treshold of entropy based filtering
+}
+
 PROBLEM_HPARAMS={
   "num_train_shards"  :1,
   "num_dev_shards"    :1,
