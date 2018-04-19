@@ -15,6 +15,10 @@ from data_filtering.sentence_embedding import SentenceEmbedding
 
 # save the config.py file for a specific run
 def save_config_file(directory):
+  # make the data dir if it doesn't exist
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+
   # this will be used in the names of saved files
   now=datetime.datetime.now()
   time_string=str(now.year)+"."+str(now.month)+"."+str(now.day)+"."+str(now.hour)+\
@@ -104,6 +108,17 @@ def data_filtering():
   train_filter.run()
   dev_filter.run()
   test_filter.run()
+
+# run a longer experiment, with many calls to the above functions
+def experiment():
+  for cluster_size in [1000, 2000, 3000, 5000, 7000, 10000]:
+    for dataset in ["Cornell", "Persona_Chat", "DailyDialog"]:
+      # modify config files
+      DATA_FILTERING["num_clusters"]=cluster_size
+      DATA_FILTERING["data_dir"]="data_dir/"+dataset+"/base/filtered_data/hash_jaccard/"+str(cluster_size)+"_clusters"
+      FLAGS["data_dir"]="data_dir/"+dataset+"/base"
+
+      data_filtering()
 
 # run some command line stuff, and get the output in real-time
 def run_command(command=["t2t-datagen","--t2t_usr_dir="+FLAGS["t2t_usr_dir"],\

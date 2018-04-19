@@ -5,3 +5,4 @@ clint
 toposort
 networkx
 pytest
+datasketch

@@ -27,7 +27,8 @@ def main():
   "train"         :run.training,
   "decode"        :run.decoding,
   "generate_data" :run.data_generating,
-  "filter_data"   :run.data_filtering
+  "filter_data"   :run.data_filtering,
+  "experiment"	  :run.experiment
   }
 
   # initialize a mode

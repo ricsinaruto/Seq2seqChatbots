@@ -36,7 +36,7 @@ DATA_FILTERING={
   "filter_problem"    :"hash_jaccard",  # can be: hash_jaccard, sentence_embedding, rnn_state
   "filter_type"       :"target_based",  # can be: target_based, source_based, both
   "num_clusters"      :5000,
-  "num_permutations"  :128,    # only for hash based clustering
+  "num_permutations"  :256,    # only for hash based clustering
   "character_level"   :False,  # only for hash based clustering
   "treshold"          :0.9    # percentage treshold of entropy based filtering
 }
