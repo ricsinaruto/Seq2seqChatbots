@@ -45,7 +45,7 @@ class HashJaccard(FilterProblem):
   """
   @property
   def num_perm(self):
-    return DATA_FILTERING["num_permutations"]
+    return DATA_FILTERING["num_perm_forest"]
 
   @property
   def DataPointClass(self):
