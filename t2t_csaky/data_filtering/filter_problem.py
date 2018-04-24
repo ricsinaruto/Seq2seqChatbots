@@ -194,9 +194,9 @@ class FilterProblem:
       self.clusters[data_tag][nearest_medoid].add_element(self.data_points[data_tag][i])
       # reverse data tag
       if data_tag=="Source":
-        self.clusters[data_tag][-1].targets.append(self.data_points["Target"][i])
+        self.clusters[data_tag][nearest_medoid].targets.append(self.data_points["Target"][i])
       else:
-        self.clusters[data_tag][-1].targets.append(self.data_points["Source"][i])
+        self.clusters[data_tag][nearest_medoid].targets.append(self.data_points["Source"][i])
 
       self.data_points[data_tag][i].cluster_index=nearest_medoid
 

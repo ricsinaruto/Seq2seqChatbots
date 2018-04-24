@@ -116,7 +116,7 @@ def experiment():
     # modify config files
     DATA_FILTERING["num_clusters"]=cluster_size
     DATA_FILTERING["data_dir"]="data_dir/"+dataset+"/base_with_numbers/filtered_data/hash_jaccard/"+str(cluster_size)+"_clusters"
-    FLAGS["data_dir"]="data_dir/"+dataset+"/base"
+    FLAGS["data_dir"]="data_dir/"+dataset+"/base_with_numbers"
 
     data_filtering()
 
