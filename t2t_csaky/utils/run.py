@@ -112,13 +112,13 @@ def data_filtering():
 # run a longer experiment, with many calls to the above functions
 def experiment():
   for cluster_size in [1000, 2000, 3000, 5000, 7000, 10000]:
-    for dataset in ["Cornell", "Persona_Chat", "DailyDialog"]:
-      # modify config files
-      DATA_FILTERING["num_clusters"]=cluster_size
-      DATA_FILTERING["data_dir"]="data_dir/"+dataset+"/base_with_numbers/filtered_data/hash_jaccard/"+str(cluster_size)+"_clusters"
-      FLAGS["data_dir"]="data_dir/"+dataset+"/base"
+    dataset="DailyDialog"
+    # modify config files
+    DATA_FILTERING["num_clusters"]=cluster_size
+    DATA_FILTERING["data_dir"]="data_dir/"+dataset+"/base_with_numbers/filtered_data/hash_jaccard/"+str(cluster_size)+"_clusters"
+    FLAGS["data_dir"]="data_dir/"+dataset+"/base"
 
-      data_filtering()
+    data_filtering()
 
 # run some command line stuff, and get the output in real-time
 def run_command(command=["t2t-datagen","--t2t_usr_dir="+FLAGS["t2t_usr_dir"],\

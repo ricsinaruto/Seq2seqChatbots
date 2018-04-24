@@ -37,7 +37,6 @@ DATA_FILTERING={
   "filter_type"       :"target_based",  # can be: target_based, source_based, both
   "num_clusters"      :5000,
   "num_permutations"  :128,    # only for hash based clustering
-  "num_perm_forest"   :160,    # only for hash based clustering
   "character_level"   :False,  # only for hash based clustering
   "treshold"          :0.9    # percentage treshold of entropy based filtering
 }
