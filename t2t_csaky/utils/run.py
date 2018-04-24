@@ -81,9 +81,9 @@ def decoding():
   if FLAGS["decode_mode"]=="interactive":
     decode_mode_string=" --decode_interactive"
   elif FLAGS["decode_mode"]=="file":
-    decode_mode_string=" --decode_from_file="
-                       +FLAGS["decode_dir"]+"/"
-                       +FLAGS["input_file_name"]
+    decode_mode_string=(" --decode_from_file="
+                        +FLAGS["decode_dir"]+"/"
+                        +FLAGS["input_file_name"])
 
   os.system("t2t-decoder \
                --generate_data=False \
