@@ -1,4 +1,4 @@
-
+"""
 
 import numpy as np
 
@@ -126,7 +126,7 @@ lines=[]
 # parse the input file
 for line in source:
   lines.append(Line(line))
-
+"""
 
 class SentenceEmbedding:
   def __init__():

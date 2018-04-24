@@ -110,10 +110,10 @@ class FilterProblem:
     targets=open(os.path.join(self.input_data_dir, self.tag+"Target.txt"))
 
     for line in sources:
-      self.data_points["Source"].append(self.DataPointClass(line))
+      self.data_points["Source"].append(self.DataPointClass(line, False))
 
     for line in targets:
-      self.data_points["Target"].append(self.DataPointClass(line))
+      self.data_points["Target"].append(self.DataPointClass(line, False))
 
     sources.close()
     targets.close()
