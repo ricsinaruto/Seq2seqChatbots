@@ -258,12 +258,12 @@ class FilterProblem:
       # calculate entropy
       entropy=0
       for cl_index in distribution:
-        if len(cluster_targets)!=0:
+        if len(cluster.targets)!=0:
           probability=distribution[cl_index]/len(cluster.targets)
           entropy+=probability*math.log(probability, 2)
 
       # normalize entropy between 0 and 1, and save it
-      if len(cluster_targets)!=0:
+      if len(cluster.targets)!=0:
         entropy=-entropy/math.log(len(cluster.targets), 2)
       self.clusters[source][num_cl].entropy=entropy
 
