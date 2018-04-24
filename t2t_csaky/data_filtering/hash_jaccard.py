@@ -108,6 +108,3 @@ class HashJaccard(FilterProblem):
       # check stopping criterions
       exit, cluster_names, cluster_names_old = \
         self.stop_clustering(data_tag, cluster_names, cluster_names_old, count)
-
-    # save the clustering results
-    self.save_clusters(data_tag)

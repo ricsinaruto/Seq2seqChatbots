@@ -102,6 +102,8 @@ class FilterProblem:
       self.read_inputs()
       self.clustering("Source")
       self.clustering("Target")
+      self.save_clusters("Source")
+      self.save_clusters("Target")
       self.filtering()
 
   # this function will read the data and make it ready for clustering
@@ -316,12 +318,14 @@ class FilterProblem:
 
       # write entropies to file
       for cluster in self.clusters["Target"]:
-        target_entropy.write(
-          cluster.medoid.string+";"+str(cluster.entropy)+"\n")
+        target_entropy.write(cluster.medoid.string+";"
+                             +str(cluster.entropy)+";"
+                             +str(len(cluster.elements))+"\n")
 
       for num_cl, cluster in enumerate(self.clusters["Source"]):
-        source_entropy.write(
-          cluster.medoid.string+";"+str(cluster.entropy)+"\n")
+        source_entropy.write(cluster.medoid.string+";"
+                             +str(cluster.entropy)+";"
+                             +str(len(cluster.elements))+"\n")
 
         # double filtering (source and target)
         if num_cl not in source_indices:
@@ -344,7 +348,9 @@ class FilterProblem:
       :source: Filtered source sentences are saved here
       :target: Filtered target sentences are saved here
     """
-    entropy_stats.write(cluster.medoid.string+";"+str(cluster.entropy)+"\n")
+    entropy_stats.write(cluster.medoid.string+";"
+                        +str(cluster.entropy)+";"
+                        +str(len(cluster.elements))+"\n")
 
     if cluster.entropy<=self.treshold:
       for num_el, element in enumerate(cluster.elements):
