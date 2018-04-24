@@ -35,12 +35,12 @@ class CharacterChatbot(word_chatbot.WordChatbot):
 
   @property
   def targeted_dataset_size(self):
-    # character chatbot currently only supports to run on the whole supplied dataset
+    # character chatbot currently only supports to run on the whole dataset
     return 0
 
   def generator(self, data_dir, tmp_dir, train):
     """ 
-    Generate the character vocab and then build train and validation t2t-datagen files.
+    Generate the vocab and then build train and validation t2t-datagen files.
     Four .txt files have to be present in the data_dir directory:
       trainSource.txt
       trainTarget.txt
@@ -60,11 +60,15 @@ class CharacterChatbot(word_chatbot.WordChatbot):
     # try to find the txt files
     if os.path.isfile(sourcePath) and os.path.isfile(targetPath):
       print("t2t_csaky_log: Generating "+mode+" files in "+data_dir)
-      return translate.character_generator(sourcePath, targetPath, character_vocab, EOS)
-
+      return translate.character_generator(sourcePath,
+                                           targetPath,
+                                           character_vocab,
+                                           EOS)
     else:
-      print("t2t_csaky_log: "+mode+" source or target file not found, please check "+\
-            "that the following files exist in your "+data_dir+" directory and rerun this program:")
+      print("t2t_csaky_log: "+mode
+            +" source or target file not found, please check "
+            +"that the following files exist in your "+data_dir
+            +" directory and rerun this program:")
       print("  trainSource.txt")
       print("  trainTarget.txt")
       print("  devSource.txt")

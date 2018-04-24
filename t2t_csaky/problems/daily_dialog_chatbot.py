@@ -25,7 +25,7 @@ EOS = text_encoder.EOS_ID
 @registry.register_problem
 class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
   """
-  A class implementing a simple turn-based chatbot problem for the DailyDialog dataset.
+  A class implementing a simple chatbot problem for the DailyDialog dataset.
   This version doesn't use any auxiliary information.
   """
 
@@ -37,7 +37,8 @@ class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
     """
 
     # set the raw data directory and data
-    self.raw_data_dir=os.path.join("/".join(self._data_dir.split("/")[:-1]),'raw_data')
+    self.raw_data_dir=os.path.join("/".join(self._data_dir.split("/")[:-1]),
+                                   'raw_data')
     self.raw_data=os.path.join(self._raw_data_dir, "ijcnlp_dailydialog")
     self.zipped_data=os.path.join(self._raw_data_dir,"ijcnlp_dailydialog.zip")
 
@@ -55,10 +56,12 @@ class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
     """
 
     # open the 6 files
-    trainSource, trainTarget, devSource, devTarget, testSource, testTarget = self.open_6_files()
+    trainSource, trainTarget, devSource, devTarget, testSource, testTarget = \
+      self.open_6_files()
 
     # open the raw data
-    dialogs=open(os.path.join(self._raw_data, 'dialogues_text.txt'), errors="ignore")
+    dialogs=open(
+      os.path.join(self._raw_data, 'dialogues_text.txt'), errors="ignore")
 
     vocabulary=Counter()
     number_of_dialogs=0
@@ -77,7 +80,8 @@ class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
       if dataset_split_counter<=self.dataset_split["train"]:
         source_file=trainSource
         target_file=trainTarget
-      elif dataset_split_counter<=self.dataset_split["train"]+self.dataset_split["val"]:
+      elif dataset_split_counter<=(self.dataset_split["train"]
+                                   +self.dataset_split["val"]):
         source_file=devSource
         target_file=devTarget
       else:
@@ -112,11 +116,17 @@ class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
         dataset_split_counter=0
 
       # check if we reached the desired dataset size
-      if self.targeted_dataset_size!=0 and self.targeted_dataset_size<line_counter:
+      if self.targeted_dataset_size!=0 \
+          and self.targeted_dataset_size<line_counter:
         break
 
     # close the files
-    self.close_6_files(trainSource, trainTarget, devSource, devTarget, testSource, testTarget)
+    self.close_n_files([trainSource,
+                       trainTarget,
+                       devSource,
+                       devTarget,
+                       testSource,
+                       testTarget])
     dialogs.close()
 
     # save the vocabulary

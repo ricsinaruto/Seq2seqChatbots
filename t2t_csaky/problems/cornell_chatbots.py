@@ -25,7 +25,7 @@ EOS = text_encoder.EOS_ID
 @registry.register_problem
 class CornellChatbotBasic(opensubtitles_chatbot.OpensubtitlesChatbot):
   """
-  A class implementing the chatbot problem for the Cornell Movie Dialog dataset.
+  A class implementing the chatbot problem with Cornell Movie Dialog dataset.
   """
 
   # main function where the preprocessing of the data starts
@@ -36,12 +36,16 @@ class CornellChatbotBasic(opensubtitles_chatbot.OpensubtitlesChatbot):
     """
 
     # set the raw data directory and data
-    self.raw_data_dir=os.path.join("/".join(self._data_dir.split("/")[:-1]),'raw_data')
-    self.raw_data=os.path.join(self._raw_data_dir, "cornell movie-dialogs corpus")
-    self.zipped_data=os.path.join(self._raw_data_dir,"cornell_movie_dialogs_corpus.zip")
+    self.raw_data_dir=os.path.join("/".join(self._data_dir.split("/")[:-1]),
+                                   'raw_data')
+    self.raw_data=os.path.join(self._raw_data_dir,
+                               "cornell movie-dialogs corpus")
+    self.zipped_data=os.path.join(self._raw_data_dir,
+                                  "cornell_movie_dialogs_corpus.zip")
 
     # create the download url
-    self.url="http://www.cs.cornell.edu/~cristian/data/cornell_movie_dialogs_corpus.zip"
+    self.url=("http://www.cs.cornell.edu/~cristian/data/"
+              +"cornell_movie_dialogs_corpus.zip")
 
     # check at which part of the pipeline are we at
     self.data_pipeline_status(train_mode)
@@ -54,10 +58,12 @@ class CornellChatbotBasic(opensubtitles_chatbot.OpensubtitlesChatbot):
     """
 
     # open the 6 files
-    trainSource, trainTarget, devSource, devTarget, testSource, testTarget = self.open_6_files()
+    trainSource, trainTarget, devSource, devTarget, testSource, testTarget = \
+      self.open_6_files()
 
     # open the raw data
-    movie_lines = open(os.path.join(self._raw_data, 'movie_lines.txt'), errors="ignore")
+    movie_lines = open(
+      os.path.join(self._raw_data, 'movie_lines.txt'), errors="ignore")
     dialog_list = self.extract_dialog_ids()
 
     vocabulary=Counter()
@@ -78,7 +84,8 @@ class CornellChatbotBasic(opensubtitles_chatbot.OpensubtitlesChatbot):
 
       number_of_lines+=1
       # check if we reached the desired dataset size
-      if self.targeted_dataset_size!=0 and self.targeted_dataset_size<number_of_lines:
+      if self.targeted_dataset_size!=0 \
+          and self.targeted_dataset_size<number_of_lines:
         break
 
     counter=0
@@ -86,13 +93,16 @@ class CornellChatbotBasic(opensubtitles_chatbot.OpensubtitlesChatbot):
     # save the actual dialogs
     for dialog in dialog_list:
       if counter % 10000==0:
-        print("t2t_csaky_log: Saved "+str(counter)+"/"+str(len(dialog_list))+" dialogs.")
+        print("t2t_csaky_log: Saved "+str(counter)+"/"+str(len(dialog_list))
+            +" dialogs.")
 
       dataset_split_counter+=1
       i=0
       # save one utterance
       for utterance in dialog:
-        if utterance != dialog[-1] and dialog[i+1]!="L211194" and dialog[i+1]!="L1045":
+        if utterance != dialog[-1] \
+            and dialog[i+1]!="L211194" \
+            and dialog[i+1]!="L1045":
           source_line=line_dict[utterance]+'\n'
           target_line=line_dict[dialog[i+1]]+'\n'
 
@@ -109,7 +119,8 @@ class CornellChatbotBasic(opensubtitles_chatbot.OpensubtitlesChatbot):
             trainSource.write(source_line)
             trainTarget.write(target_line)
 
-          elif dataset_split_counter<=self.dataset_split["train"]+self.dataset_split["val"]:
+          elif dataset_split_counter<=(self.dataset_split["train"]
+                                       +self.dataset_split["val"]):
             devSource.write(source_line)
             devTarget.write(target_line)
           else:
@@ -123,7 +134,12 @@ class CornellChatbotBasic(opensubtitles_chatbot.OpensubtitlesChatbot):
       counter+=1
 
     # close the files
-    self.close_6_files(trainSource, trainTarget, devSource, devTarget, testSource, testTarget)
+    self.close_n_files([trainSource,
+                       trainTarget,
+                       devSource,
+                       devTarget,
+                       testSource,
+                       testTarget])
     movie_lines.close()
 
     # save the vocabulary
@@ -158,7 +174,8 @@ class CornellChatbotBasic(opensubtitles_chatbot.OpensubtitlesChatbot):
 
   # extract the dialog ids from the dialog file
   def extract_dialog_ids(self):
-    dialogs = open(os.path.join(self._raw_data, 'movie_conversations.txt'), errors="ignore")
+    dialogs = open(
+      os.path.join(self._raw_data, 'movie_conversations.txt'), errors="ignore")
 
     dialog_list=[]
     # each line contains a dialog
@@ -179,8 +196,8 @@ class CornellChatbotBasic(opensubtitles_chatbot.OpensubtitlesChatbot):
 @registry.register_problem
 class CornellChatbotSeparateNames(CornellChatbotBasic):
   """
-  A class implementing the chatbot problem for the Cornell Movie Dialog dataset with
-  the names of the characters saying a line appended to that line.
+  A class implementing the chatbot problem for the Cornell Movie Dialog dataset
+  with the names of the characters saying a line appended to that line.
   """
 
   @property
@@ -189,7 +206,8 @@ class CornellChatbotSeparateNames(CornellChatbotBasic):
 
   @property
   def targeted_vocab_size(self):
-    return PROBLEM_HPARAMS["vocabulary_size"] + PROBLEM_HPARAMS["name_vocab_size"]
+    return (PROBLEM_HPARAMS["vocabulary_size"]
+            + PROBLEM_HPARAMS["name_vocab_size"])
 
   # create the source, target and vocab files
   def create_data(self, train_mode):
@@ -199,10 +217,12 @@ class CornellChatbotSeparateNames(CornellChatbotBasic):
     """
 
     # open the 6 files
-    trainSource, trainTarget, devSource, devTarget, testSource, testTarget = self.open_6_files()
+    trainSource, trainTarget, devSource, devTarget, testSource, testTarget = \
+      self.open_6_files()
 
     # open the raw data
-    movie_lines = open(os.path.join(self._raw_data, 'movie_lines.txt'), errors="ignore")
+    movie_lines = open(
+      os.path.join(self._raw_data, 'movie_lines.txt'), errors="ignore")
     dialog_list = self.extract_dialog_ids()
 
     vocabulary=Counter()
@@ -216,12 +236,12 @@ class CornellChatbotSeparateNames(CornellChatbotBasic):
 
       line=line.split(" +++$+++ ")
 
-      # it's important to separate between characters with same names but appearing in different movies
+      # separate characters with same names but appearing in different movies
       name=re.sub(" ", "_", line[3])+"_"+line[2]
       dialog_id=line[0]
       line=line[4].lower()
 
-      # build vocabulary for names:
+      # Build vocabulary for names:
       # Currently we build it based on the whole dataset, because we can assume
       # that the list of most frequent names is the same in the whole dataset, 
       # and in a random sample of it, however it would be more accurate to
@@ -237,7 +257,8 @@ class CornellChatbotSeparateNames(CornellChatbotBasic):
 
       number_of_lines+=1
       # check if we reached the desired dataset size
-      if self.targeted_dataset_size!=0 and self.targeted_dataset_size<number_of_lines:
+      if self.targeted_dataset_size!=0 \
+          and self.targeted_dataset_size<number_of_lines:
         break
 
     # replace infrequent names with unknown
@@ -248,14 +269,16 @@ class CornellChatbotSeparateNames(CornellChatbotBasic):
     dataset_split_counter=0
     for dialog in dialog_list:
       if counter % 10000==0:
-        print("t2t_csaky_log: Saved "+str(counter)+"/"+str(len(dialog_list))+" dialogs.")
+        print("t2t_csaky_log: Saved "+str(counter)+"/"+str(len(dialog_list))
+          +" dialogs.")
 
       dataset_split_counter+=1
       i=0
       # save one utterance
       for utterance in dialog:
-        if utterance != dialog[-1] and dialog[i+1]!="L211194" and dialog[i+1]!="L1045":
-
+        if utterance != dialog[-1] \
+            and dialog[i+1]!="L211194" \
+            and dialog[i+1]!="L1045":
           # prepare the name annotated data
           target_words=line_dict[dialog[i+1]].split()
           target_name=target_words[0]
@@ -275,7 +298,8 @@ class CornellChatbotSeparateNames(CornellChatbotBasic):
             trainSource.write(source_line)
             trainTarget.write(target_line)
 
-          elif dataset_split_counter<=self.dataset_split["train"]+self.dataset_split["val"]:
+          elif dataset_split_counter<=(self.dataset_split["train"]
+                                       +self.dataset_split["val"]):
             devSource.write(source_line)
             devTarget.write(target_line)
           else:
@@ -289,7 +313,12 @@ class CornellChatbotSeparateNames(CornellChatbotBasic):
       counter+=1
 
     # close the files
-    self.close_6_files(trainSource, trainTarget, devSource, devTarget, testSource, testTarget)
+    self.close_6_files([trainSource,
+                       trainTarget,
+                       devSource,
+                       devTarget,
+                       testSource,
+                       testTarget])
     movie_lines.close()
 
     # save the vocabulary
@@ -312,8 +341,9 @@ class CornellChatbotSeparateNames(CornellChatbotBasic):
 
       if line[0] not in name_list:
         string=" "+line[0]+" "
-        line_dict[dialog_id]=re.sub(string, " <unk_name> ", " "+line_dict[dialog_id]+" ")
-
+        line_dict[dialog_id]=re.sub(string,
+                                    " <unk_name> ",
+                                    " "+line_dict[dialog_id]+" ")
     return line_dict
 
   # save the vocabulary to a file

@@ -31,7 +31,9 @@ def optimize(loss, learning_rate, hparams):
   ]
   t2t_opt.log_variable_sizes(
       diet_vars, "Diet Variables", verbose=hparams.summarize_vars)
-  opt = GradientCheckpointedOptimizer(hparams.optimizer, learning_rate, hparams)
+  opt = GradientCheckpointedOptimizer(hparams.optimizer,
+                                      learning_rate,
+                                      hparams)
 
   tf.summary.scalar("learning_rate", learning_rate)
   opt_summaries = ["loss", "global_gradient_norm"]
@@ -127,7 +129,8 @@ class GradientCheckpointedOptimizer(tf.train.Optimizer):
       TypeError: If `var_list` contains anything else than `Variable` objects.
       ValueError: If some arguments are invalid.
     """
-    if gate_gradients not in [tf.train.Optimizer.GATE_NONE, tf.train.Optimizer.GATE_OP,
+    if gate_gradients not in [tf.train.Optimizer.GATE_NONE,
+                              tf.train.Optimizer.GATE_OP,
                               tf.train.Optimizer.GATE_GRAPH]:
       raise ValueError("gate_gradients must be one of: Optimizer.GATE_NONE, "
                        "Optimizer.GATE_OP, Optimizer.GATE_GRAPH.  Not %s" %
@@ -148,7 +151,7 @@ class GradientCheckpointedOptimizer(tf.train.Optimizer):
     if not var_list:
       raise ValueError("No variables to optimize.")
     var_refs = [p.target() for p in processors]
-    # TDOD: make the type of gradient checkpointing choosable, but just test it like this first.
+    # TODO: make the type of gradient checkpointing choosable.
     grads = tf.gradients(
         loss, var_refs, grad_ys=grad_loss,
         gate_gradients=(gate_gradients == tf.train.Optimizer.GATE_OP),

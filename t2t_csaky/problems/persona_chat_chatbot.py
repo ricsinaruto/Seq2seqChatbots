@@ -30,8 +30,8 @@ EOS = text_encoder.EOS_ID
 @registry.register_problem
 class PersonaChatChatbot(cornell_chatbots.CornellChatbotBasic):
   """
-  A class implementing a simple turn-based chatbot for the Persona-chat dataset.
-  The personas are not used in this class, only the raw dialogs
+  A class implementing a simple chatbot for the Persona-chat dataset.
+  The personas are not used in this class, only the raw dialogs.
   """
 
   # main function where the preprocessing of the data starts
@@ -42,7 +42,8 @@ class PersonaChatChatbot(cornell_chatbots.CornellChatbotBasic):
     """
 
     # set the raw data directory and data
-    self.raw_data_dir=os.path.join("/".join(self._data_dir.split("/")[:-1]),'raw_data')
+    self.raw_data_dir=os.path.join("/".join(self._data_dir.split("/")[:-1]),
+                                   'raw_data')
     self.raw_data=os.path.join(self._raw_data_dir, "ConvAI2")
     self.zipped_data=os.path.join(self._raw_data_dir,"convai2.tar.gz")
 
@@ -64,7 +65,8 @@ class PersonaChatChatbot(cornell_chatbots.CornellChatbotBasic):
     elif self._zipped_data[-3:]=="zip":
       zip_file = zipfile.ZipFile(self._zipped_data, 'r')
     else:
-      print("t2t_csaky_log: "+self._zipped_data+" is not a .zip or .gz file, so I can't extract it.")
+      print("t2t_csaky_log: "+self._zipped_data
+            +" is not a .zip or .gz file, so I can't extract it.")
 
     zip_file.extractall(self._raw_data)
     zip_file.close()
@@ -81,15 +83,21 @@ class PersonaChatChatbot(cornell_chatbots.CornellChatbotBasic):
     """
 
     # open the 6 files
-    trainSource, trainTarget, devSource, devTarget, testSource, testTarget = self.open_6_files()
+    trainSource, trainTarget, devSource, devTarget, testSource, testTarget = \
+      self.open_6_files()
 
     # open the raw data
-    train_dialogs=open(os.path.join(self._raw_data, 'train_none_original_no_cands.txt'), errors="ignore")
-    valid_dialogs=open(os.path.join(self._raw_data, 'valid_none_original_no_cands.txt'), errors="ignore")
+    train_dialogs=open(
+      os.path.join(self._raw_data, 'train_none_original_no_cands.txt'),
+      errors="ignore")
+    valid_dialogs=open(
+      os.path.join(self._raw_data, 'valid_none_original_no_cands.txt'),
+      errors="ignore")
     filenames=[train_dialogs, valid_dialogs]
 
     # copy the data to a new file
-    with open(os.path.join(self._raw_data,'full_none_original_no_cands.txt'), 'w') as outfile:
+    with open(os.path.join(self._raw_data,
+                           'full_none_original_no_cands.txt'), 'w') as outfile:
       for fname in filenames:
         with fname as infile:
           outfile.write(infile.read())
@@ -97,20 +105,23 @@ class PersonaChatChatbot(cornell_chatbots.CornellChatbotBasic):
     valid_dialogs.close()
 
     # open the big file
-    dialogs=open(os.path.join(self._raw_data, 'full_none_original_no_cands.txt'), errors="ignore")
+    dialogs=open(
+      os.path.join(self._raw_data, 'full_none_original_no_cands.txt'),
+      errors="ignore")
 
     number_of_lines=0
     current_dialog=""
     dialog_list=[]
     dialog_silenced=False
-    # iterate through the file and build a list of dialogs seprated by __eou__ tokens
+    # iterate through the file and build a list of dialogs separated by __eou__
     for line in dialogs:
       if number_of_lines % 10000 == 0:
         print("t2t_csaky_log: Parsed "+str(number_of_lines)+" lines.")
 
       dialog_id=line.split()[0]
       # check if this is a refurbished line
-      if "__SILENCE__" not in line and ((dialog_silenced and dialog_id=="1") or not dialog_silenced):
+      if "__SILENCE__" not in line \
+          and ((dialog_silenced and dialog_id=="1") or not dialog_silenced):
         dialog_silenced=False
         number_of_lines+=1
         # get the utterances
@@ -128,7 +139,8 @@ class PersonaChatChatbot(cornell_chatbots.CornellChatbotBasic):
       else:
         dialog_silenced=True
 
-      if self.targeted_dataset_size!=0 and self.targeted_dataset_size<number_of_lines:
+      if self.targeted_dataset_size!=0 and \
+          self.targeted_dataset_size<number_of_lines:
         break
     dialogs.close()
 
@@ -144,7 +156,8 @@ class PersonaChatChatbot(cornell_chatbots.CornellChatbotBasic):
       if dataset_split_counter<=self.dataset_split["train"]:
         source_file=trainSource
         target_file=trainTarget
-      elif dataset_split_counter<=self.dataset_split["train"]+self.dataset_split["val"]:
+      elif dataset_split_counter<=(self.dataset_split["train"]
+                                   +self.dataset_split["val"]):
         source_file=devSource
         target_file=devTarget
       else:
@@ -179,7 +192,11 @@ class PersonaChatChatbot(cornell_chatbots.CornellChatbotBasic):
         dataset_split_counter=0
 
     # close the files
-    self.close_6_files(trainSource, trainTarget, devSource, devTarget, testSource, testTarget)
-
+    self.close_n_files([trainSource,
+                        trainTarget,
+                        devSource,
+                        devTarget,
+                        testSource,
+                        testTarget])
     # save the vocabulary
     self.save_vocab(vocabulary)

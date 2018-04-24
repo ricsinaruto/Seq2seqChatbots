@@ -25,21 +25,23 @@ from tensorflow.python.layers import base
 @registry.register_model
 class RouletteTransformer(transformer.Transformer):
   """
-  A child class of the Transformer class, implementing roulette wheel selection.
+  A child class of the Transformer, implementing roulette wheel selection.
   """
   
   REGISTERED_NAME="transformer"
 
   def __init__(self,
-      hparams,
-      mode,
-      problem_hparams=None,
-      problem_idx=0,
-      data_parallelism=None,
-      decode_hparams=None):
+               hparams,
+               mode,
+               problem_hparams=None,
+               problem_idx=0,
+               data_parallelism=None,
+               decode_hparams=None):
     default_name = registry.default_name(type(self))
     name = "transformer"
-    base.Layer.__init__(self,trainable=mode == tf.estimator.ModeKeys.TRAIN, name=name)
+    base.Layer.__init__(self,
+                        trainable = mode==tf.estimator.ModeKeys.TRAIN,
+                        name=name)
     if data_parallelism is None:
       data_parallelism = eu.Parallelism([""])
     if problem_hparams is None:
@@ -143,7 +145,8 @@ class RouletteTransformer(transformer.Transformer):
           decode_length + 1, hparams.hidden_size)
 
     def preprocess_targets(targets, i):
-      """Performs preprocessing steps on the targets to prepare for the decoder.
+      """
+      Performs preprocessing steps on the targets to prepare for the decoder.
       This includes:
         - Embedding the ids.
         - Flattening to 3D tensor.
@@ -309,7 +312,8 @@ def fast_decode(encoder_output,
         probabilities=tf.pow(tf.constant(2.0),scores)
         start=0
       else:
-        probabilities=tf.subtract(tf.constant(1.0),tf.pow(tf.constant(2.0),scores))
+        probabilities=tf.subtract(
+          tf.constant(1.0),tf.pow(tf.constant(2.0),scores))
         start=beam_size-self._hparams.roulette_beam_size
 
       ex_probs=tf.divide(probabilities,tf.reduce_sum(probabilities))
@@ -322,12 +326,12 @@ def fast_decode(encoder_output,
       # change this as well if using inverse
       for i in range(start ,self._hparams.roulette_beam_size):
         upper_bound=tf.add(ex_probs[:,i], upper_bound)
-        truthValue=tf.squeeze(tf.logical_and(wheel>=upper_bound-ex_probs[:,i], wheel<=upper_bound))
+        truthValue=tf.squeeze(tf.logical_and(wheel>=upper_bound-ex_probs[:,i],
+                                             wheel<=upper_bound))
         decoded_ids,scores,i=tf.cond(
           truthValue,
           lambda: (decoded_ids[:,i,:], scores[:,i], beam_size),
-          lambda: (decoded_ids, scores, i)
-          )
+          lambda: (decoded_ids, scores, i))
 
   else:  # Greedy
 

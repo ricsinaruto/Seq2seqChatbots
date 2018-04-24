@@ -16,7 +16,8 @@ from t2t_csaky.config import *
 def general_transformer_hparams():
   hparams=transformer.transformer_base()
   hparams.add_hparam("roulette", TRANSFORMER_HPARAMS["roulette_wheel"])
-  hparams.add_hparam("roulette_beam_size", TRANSFORMER_HPARAMS["roulette_beam_size"])
+  hparams.add_hparam("roulette_beam_size",
+                     TRANSFORMER_HPARAMS["roulette_beam_size"])
 
   hparams.batch_size=TRANSFORMER_HPARAMS["batch_size"]
   hparams.layer_prepostprocess_dropout=TRANSFORMER_HPARAMS["layer_dropout"]

@@ -35,8 +35,8 @@ def main():
   if args.mode in run_mode:
     run_mode[args.mode]()
   else:
-    print("Program exited, because no suitable mode was defined. "+
-            "The mode flag has to be set to one of the following:")
+    print("Program exited, because no suitable mode was defined. \
+           The mode flag has to be set to one of the following:")
     print("  train")
     print("  decode")
     print("  generate_data")

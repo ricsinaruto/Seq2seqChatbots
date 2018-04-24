@@ -41,7 +41,7 @@ class DataPoint:
 
 class HashJaccard(FilterProblem):
   """
-  A class that does clustering based on hashes provided by the datasketch library.
+  A class that does clustering based on hashes from the datasketch library.
   """
   @property
   def num_perm(self):
@@ -69,9 +69,12 @@ class HashJaccard(FilterProblem):
     self.forest=MinHashLSHForest(num_perm=self.num_perm)
 
     # initialize clusters
-    medoids=random.sample(range(len(self.data_points[data_tag])), self.num_clusters)
+    medoids=random.sample(range(len(self.data_points[data_tag])),
+                          self.num_clusters)
+
     for i in range(self.num_clusters):
-      self.clusters[data_tag].append(self.ClusterClass(self.data_points[data_tag][medoids[i]]))
+      cl=self.ClusterClass(self.data_points[data_tag][medoids[i]])
+      self.clusters[data_tag].append(cl)
       # put medoids in a the forest
       self.forest.add(i, self.clusters[data_tag][-1].medoid.min_hash)
     self.forest.index()
@@ -80,14 +83,15 @@ class HashJaccard(FilterProblem):
     self.cluster_points(data_tag)
           
     # these will be needed for the stopping criterion
-    cluster_names=[self.clusters[data_tag][i].medoid.string for i in range(self.num_clusters)]
+    cluster_names=[self.clusters[data_tag][i].medoid.string
+                    for i in range(self.num_clusters)]
     cluster_names_old=list(cluster_names)
-    loop_count=0
+    count=0
     exit=False
 
     # clustering loop
     while not exit:
-      loop_count+=1
+      count+=1
 
       # find the point that minimizes the mean distance within a cluster
       self.find_medoid(data_tag)
@@ -102,7 +106,8 @@ class HashJaccard(FilterProblem):
       self.cluster_points(data_tag)
 
       # check stopping criterions
-      exit, cluster_names, cluster_names_old=self.stop_clustering(data_tag, cluster_names, cluster_names_old, loop_count)
+      exit, cluster_names, cluster_names_old = \
+        self.stop_clustering(data_tag, cluster_names, cluster_names_old, count)
 
     # save the clustering results
     self.save_clusters(data_tag)

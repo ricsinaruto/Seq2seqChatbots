@@ -84,8 +84,8 @@ def lstm_seq2seq_internal_static(inputs, targets, hparams, train):
     input_list.clear()
     # LSTM decoder.
     # get a list of tensors
-    shifted_targets = common_layers.flatten4d3d(common_layers.shift_right(targets))
-    target_list=[shifted_targets[:,i,:] for i in range(21)]
+    shifted_trg = common_layers.flatten4d3d(common_layers.shift_right(targets))
+    target_list=[shifted_trg[:,i,:] for i in range(21)]
 
     decoder_outputs, _ = lstm(
         target_list,
@@ -96,16 +96,15 @@ def lstm_seq2seq_internal_static(inputs, targets, hparams, train):
     target_list.clear()
 
     # convert decoder outputs to tensor
-    decoder_outputs_tensor=tf.transpose(tf.convert_to_tensor(decoder_outputs), perm=[1,0,2])
+    tensors=tf.transpose(tf.convert_to_tensor(decoder_outputs), perm=[1,0,2])
     decoder_outputs.clear()
 
     # project the outputs
     with tf.variable_scope("projection"):
-      projected_outputs=tf.layers.dense(
-          decoder_outputs_tensor,
-          2048,
-          activation=None,
-          use_bias=False)
+      projected_outputs=tf.layers.dense(tensors,
+                                        2048,
+                                        activation=None,
+                                        use_bias=False)
       
     return tf.expand_dims(projected_outputs, axis=2)
 
@@ -114,11 +113,11 @@ def lstm_seq2seq_internal_static(inputs, targets, hparams, train):
 class GradientCheckpointedSeq2seq(t2t_model.T2TModel):
   """
   A class where I replaced the internal hparams with my own function call.
-  This way the hidden_size param of chatbot_lstm_hparams refers to the hidden size
-    of the lstm cells, while the hidden_size specified by the hparam set that is
+  This way the hidden_size param of chatbot_lstm_hparams refers to the size
+    of the lstm cells, while the hidden_size specified by the hparam set
     given during training refers to the word embedding size.
 
-  In this class the output of the LSTM layer is projected to 2048 linear units as in:
+  In this class the output of the LSTM layer is projected to 2048 linear units:
   https://arxiv.org/pdf/1506.05869.pdf
 
   Moreover, in this class gradient checkpointing is implemented.
@@ -129,7 +128,10 @@ class GradientCheckpointedSeq2seq(t2t_model.T2TModel):
       raise ValueError("LSTM models fail with orthogonal initializer.")
     train=self._hparams.mode==tf.estimator.ModeKeys.TRAIN
     return lstm_seq2seq_internal_dynamic(
-      features.get("inputs"),features["targets"],seq2seq_hparams.chatbot_lstm_hparams(),train)
+        features.get("inputs"),
+        features["targets"],
+        seq2seq_hparams.chatbot_lstm_hparams(),
+        train)
 
   # Change the optimizer to a new one, which uses gradient checkpointing
   def optimize(self, loss, num_async_replicas=1):
