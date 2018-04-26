@@ -37,9 +37,11 @@ DATA_FILTERING={
   "filter_problem"    :"hash_jaccard",  # can be: hash_jaccard, sentence_embedding, rnn_state
   "filter_type"       :"target_based",  # can be: target_based, source_based, both
   "num_clusters"      :5000,
+  "min_cluster_size"  :5,     # clusters with fewer elements won't get filtered
   "num_permutations"  :128,   # only for hash based clustering
   "character_level"   :False, # only for hash based clustering
-  "treshold"          :0.9    # percentage treshold of entropy based filtering
+  "treshold"          :0.9,   # percentage treshold of entropy based filtering
+  "ckpt_number"       :22001  # only for sentence embedding clustering
 }
 
 PROBLEM_HPARAMS={
@@ -63,6 +65,7 @@ TRANSFORMER_HPARAMS={
   "layer_dropout"     :0.4,
   "attention_dropout" :0.2,
   "relu_dropout"      :0.2,
+  "embed_num_shards"  :16,    # shard the embedding matrix into n matrices
   "summarize_vars"    :True   # print out the model parameters at the start
 }
 

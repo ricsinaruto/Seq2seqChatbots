@@ -60,6 +60,7 @@ class FilterProblem:
     """
     self.tag=tag
     self.treshold=DATA_FILTERING["treshold"]
+    self.min_cluster_size=DATA_FILTERING["min_cluster_size"]
     self.clusters= {
       "Source" : [],
       "Target" : []
@@ -134,7 +135,7 @@ class FilterProblem:
     for line in clusters:
       [source_medoid, pair, target_cluster]=line.strip("\n").split("<=====>")
       [source, target]=pair.split("=")
-      [target_medoid, target_cl_index]=target_medoid.split(":")
+      [target_medoid, target_cl_index]=target_cluster.split(":")
 
       source_data_point=self.DataPointClass(source, only_string=True)
       target_data_point=self.DataPointClass(target, only_string=True)
@@ -144,19 +145,21 @@ class FilterProblem:
       # check if this is a new medoid (source side)
       if last_medoid!=source_medoid:
         # add medoid to cluster
-        cl=self.ClusterClass(self.DataPointClass(medoid, only_string=True))
-        self.clusters["Source"].append(cl)
+        dp=self.DataPointClass(source_medoid, only_string=True)
+        self.clusters["Source"].append(self.ClusterClass(dp))
       self.clusters["Source"][-1].add_element(source_data_point)
       self.clusters["Source"][-1].targets.append(target_data_point)
 
       # target side
-      if self.clusters["Target"][target_cl_index]=="":
+      if self.clusters["Target"][int(target_cl_index)]=="":
         dp=self.DataPointClass(target_medoid, only_string=True)
-        self.clusters["Target"][target_cl_index]=self.ClusterClass(dp)
-      self.clusters["Target"][target_cl_index].add_element(target_data_point)
-      self.clusters["Target"][target_cl_index].targets.append(source_data_point)
+        self.clusters["Target"][int(target_cl_index)]=self.ClusterClass(dp)
+      self.clusters["Target"][int(target_cl_index)].add_element(
+        target_data_point)
+      self.clusters["Target"][int(target_cl_index)].targets.append(
+        source_data_point)
 
-      last_medoid=medoid
+      last_medoid=source_medoid
 
     clusters.close()
 
@@ -166,22 +169,20 @@ class FilterProblem:
     Params:
       :data_tag: Whether it's source or target data
     """
-    for i in range(self.num_clusters):
+    for cluster in self.clusters[data_tag]:
       big_sum=0
-      for j1 in range(len(self.clusters[data_tag][i].elements)):
+      for element1 in cluster.elements:
         small_sum=0
-        for j2 in range(len(self.clusters[data_tag][i].elements)):
-          small_sum+=self.clusters[data_tag][i].elements[j1].distance(
-                      self.clusters[data_tag][i].elements[j2])
+        for element2 in cluster.elements:
+          small_sum+=element1.similarity(element2)
 
         if small_sum>big_sum:
           big_sum=small_sum
-          self.clusters[data_tag][i].medoid = (
-            self.clusters[data_tag][i].elements[j1])
+          cluster.medoid = element1
 
       # clear elements after we finished with one cluster
-      self.clusters[data_tag][i].elements.clear()
-      self.clusters[data_tag][i].targets.clear()
+      cluster.elements.clear()
+      cluster.targets.clear()
 
   # find nearest medoid for a data point
   def find_nearest_medoid(self, data_point):
@@ -194,7 +195,7 @@ class FilterProblem:
       :data_tag: Whether it's source or target data
     """
     for i, data_point in enumerate(self.data_points[data_tag]):
-      nearest_medoid=self.find_nearest_medoid(data_point)
+      nearest_medoid=self.find_nearest_medoid(data_point, data_tag)
       self.clusters[data_tag][nearest_medoid].add_element(data_point)
 
       # reverse data tag
@@ -204,7 +205,12 @@ class FilterProblem:
 
       data_point.cluster_index=nearest_medoid
 
-  def stop_clustering(self, data_tag, cluster_names, cluster_names_old, count):
+  def stop_clustering(self,
+                      data_tag,
+                      cluster_names,
+                      cluster_names_old,
+                      count,
+                      counts):
     """
     Params:
       :data_tag: Whether it's source or target data
@@ -229,9 +235,20 @@ class FilterProblem:
     print("==================================================")
     print("==================================================")
 
+    # check if no. of medoids changed is the same for the last 6 iterations
+    same_counts=True
+    counts.append(count_difference)
+    if len(counts)>6:
+      counts=list(counts[1:])
+    for i, c in enumerate(counts[:-1]):
+      if c!=counts[i+1]:
+        same_counts=False
+
     # exit if there is no change or we are stuck in a loop
-    exit=True if count_difference==0 or count_difference_old==0 else False
-    return exit, cluster_names, cluster_names_old
+    exit=False
+    if count_difference==0 or count_difference_old==0 or same_counts:
+      exit=True
+    return exit, cluster_names, cluster_names_old, counts
 
   # do the clustering of sources and targets
   def clustering(self, data_tag):
@@ -254,36 +271,38 @@ class FilterProblem:
 
     indices=[]
     for num_cl, cluster in enumerate(self.clusters[source]):
-      # build a distribution for the current cluster, based on the targets
-      distribution=Counter()
-      for target in cluster.targets: 
-        if target.cluster_index in distribution:
-          distribution[target.cluster_index]+=1
-        else:
-          distribution[target.cluster_index]=1
+      # error guarding for the case when loading clusters
+      if cluster!="":
+        # build a distribution for the current cluster, based on the targets
+        distribution=Counter()
+        for target in cluster.targets: 
+          if target.cluster_index in distribution:
+            distribution[target.cluster_index]+=1
+          else:
+            distribution[target.cluster_index]=1
 
-      # calculate entropy
-      entropy=0
-      for cl_index in distribution:
+        # calculate entropy
+        entropy=0
+        for cl_index in distribution:
+          if len(cluster.targets)>1:
+            probability=distribution[cl_index]/len(cluster.targets)
+            entropy+=probability*math.log(probability, 2)
+
+        # normalize entropy between 0 and 1, and save it
         if len(cluster.targets)>1:
-          probability=distribution[cl_index]/len(cluster.targets)
-          entropy+=probability*math.log(probability, 2)
+          entropy=-entropy/math.log(len(cluster.targets), 2)
+        cluster.entropy=entropy
 
-      # normalize entropy between 0 and 1, and save it
-      if len(cluster.targets)>1:
-        entropy=-entropy/math.log(len(cluster.targets), 2)
-      cluster.entropy=entropy
-
-      # save the filtering results
-      if self.type!="both":
-        self.save_filtered_data(cluster,
-                                entropy_stats,
-                                source_file, 
-                                target_file)
-      # filter
-      if entropy>self.treshold:
-        indices.append(num_cl)
-        print('Medoid: "'+cluster.medoid.string+'" got filtered.')
+        # save the filtering results
+        if self.type!="both":
+          self.save_filtered_data(cluster,
+                                  entropy_stats,
+                                  source_file, 
+                                  target_file)
+        # filter
+        if entropy>self.treshold:
+          indices.append(num_cl)
+          print('Medoid: "'+cluster.medoid.string+'" got filtered.')
 
     print("Finished filtering.")
     source_file.close()
@@ -312,15 +331,17 @@ class FilterProblem:
         os.path.join(self.output_data_dir,
                      self.tag+"Target_cluster_entropies.txt"), "w")
       source_file=open(os.path.join(self.output_data_dir,
-                                    self.tag+source+".txt"), "w")
+                                    self.tag+"Source.txt"), "w")
       target_file=open(os.path.join(self.output_data_dir,
-                                    self.tag+target_string+".txt"), "w")
+                                    self.tag+"Target.txt"), "w")
 
       # write entropies to file
       for cluster in self.clusters["Target"]:
-        target_entropy.write(cluster.medoid.string+";"
-                             +str(cluster.entropy)+";"
-                             +str(len(cluster.elements))+"\n")
+        # filter errors due to cluster loading
+        if cluster!="":
+          target_entropy.write(cluster.medoid.string+";"
+                               +str(cluster.entropy)+";"
+                               +str(len(cluster.elements))+"\n")
 
       for num_cl, cluster in enumerate(self.clusters["Source"]):
         source_entropy.write(cluster.medoid.string+";"
@@ -328,7 +349,8 @@ class FilterProblem:
                              +str(len(cluster.elements))+"\n")
 
         # double filtering (source and target)
-        if num_cl not in source_indices:
+        if num_cl not in source_indices \
+            or len(cluster.elements)<self.min_cluster_size:
           for num_el, element in enumerate(cluster.elements):
             if cluster.targets[num_el].cluster_index not in target_indices:
               source_file.write(element.string+"\n")
@@ -352,7 +374,8 @@ class FilterProblem:
                         +str(cluster.entropy)+";"
                         +str(len(cluster.elements))+"\n")
 
-    if cluster.entropy<=self.treshold:
+    if cluster.entropy<=self.treshold \
+        or len(cluster.elements)<self.min_cluster_size:
       for num_el, element in enumerate(cluster.elements):
         source.write(element.string+"\n")
         target.write(cluster.targets[num_el].string+"\n")

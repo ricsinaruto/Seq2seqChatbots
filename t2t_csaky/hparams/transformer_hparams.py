@@ -21,6 +21,7 @@ def general_transformer_hparams():
 
   hparams.batch_size=TRANSFORMER_HPARAMS["batch_size"]
   hparams.layer_prepostprocess_dropout=TRANSFORMER_HPARAMS["layer_dropout"]
+  hparams.symbol_modality_num_shards=TRANSFORMER_HPARAMS["embed_num_shards"]
   hparams.attention_dropout=TRANSFORMER_HPARAMS["attention_dropout"]
   hparams.relu_dropout=TRANSFORMER_HPARAMS["relu_dropout"]
   hparams.summarize_vars=TRANSFORMER_HPARAMS["summarize_vars"]

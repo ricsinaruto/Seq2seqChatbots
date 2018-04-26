@@ -35,7 +35,7 @@ class DataPoint:
         self.min_hash.update(word.encode('utf8'))
 
   # computes jaccard distance between self and another hash
-  def distance(self, other):
+  def similarity(self, other):
     return self.min_hash.jaccard(other.min_hash)
 
 
@@ -52,7 +52,7 @@ class HashJaccard(FilterProblem):
     return DataPoint
 
   # find nearest medoid for a data point
-  def find_nearest_medoid(self, data_point):
+  def find_nearest_medoid(self, data_point, data_tag=""):
     nearest_medoid=self.forest.query(data_point.min_hash, 1)
     if not nearest_medoid:
       nearest_medoid=[random.randint(0, self.num_clusters-1)]
@@ -87,6 +87,7 @@ class HashJaccard(FilterProblem):
                     for i in range(self.num_clusters)]
     cluster_names_old=list(cluster_names)
     count=0
+    counts=[]
     exit=False
 
     # clustering loop
@@ -106,5 +107,9 @@ class HashJaccard(FilterProblem):
       self.cluster_points(data_tag)
 
       # check stopping criterions
-      exit, cluster_names, cluster_names_old = \
-        self.stop_clustering(data_tag, cluster_names, cluster_names_old, count)
+      exit, cluster_names, cluster_names_old, counts = \
+        self.stop_clustering(data_tag,
+                             cluster_names,
+                             cluster_names_old,
+                             count,
+                             counts)
