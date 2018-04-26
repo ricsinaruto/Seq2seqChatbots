@@ -125,6 +125,9 @@ class SentenceEmbedding(FilterProblem):
     if FLAGS["model"]=="transformer":
       self.num_shards=TRANSFORMER_HPARAMS["embed_num_shards"]
 
+    # make the weight dir if it doesn't exist
+    if not os.path.exists(os.path.join(FLAGS["train_dir"], "weights")):
+      os.makedirs(os.path.join(FLAGS["train_dir"], "weights"))
     # first we have to extract the weights from the model
     if len(os.listdir(os.path.join(FLAGS["train_dir"], "weights"))) \
         !=self.num_shards:
@@ -177,10 +180,6 @@ class SentenceEmbedding(FilterProblem):
 
   # extract embedding weights
   def extract_weights(self):
-    # make the weight dir if it doesn't exist
-    if not os.path.exists(os.path.join(FLAGS["train_dir"], "weights")):
-      os.makedirs(os.path.join(FLAGS["train_dir"], "weights"))
-
     reader = pywrap_tensorflow.NewCheckpointReader(self.ckpt_file_name)
     lines=reader.debug_string().decode("utf-8").split("\n")
 
