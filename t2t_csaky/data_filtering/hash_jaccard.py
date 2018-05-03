@@ -11,10 +11,11 @@ class DataPoint:
   """
   A class that handles a hash example.
   """
-  def __init__(self, string, only_string=True):
+  def __init__(self, string, index, only_string=True):
     """
     Params:
       :string:  String to be stored
+      :index: Number of the line in the file from which this sentence was read
       :only_string: Whether to only store string
     """ 
     self.string=string.strip("\n")
