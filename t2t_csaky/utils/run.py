@@ -110,16 +110,12 @@ def data_filtering():
     "rnn_state"         : RNNState
   }
 
-  train_filter=filter_problems[DATA_FILTERING["filter_problem"]]("train")
-  dev_filter=filter_problems[DATA_FILTERING["filter_problem"]]("dev")
-  test_filter=filter_problems[DATA_FILTERING["filter_problem"]]("test")
-  dev_filter.run()
-  train_filter.run()
-  test_filter.run()
+  problem=filter_problems[DATA_FILTERING["filter_problem"]]("full")
+  problem.run()
 
 # run a longer experiment, with many calls to the above functions
 def experiment():
-  for cluster_size in [1000, 2000, 3000, 5000, 7000, 10000]:
+  for cluster_size in [100, 200, 400, 800, 1600, 3200, 6400, 12800, 25600]:
     dataset="DailyDialog"
     # modify config files
     DATA_FILTERING["num_clusters"]=cluster_size

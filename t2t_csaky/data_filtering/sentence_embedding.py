@@ -19,6 +19,7 @@ class DataPoint:
       :index: Number of the line in the file from which this sentence was read
       :only_string: Whether to only store string
     """ 
+    self.index=index
     self.string=string.strip("\n")
     self.ids=[]
 

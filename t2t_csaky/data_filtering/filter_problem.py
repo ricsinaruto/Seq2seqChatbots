@@ -30,7 +30,7 @@ class Cluster:
   def __init__(self, medoid):
     """
     Params:
-      :medoid:  Center of the cluster.
+      :medoid:  Center of the cluster, data point object.
     """
     self.medoid=medoid
     self.elements=[]
@@ -90,9 +90,9 @@ class FilterProblem:
 
     # extra step to figure out in which split to put the results
     self.split_line_counts = {
-      "train": self.count_lines("train"),
-      "dev": self.count_lines("dev"),
-      "test":self.count_lines("test")
+      "train":  self.count_lines("train"),
+      "dev":    self.count_lines("dev"),
+      "test":   self.count_lines("test")
     }
 
   # count the number of line in the given file

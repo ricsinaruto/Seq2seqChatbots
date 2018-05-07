@@ -19,6 +19,7 @@ class DataPoint:
       :only_string: Whether to only store string
     """ 
     self.string=string.strip("\n")
+    self.index=index
     self.character_level=DATA_FILTERING["character_level"]
     self.cluster_index=0
 
