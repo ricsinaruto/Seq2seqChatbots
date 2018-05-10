@@ -1,10 +1,10 @@
 """
-In this file you can set all tensor2tensor flags, hparams and any other settings
-for the current run. This file will also be copied to the directory that you provide.
+In this file you can set all tensor2tensor flags, hparams and other settings
+for the current run. This file will also be copied to the provided directory.
 """
 
 FLAGS={
-  "t2t_usr_dir"       :"t2t_csaky", # this is the directory from which tensor2tensor imports
+  "t2t_usr_dir"       :"t2t_csaky", # tensor2tensor imports from this dir
   "data_dir"          :"data_dir/DailyDialog/base_with_numbers",
   "train_dir"         :"train_dir/DailyDialog/trf_40_dropout-base_with_numbers",
   "decode_dir"        :"decode_dir/DailyDialog/trf_20_dropout-base",
@@ -16,19 +16,33 @@ FLAGS={
 
   # training related flags
   "train_mode"        :"train_and_evaluate",
-  "keep_checkpoints"  :3,       # how many checkpoints to keep behind the newest one
+  "keep_checkpoints"  :3,       # how many checkpoints to keep at head
   "train_steps"       :1000000,
   "save_every_n_hour" :0,       # save checkpoints every n hours
-  "save_every_n_secs" :1800,       # save checkpoints every n seconds, overrides the previous param
-  "evaluation_steps"  :1000,    # number of evaluation steps to run at each cycle
-  "evaluation_freq"   :1000,    # evaluation cycle is run every n training steps
+  "save_every_n_secs" :1800,    # every n seconds, overrides hour param
+  "evaluation_steps"  :1000,    # number of evaluation steps at each cycle
+  "evaluation_freq"   :1000,    # evaluation cycle is run every n train steps
 
   # decoding related flags
-  "output_file_name"  :"inference_at_11k.txt",  # print the inference outputs to this
-  "input_file_name"   :"NCM_examples.txt",      # read the inputs to inference from here
-  "decode_mode"       :"interactive",           # can be: interactive, file, dataset
+  "output_file_name"  :"inference_at_11k.txt",  # save the inference outputs
+  "input_file_name"   :"NCM_examples.txt",      # read inputs to be fed
+  "decode_mode"       :"interactive",   # can be: interactive, file, dataset
   "beam_size"         :10,
-  "return_beams"      :"True"                   # if False return only the top beam, otherwise beam_size beams
+  "return_beams"      :"True"           # if False return only the top beam, 
+                                        # otherwise beam_size beams
+}
+
+DATA_FILTERING={
+  "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data/sentence_embedding/100_clusters",
+  "filter_problem"    :"sentence_embedding",  # can be: hash_jaccard, sentence_embedding, rnn_state
+  "filter_type"       :"both",  # can be: target_based, source_based, both
+  "source_clusters"   :100,
+  "target_clusters"   :100,
+  "min_cluster_size"  :2,     # clusters with fewer elements won't get filtered
+  "num_permutations"  :128,   # only for hash based clustering
+  "character_level"   :False, # only for hash based clustering
+  "treshold"          :4,   # percentage treshold of entropy based filtering
+  "ckpt_number"       :22001  # only for sentence embedding clustering
 }
 
 PROBLEM_HPARAMS={
@@ -52,7 +66,8 @@ TRANSFORMER_HPARAMS={
   "layer_dropout"     :0.4,
   "attention_dropout" :0.2,
   "relu_dropout"      :0.2,
-  "summarize_vars"    :True   # print out the model parameters at the start of training
+  "embed_num_shards"  :16,    # shard the embedding matrix into n matrices
+  "summarize_vars"    :True   # print out the model parameters at the start
 }
 
 # These will be applied on top of the lstm_seq2seq hparams_set
@@ -62,12 +77,14 @@ SEQ2SEQ_HPARAMS= {
 
   # hparams_set override
   "optimizer"         :"Adafactor",
-  "fixed_batch_size"  :False,   # if True, batch size refers to number of sentences, otherwise it's number of tokens
+  "fixed_batch_size"  :False, # if True, batch size is number of sentences,
+                              # otherwise it's number of tokens
   "summarize_vars"    :True,
-  "embed_num_shards"  :10,      # shard the embedding matrix into n different matrices
+  "embed_num_shards"  :10,    # shard the embedding matrix into n matrices
   "embedding_size"    :2048,
   "num_layers"        :2,
   "batch_size"        :512,
-  "max_sentence_len"  :64,      # sentences in the dataset longer than this will be ignored
-  "shared_embedding_and_softmax_weights":True   # if true, use 1 matrix for the softmax and the embedding weights
+  "max_sentence_len"  :64,    # sentences longer than this will be ignored
+  "shared_embedding_and_softmax_weights":True # if True, use 1 matrix for the 
+                                              # softmax and embedding weights
 }

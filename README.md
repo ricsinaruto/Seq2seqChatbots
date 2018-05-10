@@ -3,7 +3,7 @@
 This repository contains the code that I have written for experiments described in [this](https://tdk.bme.hu/VIK/DownloadPaper/asdad) paper. I made my own problem, hparams and model registrations to the [tensor2tensor](https://github.com/tensorflow/tensor2tensor) library in order to try out different datasets with the [Transformer](https://arxiv.org/abs/1706.03762) modell for training dialog agents. The folders in the repository contain the following content:
 * **docs**: Latex files and pictures required to generate my [paper](https://tdk.bme.hu/VIK/DownloadPaper/asdad). Also check my research [proposal](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/doc/research_proposal.pdf) for a detailed description of my current research interests.
 * **t2t_csaky**: This folder contains all the code that I have written, more detailed description can be found lower.
-* **train_dir**: Here you can find inference outputs from the various trainings that I have run.
+* **decode_dir**: Here you can find inference outputs from the various trainings that I have run.
 * **wiki_images**: Contains images used for the [wiki](https://github.com/ricsinaruto/Seq2seqChatbots/wiki/Chatbot-and-Related-Research-Paper-Notes-with-Images), where I write about more than 100 publications related to chatbots.
 
 ## Quick Guide
@@ -12,57 +12,56 @@ First, install all the required packages in your python environment:
 pip install -r requirements.txt
 ```
 
-### Data
-In order to download and preprocess the data and generate source and target pairs, the following command can be used from this directory:
+### Main and Config
+In order to run something, you will have to call the [main](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/main.py) file:
 ```
-t2t-datagen --t2t_usr_dir=t2t_csaky --data_dir=$Path-to-data-dir --problem=$Name-of-problem
+python t2t_csaky/main.py --mode=train
 ```
-Where:
-* **$Path-to-data-dir**: The path to the directory where you want to generate the source and target pairs, and other data. The dataset will be downloaded one level higher from this directory into a *raw_data* folder.
-* **$Name-of-problem**: This is the name of a registered problem that tensor2tensor needs. Currently I have 3 registered problems:
-  * *[opensubtitles_chatbot](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/problems/opensubtitles_chatbot.py)*: This problem can be used to work with the [OpenSubtitles](http://opus.nlpl.eu/OpenSubtitles2018.php) dataset. Since there are several versions of this dataset, you can specify the year of the dataset that you want to download with the *dataset_version* property inside the class.
-  * *[cornell_chatbot_basic](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/problems/cornell_chatbots.py)*: This problem implements the [Cornell Movie-Dialog Corpus](https://www.cs.cornell.edu/~cristian/Cornell_Movie-Dialogs_Corpus.html).
-  * *[cornell_chatbot_separate_names](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/problems/cornell_chatbots.py)*: This problem uses the same Cornell corpus, however the names of the speakers and addressees of each utterance are appended, resulting in source utterances like below. Thus the size of the vocabulary containing these names can be specified through the *targeted_name_vocab_size* property inside the CornellChatbotSeparateNames class.
+The mode flag can be one of the following three: *{[generate_data](https://github.com/ricsinaruto/Seq2seqChatbots/tree/master#generate-data), [train](https://github.com/ricsinaruto/Seq2seqChatbots/tree/master#train), [decode](https://github.com/ricsinaruto/Seq2seqChatbots/tree/master#decode)}*. A detailed explanation is given lower, for what each mode does. With version v1.1 I introduced the main and config files, for a more streamlined experience, but if you want more freedom and want to use tensor2tensor commands directly, check the v1.0_README for the old way.
+#### [Config](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/config.py)
+You can control the flags and parameters of each mode directly in this file. Furthermore, for each run that you initiate this file will be copied to the appropriate directory, so you can quickly access the parameters of any run. There are some flags that you have to set for every mode (the *FLAGS* dictionary in the config file):
+* **t2t_usr_dir**: Path to the directory where my code resides. You don't have to change this, unless you rename the directory.
+* **data_dir**: The path to the directory where you want to generate the source and target pairs, and other data. The dataset will be downloaded one level higher from this directory into a *raw_data* folder.
+* **problem**: This is the name of a registered problem that tensor2tensor needs. Detailed in the *generate_data* section below.
+
+### Generate Data
+This mode will download and preprocess the data and generate source and target pairs. Currently i have 6 registered problems, that you can use besides the ones given by tensor2tensor:
+* *[persona_chat_chatbot](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/problems/persona_chat_chatbot.py)*: This problem implements the [Persona-Chat](https://arxiv.org/pdf/1801.07243.pdf) dataset (without the use of personas).
+* *[daily_dialog_chatbot](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/problems/daily_dialog_chatbot.py)*: This problem implements the [DailyDialog](http://yanran.li/dailydialog.html) dataset (without the use of topics, dialog acts or emotions).
+* *[opensubtitles_chatbot](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/problems/opensubtitles_chatbot.py)*: This problem can be used to work with the [OpenSubtitles](http://opus.nlpl.eu/OpenSubtitles2018.php) dataset.
+* *[cornell_chatbot_basic](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/problems/cornell_chatbots.py)*: This problem implements the [Cornell Movie-Dialog Corpus](https://www.cs.cornell.edu/~cristian/Cornell_Movie-Dialogs_Corpus.html).
+* *[cornell_chatbot_separate_names](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/problems/cornell_chatbots.py)*: This problem uses the same Cornell corpus, however the names of the speakers and addressees of each utterance are appended, resulting in source utterances like below.
     > BIANCA_m0 what good stuff ?  CAMERON_m0
-  * *[character_chatbot](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/problems/character_chatbot.py)*: This is a general character-based problem that works with any dataset. Before using this, the .txt files generated by any of the problems above have to be placed inside the data directory, and after that this problem can be used to generate tensor2tensor character-based data files.
-* Further properties that affect the data generation and can be set in each of the classes:
-  * *targeted_vocab_size*: Size of the vocabulary that we want to use for the problem. Words outside this vocabulary will be replaced with the <unk> token.
-  * *targeted_dataset_size*: Number of utterance pairs, if we don't want to use the full dataset.
-  * *dataset_split*: Specify a train-val-test split for the problem.
+* *[character_chatbot](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/problems/character_chatbot.py)*: This is a general character-based problem that works with any dataset. Before using this, the .txt files generated by any of the problems above have to be placed inside the data directory, and after that this problem can be used to generate tensor2tensor character-based data files.
 
-### Training
-If you have generated the data files, you can train any model offered by tensor2tensor, using this command:
-```
-t2t-trainer \
-  --t2t_usr_dir=t2t_csaky \
-  --generate_data=False \
-  --data_dir=$Path-to-data-dir \
-  --problems=$Name-of-problem \
-  --model=$Name-of-model \
-  --hparams_set=$Name-of-hparams \
-  --output_dir=$Path-to-train-dir \
-  --train_steps=$Number-of-training-steps
-  ```
-Where:
-* **$Name-of-model**: The name of a registered modell, eg. *transformer*, which I have used for most of my trainings. I also subclassed some models and made my own registriations with small modifications:
-  * *[roulette_transformer](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/models/roulette_transformer.py)*: Original transformer modell, now with modified beam search, where roulette-wheel selection can be used to select among the top beams, instead of argmax.
-  * *[own_hparams_seq2seq](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/models/own_hparams_seq2seq.py)*: Small modification of the lstm based seq2seq model, so that i can user my own hparams entirely. The hparams set named *chatbot_lstm_hparams* has to be used with this model.
-* **$Name-of-hparams**: Name of an hparams set. You can use official tensor2tensor hparams, or use my definitions found [here](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/hparams/transformer_hparams.py). You can find different batch size and dropout variations.
+The *PROBLEM_HPARAMS* dictionary in the config file contains problem specific parameters that you can set before generating data:
+* *num_train_shards*/*num_dev_shards*: If you want the generated train or dev data to be sharded over several files.
+* *vocabulary_size*: Size of the vocabulary that we want to use for the problem. Words outside this vocabulary will be replaced with the <unk> token.
+* *dataset_size*: Number of utterance pairs, if we don't want to use the full dataset (defined by 0).
+* *dataset_split*: Specify a train-val-test split for the problem.
+* *dataset_version*: This is only relevant to the opensubtitles dataset, since there are several versions of this dataset, you can specify the year of the dataset that you want to download.
+* *name_vocab_size*: This is only relevant to the cornell problem with separate names. You can set the size of the vocabulary containing only the personas.
 
+### Train
+This mode allows you to train a model with the specified problem and hyperparameters. Currently I subclassed two models to make small modifications to them:
+* *[roulette_transformer](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/models/roulette_transformer.py)*: Original transformer modell, now with modified beam search, where roulette-wheel selection can be used to select among the top beams, instead of argmax.
+* *[gradient_checkpointed_seq2seq](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/models/gradient_checkpointed_seq2seq.py)*: Small modification of the lstm based seq2seq model, so that i can user my own hparams entirely. Moreover, before calculating the softmax the LSTM hidden units are projected to 2048 linear units as [here](https://arxiv.org/pdf/1506.05869.pdf). Finally, I tried to implement [gradient checkpointing](https://github.com/openai/gradient-checkpointing) to this model, but currently it is taken out since it didn't give good results.
 
-### Decoding
-You can decode from the trained models interactively, using the command below. Also, for all 4 trainings that I ran, I uploaded the checkpoint files [here](https://mega.nz/#!bckTiS6Z!3CJxsl4AyR1W6eUnJ6Viq_cKMhhMh82cFlmA9xbotpo) so you can try them out without needing to train. Just copy the checkpoint files to your train_dir folder, and provide the folder which you want for the *output_dir* flag.
-```
-t2t-decoder \
-  --t2t_usr_dir=t2t_csaky \
-  --data_dir=$Path-to-data-dir \
-  --problems=$Name-of-problem \
-  --model=transformer \
-  --hparams_set=$Name-of-hparams \
-  --output_dir=$Path-to-train-dir \
-  --decode_interactive
-```
+There are several additional flags that you can specify for a training run in the *FLAGS* dictionary in the config file, some of which are:
+* *train_dir*: Name of the directory where the training checkpoint files will be saved.
+* *model*: Name of the model: either one of the above or a tensor2tensor defined model.
+* *hparams*: Specify a registered hparams_set, or leave empty if you want to define hparams in the config file. In order to specify hparams for a *seq2seq* or *transformer* model, you can use the *SEQ2SEQ_HPARAMS* and *TRANSFORMER_HPARAMS* dictionaries in the config file (check it for more details).
 
+### Decode
+With this mode you can decode from the trained models. The following parameters affect the decoding (in the *FLAGS* dictionary in the config file):
+* *decode_mode*: Can be *interactive*, where you can chat with the model using the command line. *file* mode allows you to specify a file with source utterances for which to generate responses, and *dataset* mode will randomly sample the validation data provided and output responses.
+* *decode_dir*: Directory where you can provide file to decode from, and outputted responses will be saved here
+* *input_file_name*: Name of the file that you have to give in *file* mode (placed in the *decode_dir*).
+* *output_file_name*: Name of the file, inside *decode_dir*, where output responses will be saved.
+* *beam_size*: Size of the beam, when using beam search.
+* *return_beams*: If False return only the top beam, otherwise return *beam_size* number of beams.
+
+Also, for all 4 training examples given below, I uploaded the checkpoint files [here](https://mega.nz/#!bckTiS6Z!3CJxsl4AyR1W6eUnJ6Viq_cKMhhMh82cFlmA9xbotpo) so you can try them out without needing to train. However, these only work with tensor2tensor version 1.2.1, and v0.9 of this repository.
 
 ### Sample conversations from the various trainings
 S2S is a baseline seq2seq model from [this](https://arxiv.org/pdf/1506.05869.pdf) paper, Cornell is the Transformer model trained on Cornell data, Cornell S is similar, but trained with speaker-addressee annotations. OpenSubtitles is the Transformer trained with OpenSubtitles data, and OpenSubtitles F, is the previous training finetuned (further trained) on Cornell speaker annotated data.

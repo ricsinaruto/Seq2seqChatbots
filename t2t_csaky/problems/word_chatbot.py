@@ -147,10 +147,11 @@ class WordChatbot(problem.Text2TextProblem):
   # This function generates the train and validation pairs in t2t-datagen style
   def generator(self, data_dir, tmp_dir, train):
     """ 
-    The function assumes that if you have data at one level of the pipeline, you 
-    don't want to re-generate it, so for example if the 4 txt files exist, the function
-    continues by generating the t2t-datagen format files, so if you want to re-download
-    or re-generate data you have to delete it first from the appropriate directories.
+    The function assumes that if you have data at one level of the pipeline,
+    you don't want to re-generate it, so for example if the 4 txt files exist,
+    the function continues by generating the t2t-datagen format files.
+    So if you want to re-download or re-generate data,
+    you have to delete it first from the appropriate directories.
 
     Params:
       :data_dir:  directory where the data will be generated
@@ -169,9 +170,10 @@ class WordChatbot(problem.Text2TextProblem):
     self.preprocess_data(mode)
 
     # create a t2t symbolizer vocab from
-    symbolizer_vocab = text_encoder.TokenTextEncoder(os.path.join(data_dir, self.vocab_file),
-                                                    num_reserved_ids=0,
-                                                    replace_oov="<unk>")
+    symbolizer_vocab = text_encoder.TokenTextEncoder(
+      os.path.join(data_dir, self.vocab_file),
+      num_reserved_ids=0,
+      replace_oov="<unk>")
 
     return self.token_generator(sourcePath,targetPath,symbolizer_vocab, EOS)
 
@@ -180,8 +182,8 @@ class WordChatbot(problem.Text2TextProblem):
     """
     This generator assumes the files at source_path and target_path have
     the same number of lines and yields dictionaries of "inputs" and "targets"
-    where inputs are token ids from the " "-split source (and target, resp.) lines
-    converted to integers using the token_map.
+    where inputs are token ids from the " "-split source (and target, resp.)
+    lines converted to integers using the token_map.
 
     Args:
       source_path: path to the file with source sentences.
@@ -220,7 +222,42 @@ class WordChatbot(problem.Text2TextProblem):
       encoder=text_encoder.SubwordTextEncoder(vocab_filename)
     else:
       vocab_filename=os.path.join(data_dir,self.vocab_file)
-      encoder=text_encoder.TokenTextEncoder(vocab_filename, replace_oov="<unk>")
+      encoder=text_encoder.TokenTextEncoder(vocab_filename,
+                                            replace_oov="<unk>")
     if self.has_inputs:
       return {"inputs":encoder,"targets":encoder}
     return {"targets":encoder}
+
+  # save the vocabulary to a file
+  def save_vocab(self, vocab):
+    """ 
+    Params:
+      :vocab: vocabulary list
+    """
+    voc_file=open(os.path.join(self._data_dir, self.vocab_file), 'w')
+
+    # put the reserved tokens in
+    voc_file.write("<pad>\n")
+    voc_file.write("<EOS>\n")
+    for word, _ in vocab.most_common(self.targeted_vocab_size-3):
+      voc_file.write(word+'\n')
+    voc_file.write("<unk>")
+
+    voc_file.close()
+
+  # open the 6 files to write the processed data into
+  def open_6_files(self):
+    trainSource = open(os.path.join(self._data_dir, 'trainSource.txt'), 'w')
+    trainTarget = open(os.path.join(self._data_dir, 'trainTarget.txt'), 'w')
+    devSource = open(os.path.join(self._data_dir, 'devSource.txt'), 'w')
+    devTarget = open(os.path.join(self._data_dir, 'devTarget.txt'), 'w')
+    testSource = open(os.path.join(self._data_dir, 'testSource.txt'), 'w')
+    testTarget = open(os.path.join(self._data_dir, 'testTarget.txt'), 'w')
+
+    return trainSource, trainTarget, devSource,
+           devTarget, testSource, testTarget
+
+  # close the 6 files to write the processed data into
+  def close_n_files(self, files):
+    for file in files:
+      file.close()
