@@ -119,11 +119,15 @@ class FilterProblem:
   # main method that will run all the functions to do the filtering
   def run(self):
     # if we have already done the clustering, don't redo it
-    if os.path.isfile(os.path.join(self.output_data_dir, 
-                                   self.tag+"Source_cluster_elements.txt")) \
-      and os.path.isfile(os.path.join(self.output_data_dir, 
-                                      self.tag+"Target_cluster_elements.txt")):
-
+    source_data=os.path.join(self.output_data_dir,
+                             "..",
+                             str(self.num_clusters["Source"])+"_clusters",
+                             self.tag+"Source_cluster_elements.txt")
+    target_data=os.path.join(self.output_data_dir,
+                             "..",
+                             str(self.num_clusters["Target"])+"_clusters",
+                             self.tag+"Target_cluster_elements.txt")
+    if os.path.isfile(source_data) and os.path.isfile(target_data):
       print("Found cluster files in "+self.output_data_dir+", filtering next.")
       self.load_clusters()
       self.filtering()
@@ -162,12 +166,12 @@ class FilterProblem:
     source_clusters=open(
       os.path.join(self.output_data_dir,
                    "..",
-                   str(self.num_clusters["Source"])+"clusters",
+                   str(self.num_clusters["Source"])+"_clusters",
                    self.tag+"Source_cluster_elements.txt"))
     target_clusters=open(
       os.path.join(self.output_data_dir,
                    "..",
-                   str(self.num_clusters["Target"])+"clusters",
+                   str(self.num_clusters["Target"])+"_clusters",
                    self.tag+"Source_cluster_elements.txt"))
 
     # make a preloaded target cluster list
@@ -189,7 +193,7 @@ class FilterProblem:
       [index, line]=line.split(";")
       [source_medoid, pair, target_cluster]=line.strip("\n").split("<=====>")
       [source, target]=pair.split("=")
-      [target_medoid, target_cl_index]=target_cluster_list[index]
+      [target_medoid, target_cl_index]=target_cluster_list[int(index)]
       index=int(index)
 
       source_data_point=self.DataPointClass(source, index, True)

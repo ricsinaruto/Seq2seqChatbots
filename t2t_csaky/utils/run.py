@@ -115,17 +115,20 @@ def data_filtering():
 
 # run a longer experiment, with many calls to the above functions
 def experiment():
-  for cluster_size in [100, 200, 400, 800, 1600, 3200, 6400, 12800, 25600]:
-    dataset="DailyDialog"
-    # modify config files
-    DATA_FILTERING["num_clusters"]=cluster_size
-    DATA_FILTERING["data_dir"] = (
-      "data_dir/"+dataset
-      +"/base_with_numbers/filtered_data/hash_jaccard/"
-      +str(cluster_size)+"_clusters")
-    FLAGS["data_dir"]="data_dir/"+dataset+"/base_with_numbers"
+  clusters=[100, 200, 400, 800, 1600, 3200, 6400, 12800, 25600]
+  for dataset in ["DailyDialog", "Persona_Chat"]:
+    for source_cluster in clusters:
+      for target_cluster in clusters:
+          # modify config files
+          DATA_FILTERING["source_clusters"]=source_cluster
+          DATA_FILTERING["target_clusters"]=target_cluster
+          DATA_FILTERING["data_dir"] = (
+            "data_dir/"+dataset
+            +"/base_with_numbers/filtered_data/hash_jaccard/"
+            +str(source_cluster)+"-"+str(target_cluster)+"_filtering")
+          FLAGS["data_dir"]="data_dir/"+dataset+"/base_with_numbers"
 
-    data_filtering()
+          data_filtering()
 
 # run some command line stuff, and get the output in real-time
 def run_command(command=["t2t-datagen",

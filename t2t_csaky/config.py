@@ -33,15 +33,15 @@ FLAGS={
 }
 
 DATA_FILTERING={
-  "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data/hash_jaccard/word_1000_clusters_0.9",
-  "filter_problem"    :"hash_jaccard",  # can be: hash_jaccard, sentence_embedding, rnn_state
-  "filter_type"       :"target_based",  # can be: target_based, source_based, both
-  "source_clusters"   :1600,
+  "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data/sentence_embedding/100_clusters",
+  "filter_problem"    :"sentence_embedding",  # can be: hash_jaccard, sentence_embedding, rnn_state
+  "filter_type"       :"both",  # can be: target_based, source_based, both
+  "source_clusters"   :100,
   "target_clusters"   :100,
-  "min_cluster_size"  :5,     # clusters with fewer elements won't get filtered
+  "min_cluster_size"  :2,     # clusters with fewer elements won't get filtered
   "num_permutations"  :128,   # only for hash based clustering
   "character_level"   :False, # only for hash based clustering
-  "treshold"          :0.9,   # percentage treshold of entropy based filtering
+  "treshold"          :4,   # percentage treshold of entropy based filtering
   "ckpt_number"       :22001  # only for sentence embedding clustering
 }
 
