@@ -57,7 +57,7 @@ class HashJaccard(FilterProblem):
   def find_nearest_medoid(self, data_point, data_tag=""):
     nearest_medoid=self.forest.query(data_point.min_hash, 1)
     if not nearest_medoid:
-      nearest_medoid=[random.randint(0, self.num_clusters-1)]
+      nearest_medoid=[random.randint(0, self.num_clusters[data_tag]-1)]
     return nearest_medoid[0]
 
   # do the clustering of sources and targets
@@ -72,9 +72,9 @@ class HashJaccard(FilterProblem):
 
     # initialize clusters
     medoids=random.sample(range(len(self.data_points[data_tag])),
-                          self.num_clusters)
+                          self.num_clusters[data_tag])
 
-    for i in range(self.num_clusters):
+    for i in range(self.num_clusters[data_tag]):
       cl=self.ClusterClass(self.data_points[data_tag][medoids[i]])
       self.clusters[data_tag].append(cl)
       # put medoids in a the forest
@@ -86,7 +86,7 @@ class HashJaccard(FilterProblem):
           
     # these will be needed for the stopping criterion
     cluster_names=[self.clusters[data_tag][i].medoid.string
-                    for i in range(self.num_clusters)]
+                    for i in range(self.num_clusters[data_tag])]
     cluster_names_old=list(cluster_names)
     count=0
     counts=[]
@@ -101,7 +101,7 @@ class HashJaccard(FilterProblem):
 
       # create new forest
       self.forest=MinHashLSHForest(num_perm=self.num_perm)
-      for i in range(self.num_clusters):
+      for i in range(self.num_clusters[data_tag]):
         self.forest.add(i, self.clusters[data_tag][i].medoid.min_hash)
       self.forest.index()
 

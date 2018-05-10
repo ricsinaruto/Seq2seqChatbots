@@ -73,26 +73,40 @@ class FilterProblem:
     }
 
     # calculate number of clusters
+    self.num_clusters = {
+      "Source": 0,
+      "Target": 0,
+    }
     if self.tag=="train" or self.tag=="full":
-      self.num_clusters=DATA_FILTERING["num_clusters"]
+      self.num_clusters["Source"]=DATA_FILTERING["source_clusters"]
+      self.num_clusters["Target"]=DATA_FILTERING["target_clusters"]
     elif self.tag=="dev":
-      self.num_clusters=int(DATA_FILTERING["num_clusters"]
-                            * PROBLEM_HPARAMS["dataset_split"]["val"]
-                            / PROBLEM_HPARAMS["dataset_split"]["train"])
-    else self.tag=="test":
-      self.num_clusters=int(DATA_FILTERING["num_clusters"]
-                            * PROBLEM_HPARAMS["dataset_split"]["test"]
-                            / PROBLEM_HPARAMS["dataset_split"]["train"])
+      self.num_clusters["Source"]=int(DATA_FILTERING["source_clusters"]
+                                   * PROBLEM_HPARAMS["dataset_split"]["val"]
+                                   / PROBLEM_HPARAMS["dataset_split"]["train"])
+      self.num_clusters["Target"]=int(DATA_FILTERING["target_clusters"]
+                                   * PROBLEM_HPARAMS["dataset_split"]["val"]
+                                   / PROBLEM_HPARAMS["dataset_split"]["train"])
+    else:
+      self.num_clusters["Source"]=int(DATA_FILTERING["source_clusters"]
+                                   * PROBLEM_HPARAMS["dataset_split"]["test"]
+                                   / PROBLEM_HPARAMS["dataset_split"]["train"])
+      self.num_clusters["Target"]=int(DATA_FILTERING["target_clusters"]
+                                   * PROBLEM_HPARAMS["dataset_split"]["test"]
+                                   / PROBLEM_HPARAMS["dataset_split"]["train"])
 
     self.output_data_dir=DATA_FILTERING["data_dir"]
     self.input_data_dir=FLAGS["data_dir"]
     self.type=DATA_FILTERING["filter_type"]
 
     # extra step to figure out in which split to put the results
+    train_lines=self.count_lines("train")
+    dev_lines=self.count_lines("dev")
+    test_lines=self.count_lines("test")
     self.split_line_counts = {
-      "train":  self.count_lines("train"),
-      "dev":    self.count_lines("dev"),
-      "test":   self.count_lines("test")
+      "train":  train_lines,
+      "dev":    dev_lines,
+      "test":   test_lines
     }
 
   # count the number of line in the given file
@@ -144,45 +158,64 @@ class FilterProblem:
 
   # load clusters from files
   def load_clusters(self):
-    clusters=open(os.path.join(self.output_data_dir, 
-                               self.tag+"Source_cluster_elements.txt"))
+    # open the data files
+    source_clusters=open(
+      os.path.join(self.output_data_dir,
+                   "..",
+                   str(self.num_clusters["Source"])+"clusters",
+                   self.tag+"Source_cluster_elements.txt"))
+    target_clusters=open(
+      os.path.join(self.output_data_dir,
+                   "..",
+                   str(self.num_clusters["Target"])+"clusters",
+                   self.tag+"Source_cluster_elements.txt"))
 
     # make a preloaded target cluster list
-    self.clusters["Target"]=["" for i in range(self.num_clusters)]
+    self.clusters["Target"]=["" for i in range(self.num_clusters["Target"])]
+    target_cluster_list=["" for i in range(self.split_line_counts["train"]
+                                           +self.split_line_counts["dev"]
+                                           +self.split_line_counts["test"])]
+    # read the target clusters first
+    for line in target_clusters:
+      [index, line]=line.split(";")
+      [source_medoid, pair, target_cluster]=line.strip("\n").split("<=====>")
+      # list containing target medoid and target cluster index
+      [target_medoid, target_cl_index]=target_cluster.split(":")
+      target_cluster_list[int(index)]=[target_medoid, int(target_cl_index)]
 
     # load the clusters
     last_medoid="<-->"
-    for line in clusters:
+    for line in source_clusters:
       [index, line]=line.split(";")
       [source_medoid, pair, target_cluster]=line.strip("\n").split("<=====>")
       [source, target]=pair.split("=")
-      [target_medoid, target_cl_index]=target_cluster.split(":")
+      [target_medoid, target_cl_index]=target_cluster_list[index]
+      index=int(index)
 
-      source_data_point=self.DataPointClass(source, index, only_string=True)
-      target_data_point=self.DataPointClass(target, index, only_string=True)
+      source_data_point=self.DataPointClass(source, index, True)
+      target_data_point=self.DataPointClass(target, index, True)
       source_data_point.cluster_index=len(self.clusters["Source"])
-      target_data_point.cluster_index=int(target_cl_index)
+      target_data_point.cluster_index=target_cl_index
 
       # check if this is a new medoid (source side)
       if last_medoid!=source_medoid:
         # add medoid to cluster
-        dp=self.DataPointClass(source_medoid, only_string=True)
+        dp=self.DataPointClass(source_medoid, index=0, only_string=True)
         self.clusters["Source"].append(self.ClusterClass(dp))
       self.clusters["Source"][-1].add_element(source_data_point)
       self.clusters["Source"][-1].targets.append(target_data_point)
 
       # target side
-      if self.clusters["Target"][int(target_cl_index)]=="":
-        dp=self.DataPointClass(target_medoid, only_string=True)
-        self.clusters["Target"][int(target_cl_index)]=self.ClusterClass(dp)
-      self.clusters["Target"][int(target_cl_index)].add_element(
-        target_data_point)
-      self.clusters["Target"][int(target_cl_index)].targets.append(
-        source_data_point)
+      if self.clusters["Target"][target_cl_index]=="":
+        dp=self.DataPointClass(target_medoid, index=0, only_string=True)
+        self.clusters["Target"][target_cl_index]=self.ClusterClass(dp)
+      self.clusters["Target"][target_cl_index].add_element(target_data_point)
+      self.clusters["Target"][target_cl_index].targets.append(source_data_point)
 
       last_medoid=source_medoid
 
-    clusters.close()
+    source_clusters.close()
+    target_clusters.close()
 
   # find the point that minimizes mean distance within a cluster
   def find_medoid(self, data_tag):
@@ -217,8 +250,8 @@ class FilterProblem:
       :data_tag: Whether it's source or target data
     """
     for i, data_point in enumerate(self.data_points[data_tag]):
-      if i%1000==0:
-        print(str(i))
+      #if i%1000==0:
+      print(str(i))
       nearest_medoid=self.find_nearest_medoid(data_point, data_tag)
       self.clusters[data_tag][nearest_medoid].add_element(data_point)
 
@@ -244,7 +277,7 @@ class FilterProblem:
     """ 
     count_difference=0
     count_difference_old=0
-    for i in range(self.num_clusters):
+    for i in range(self.num_clusters[data_tag]):
       # check strings from previous iteration to see if they are the same
       if self.clusters[data_tag][i].medoid.string!=cluster_names[i]:
         count_difference+=1
@@ -360,7 +393,7 @@ class FilterProblem:
     """
     # function for writing the dataset to file
     def save_dataset(source):
-      for num_cl, cluster in self.clusters[source]:
+      for num_cl, cluster in enumerate(self.clusters[source]):
         # filter errors due to cluster loading
         if cluster!="":
           # write cluster entropies
@@ -380,8 +413,8 @@ class FilterProblem:
               if cluster.targets[num_el].cluster_index not in target_indices or self.type!="both":
                 source_string=element.string+"\n"
                 target_string=cluster.targets[num_el].string+"\n"
-                source_file.write(source_string)
-                target_file.write(target_string)
+                file_dict[self.tag+"source_file"].write(source_string)
+                file_dict[self.tag+"target_file"].write(target_string)
 
                 # write to separate files if we do split after clustering
                 if self.tag=="full":

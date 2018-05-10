@@ -2,6 +2,7 @@ import numpy as np
 import os
 import random
 from tensorflow.python import pywrap_tensorflow
+from collections import Counter
 
 # my imports
 from config import *
@@ -29,9 +30,9 @@ class DataPoint:
     Params:
       :vocab_dict: Vocabulary dictionary that contains embedding weights
     """
-    words=self.string.split()
+    self.words=self.string.split()
 
-    for word in words:
+    for word in self.words:
       if word in vocab_dict:
         self.ids.append(vocab_dict[word])
       else:
@@ -39,55 +40,57 @@ class DataPoint:
 
   # compute the distance of two embeddings
   def emb_dist(self, id1, id2):
-    return np.linalg.norm(np.array(id1)-np.array(id2))
+    return np.linalg.norm(np.subtract(np.array(id1), np.array(id2)))
 
   # distance metric between this and another sentence
   def distance(self, other):
-    # TODO: what is the range of this distance?
+    # TODO: redo this based on what recski told me
 
-    self_ids=list(self.ids)
-    self_words=self.string.split()
-    other_ids=list(other.ids)
-    other_words=other.string.split()
+    self_word_id=dict(zip(self.words, self.ids))
+    other_word_id=dict(zip(other.words, other.ids))
+    self_counter=Counter(self.words)
+    other_counter=Counter(other.words)
 
-    # first delete the ones that are the same
-    for word, weight in zip(self_words, list(self_ids)):
-      if word in other_words:
-        self_ids.remove(weight)
-        other_ids.remove(weight)
-        other_words.remove(word)
+    self_minus_other=self_counter-other_counter
+    other_minus_self=other_counter-self_counter
+    distances={}
 
-    distances=[[] for x in range(len(self_ids))]
     # compute distance in one way
     first_sum=0
-    for i, self_id in enumerate(self_ids):
+    for self_word in self_minus_other:
       minimum=1
+      for other_word in other_minus_self:
+        dist=self.emb_dist(self_word_id[self_word], other_word_id[other_word])
+        distances[(self_word, other_word)]=dist
+        if dist<minimum:
+          minimum=dist
 
-      for other_id in other_ids:
-        distances[i].append(self.emb_dist(self_id, other_id))
-        # compare
-        if distances[i][-1]<minimum:
-          minimum=distances[i][-1]
-      first_sum+=minimum
-    if len(self_ids)!=0:
-      first_sum=first_sum/len(self_ids)
+      count=self_minus_other[self_word]
+      first_sum+=count*minimum
+    # normalize  
+    self_length=len(self_minus_other)
+    if self_length!=0:
+      first_sum=first_sum/self_length
 
     # compute distance in the other way
     second_sum=0
-    for j in range(len(other_ids)):
+    for other_word in other_minus_self:
       minimum=1
+      for self_word in self_minus_other:
+        dist=distances[(self_word, other_word)]
+        if dist<minimum:
+          minimum=dist
 
-      for i in range(len(self_ids)):
-        if distances[i][j]<minimum:
-          minimum=distances[i][j]
-      second_sum+=minimum
-    if len(other_ids)!=0:
-      second_sum=second_sum/len(other_ids)
+      count=other_minus_self[other_word]
+      second_sum+=count*minimum
+    # normalize
+    other_length=len(other_minus_self)
+    if other_length!=0:
+      second_sum=second_sum/other_length
 
     # if one sentence contains the other
-    if len(self_ids)==0 or len(other_ids)==0:
-      return (abs(len(self_ids)-len(other_ids))
-            / max(len(self.ids), len(other.ids)))
+    if self_length==0 or other_length==0:
+      return abs(self_length-other_length) / max(len(self.ids), len(other.ids))
     return (first_sum+second_sum)/2
 
   # computes a similarity metric between two sentences
@@ -151,8 +154,8 @@ class SentenceEmbedding(FilterProblem):
 
     # initialize clusters
     medoids=random.sample(range(len(self.data_points[data_tag])),
-                          self.num_clusters)
-    for i in range(self.num_clusters):
+                          self.num_clusters[data_tag])
+    for i in range(self.num_clusters[data_tag]):
       cl=self.ClusterClass(self.data_points[data_tag][medoids[i]])
       self.clusters[data_tag].append(cl)
 
@@ -161,7 +164,7 @@ class SentenceEmbedding(FilterProblem):
 
     # these will be needed for the stopping criterion
     cluster_names=[self.clusters[data_tag][i].medoid.string
-                    for i in range(self.num_clusters)]
+                    for i in range(self.num_clusters[data_tag])]
     cluster_names_old=list(cluster_names)
     count=0
     counts=[]

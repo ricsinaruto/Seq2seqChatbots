@@ -36,7 +36,8 @@ DATA_FILTERING={
   "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data/hash_jaccard/word_1000_clusters_0.9",
   "filter_problem"    :"hash_jaccard",  # can be: hash_jaccard, sentence_embedding, rnn_state
   "filter_type"       :"target_based",  # can be: target_based, source_based, both
-  "num_clusters"      :5000,
+  "source_clusters"   :1600,
+  "target_clusters"   :100,
   "min_cluster_size"  :5,     # clusters with fewer elements won't get filtered
   "num_permutations"  :128,   # only for hash based clustering
   "character_level"   :False, # only for hash based clustering
