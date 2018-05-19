@@ -37,7 +37,7 @@ class DataPoint:
         self.min_hash.update(word.encode('utf8'))
 
   # computes jaccard distance between self and another hash
-  def similarity(self, other):
+  def similarity(self, other, dist_matrix=""):
     return self.min_hash.jaccard(other.min_hash)
 
 

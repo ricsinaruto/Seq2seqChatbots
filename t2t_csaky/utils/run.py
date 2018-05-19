@@ -10,6 +10,7 @@ from config import *
 from data_filtering.hash_jaccard import HashJaccard
 from data_filtering.rnn_state import RNNState
 from data_filtering.sentence_embedding import SentenceEmbedding
+from data_filtering.identity_clustering import IdentityClustering
 
 
 
@@ -59,6 +60,7 @@ def training():
             +" --model="+FLAGS["model"]
             +" --hparams_set="+hparam_string
             +" --schedule="+FLAGS["train_mode"]
+            +" --worker_gpu_memory_fraction="+str(FLAGS["memory_fraction"])
             +" --keep_checkpoint_max="+str(FLAGS["keep_checkpoints"])
             +" --keep_checkpoint_every_n_hours="+str(FLAGS["save_every_n_hour"])
             +" --save_checkpoints_secs="+str(FLAGS["save_every_n_secs"])
@@ -92,6 +94,7 @@ def decoding():
             +" --problems="+FLAGS["problem"]
             +" --output_dir="+FLAGS["train_dir"]
             +" --model="+FLAGS["model"]
+            +" --worker_gpu_memory_fraction="+str(FLAGS["memory_fraction"])
             +" --hparams_set="+hparam_string
             +" --decode_to_file="+FLAGS["decode_dir"]+"/"
                                  +FLAGS["output_file_name"]
@@ -107,7 +110,8 @@ def data_filtering():
   filter_problems= {
     "hash_jaccard"      : HashJaccard,
     "sentence_embedding": SentenceEmbedding,
-    "rnn_state"         : RNNState
+    "rnn_state"         : RNNState,
+    "identity_clustering":IdentityClustering
   }
 
   problem=filter_problems[DATA_FILTERING["filter_problem"]]("full")

@@ -5,9 +5,9 @@ for the current run. This file will also be copied to the provided directory.
 
 FLAGS={
   "t2t_usr_dir"       :"t2t_csaky", # tensor2tensor imports from this dir
-  "data_dir"          :"data_dir/DailyDialog/base_with_numbers",
-  "train_dir"         :"train_dir/DailyDialog/trf_40_dropout-base_with_numbers",
-  "decode_dir"        :"decode_dir/DailyDialog/trf_20_dropout-base",
+  "data_dir"          :"data_dir/DailyDialog/base_both_identity_clustering",
+  "train_dir"         :"train_dir/DailyDialog/trf_20_dropout-base_both_identity_clustering",
+  "decode_dir"        :"decode_dir/DailyDialog/trf_20_dropout-base_both_identity_clustering",
   "problem"           :"daily_dialog_chatbot",
   "model"             :"transformer",
   "hparams"           :"",  # this is empty if we use hparams defined in this file,
@@ -15,8 +15,8 @@ FLAGS={
   "profile_perform"   :"True",
 
   # training related flags
+  "memory_fraction"   :0.9,	# fraction of gpu memory to use
   "train_mode"        :"train_and_evaluate",
-  "memory_fraction"   :0.95,
   "keep_checkpoints"  :3,       # how many checkpoints to keep at head
   "train_steps"       :1000000,
   "save_every_n_hour" :0,       # save checkpoints every n hours
@@ -25,25 +25,25 @@ FLAGS={
   "evaluation_freq"   :1000,    # evaluation cycle is run every n train steps
 
   # decoding related flags
-  "output_file_name"  :"inference_at_11k.txt",  # save the inference outputs
-  "input_file_name"   :"NCM_examples.txt",      # read inputs to be fed
-  "decode_mode"       :"interactive",   # can be: interactive, file, dataset
-  "beam_size"         :10,
-  "return_beams"      :"True"           # if False return only the top beam, 
+  "output_file_name"  :"inference_at_7k_identity_clustering_100_beams.txt",  # save the inference outputs
+  "input_file_name"   :"identity_clustering_filtered.txt",      # read inputs to be fed
+  "decode_mode"       :"file",   # can be: interactive, file, dataset
+  "beam_size"         :100,
+  "return_beams"      :"False"           # if False return only the top beam, 
                                         # otherwise beam_size beams
 }
 
 DATA_FILTERING={
-  "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data/sentence_embedding/100_clusters",
+  "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data/sentence_embedding/base",
   "filter_problem"    :"sentence_embedding",  # can be: hash_jaccard, sentence_embedding, rnn_state
   "filter_type"       :"both",  # can be: target_based, source_based, both
-  "source_clusters"   :100,
-  "target_clusters"   :100,
+  "source_clusters"   :51200,
+  "target_clusters"   :51200,
   "min_cluster_size"  :2,     # clusters with fewer elements won't get filtered
   "num_permutations"  :128,   # only for hash based clustering
   "character_level"   :False, # only for hash based clustering
   "treshold"          :4,   # percentage treshold of entropy based filtering
-  "ckpt_number"       :22001  # only for sentence embedding clustering
+  "ckpt_number"       :20029  # only for sentence embedding clustering
 }
 
 PROBLEM_HPARAMS={
@@ -64,9 +64,9 @@ TRANSFORMER_HPARAMS={
 
   # hparams_set override
   "batch_size"        :4096,
-  "layer_dropout"     :0.4,
-  "attention_dropout" :0.2,
-  "relu_dropout"      :0.2,
+  "layer_dropout"     :0.2,
+  "attention_dropout" :0.1,
+  "relu_dropout"      :0.1,
   "embed_num_shards"  :16,    # shard the embedding matrix into n matrices
   "summarize_vars"    :True   # print out the model parameters at the start
 }

@@ -3,29 +3,56 @@ import os
 import random
 from tensorflow.python import pywrap_tensorflow
 from collections import Counter
+from multiprocessing import Process
+import scipy
 
 # my imports
 from config import *
 from data_filtering.filter_problem import FilterProblem
+
+# temporary helper function to load a vocabulary
+def _load_vocab():
+  vocab=open(
+    os.path.join(FLAGS["data_dir"],
+                 "vocab.chatbot."+str(PROBLEM_HPARAMS["vocabulary_size"])))
+  vocab_dict={}
+  # read the vocab file
+  i=0
+  for word in vocab:
+    vocab_dict[word.strip("\n")]=i
+    i+=1
+  vocab.close()
+
+  return vocab_dict
 
 # a class to handle each data point
 class DataPoint:
   """
   A class that handles a hash example.
   """
+  vocab_dict=_load_vocab()
   def __init__(self, string, index, only_string=True):
     """
     Params:
       :string:  String to be stored
       :index: Number of the line in the file from which this sentence was read
       :only_string: Whether to only store string
-    """ 
+    """
     self.index=index
     self.string=string.strip("\n")
     self.words=self.string.split()
 
+    # replace out of vocabulary words
+    for i, word in enumerate(self.words):
+      if word not in DataPoint.vocab_dict:
+        self.words[i]="<unk>"
+      self.words[i]=DataPoint.vocab_dict[self.words[i]]
+
+    # transform to counter
+    self.words=Counter(self.words)
+
   # distance metric between this and another sentence
-  def distance(self, other, dist_matrix):
+  def distance(self_counter, other_counter, dist_matrix):
     """
     Params:
       :other: The other sentence to which we calculate distance
@@ -37,7 +64,7 @@ class DataPoint:
       for self_word in self_counter:
         minimum=1
         for other_word in other_counter:
-          dist=dist_matrix[self_word+"_"+other_word]
+          dist=dist_matrix[self_word, other_word]
           if dist<minimum:
             minimum=dist
 
@@ -50,19 +77,13 @@ class DataPoint:
         dist_sum=dist_sum/self_length
       return dist_sum
 
-    self_counter=Counter(self.words)
-    other_counter=Counter(other.words)
-    # this part takes out the common words
-    #self_minus_other=self_counter-other_counter
-    #other_minus_self=other_counter-self_counter
-
-    first_sum=word_sum(self_counter, other_counter)
-    second_sum=word_sum(other_counter, self_counter)
+    first_sum=word_sum(self_counter.words, other_counter.words)
+    second_sum=word_sum(other_counter.words, self_counter.words)
     return (first_sum+second_sum)/2
 
   # computes a similarity metric between two sentences
-  def similarity(self, other):
-    return -self.distance(other)
+  def similarity(self, other, dist_matrix):
+    return -self.distance(other, dist_matrix)
 
 class SentenceEmbedding(FilterProblem):
   """
@@ -88,8 +109,8 @@ class SentenceEmbedding(FilterProblem):
       :data_tag: Whether it's source or target data
     """
     min_distance=0
-    for i, medoid in enumerate(self.clusters[data_tag]):
-      dist=data_point.distance(medoid.medoid, self.dist_matrix)
+    for i, cluster in enumerate(self.clusters[data_tag]):
+      dist=data_point.distance(cluster.medoid, self.dist_matrix)
 
       if i==0 or dist<min_distance:
         min_distance=dist
@@ -118,8 +139,21 @@ class SentenceEmbedding(FilterProblem):
     # load vocab distance matrix
     if data_tag=="Source":
       self.load_distance_matrix()
+      
+    # create a sentence distance matrix
+    processes=[]
+    for i in range(16):
+      p=Process(target=self.create_sentence_distance_matrix, args=(data_tag,i))
+      processes.append(p)
+      p.start()
 
+    # stop processes
+    for process in processes:
+      process.join()
+
+    """
     # initialize clusters
+    self.load_sentence_matrix(data_tag)
     medoids=random.sample(range(len(self.data_points[data_tag])),
                           self.num_clusters[data_tag])
     for i in range(self.num_clusters[data_tag]):
@@ -154,6 +188,7 @@ class SentenceEmbedding(FilterProblem):
                              cluster_names_old,
                              count,
                              counts)
+    """
 
   # extract embedding weights
   def extract_weights(self):
@@ -230,17 +265,50 @@ class SentenceEmbedding(FilterProblem):
     matrix_file=open(
       os.path.join(self.weights_folder, "distance_matrix.txt"))
 
-    i=0
+    i=-1
     vocab_list=[]
-    self.dist_matrix={}
     # load the distances into a dictionary
     for line in matrix_file:
-      if i==0:
+      if i==-1:
         vocab_list=line.split(";")[1:-1]
       else:
         distances=line.split(";")[:-1]
         for j, dist in enumerate(distances[1:]):
-          self.dist_matrix[distances[0]+"_"+vocab_list[j]]=float(dist)
+          self.dist_matrix[i, j]=float(dist)
+      i+=1
+
+    matrix_file.close()
+
+  # create a sentence distance matrix
+  def create_sentence_distance_matrix(self, data_tag, pid):
+    """
+    Params:
+      :pid: process id of this function (used to split data)
+      :dist_matrix: vocab distance matrix
+    """
+    # save the created distance matrix
+    out=open(
+      os.path.join(
+        self.input_data_dir, data_tag+"SentenceMatrix"+str(pid)+".txt"), "w")
+
+    length=len(self.data_points[data_tag])
+    for dp1 in self.data_points[data_tag][int(pid/16*length):int((pid+1)/16*length)]:
+      for dp2 in self.data_points[data_tag]:
+        out.write(str(dp1.distance(dp2, self.dist_matrix))+";")
+      out.write("\n")
+    out.close()
+
+  # load the sentence matrix
+  def load_sentence_matrix(self, data_tag):
+    self.sentence_matrix={}
+    matrix_file=open(
+      os.path.join(self.input_data_dir, data_tag+"SentenceMatrix.txt"))
+
+    i=0
+    for line in matrix_file:
+      distances=line.split(";")[:-1]
+      for j, dist in enumerate(distances):
+        self.sentence_matrix[(i, j)]=float(dist)
       i+=1
 
     matrix_file.close()

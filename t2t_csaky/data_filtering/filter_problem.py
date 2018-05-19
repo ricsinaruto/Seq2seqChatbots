@@ -1,5 +1,6 @@
 import os
 import math
+import numpy as np
 from collections import Counter
 
 # my imports
@@ -61,6 +62,8 @@ class FilterProblem:
       :tag: Can be either train, dev or test
     """
     self.tag=tag
+    self.dist_matrix=np.ndarray(shape=(PROBLEM_HPARAMS["vocabulary_size"],
+                                       PROBLEM_HPARAMS["vocabulary_size"]))
     self.treshold=DATA_FILTERING["treshold"]
     self.min_cluster_size=DATA_FILTERING["min_cluster_size"]
     self.clusters= {
@@ -233,7 +236,7 @@ class FilterProblem:
       for element1 in cluster.elements:
         small_sum=0
         for element2 in cluster.elements:
-          small_sum+=element1.similarity(element2)
+          small_sum+=element1.similarity(element2, self.dist_matrix)
 
         if small_sum>big_sum:
           big_sum=small_sum
@@ -253,14 +256,15 @@ class FilterProblem:
     Params:
       :data_tag: Whether it's source or target data
     """
+    # reverse data tag
+    rev_tag="Target" if data_tag=="Source" else "Source"
+    
     for i, data_point in enumerate(self.data_points[data_tag]):
       #if i%1000==0:
       print(str(i))
       nearest_medoid=self.find_nearest_medoid(data_point, data_tag)
       self.clusters[data_tag][nearest_medoid].add_element(data_point)
 
-      # reverse data tag
-      rev_tag="Target" if data_tag=="Source" else "Source"
       self.clusters[data_tag][nearest_medoid].targets.append(
         self.data_points[rev_tag][i])
 

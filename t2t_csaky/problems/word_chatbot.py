@@ -254,7 +254,7 @@ class WordChatbot(problem.Text2TextProblem):
     testSource = open(os.path.join(self._data_dir, 'testSource.txt'), 'w')
     testTarget = open(os.path.join(self._data_dir, 'testTarget.txt'), 'w')
 
-    return trainSource, trainTarget, devSource,
+    return trainSource, trainTarget, devSource, \
            devTarget, testSource, testTarget
 
   # close the 6 files to write the processed data into
