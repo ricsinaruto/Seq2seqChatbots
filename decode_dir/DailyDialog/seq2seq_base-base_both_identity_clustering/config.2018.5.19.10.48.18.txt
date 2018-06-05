@@ -6,44 +6,42 @@ for the current run. This file will also be copied to the provided directory.
 FLAGS={
   "t2t_usr_dir"       :"t2t_csaky", # tensor2tensor imports from this dir
   "data_dir"          :"data_dir/DailyDialog/base_both_identity_clustering",
-  "train_dir"         :"train_dir/DailyDialog/trf_20_dropout-base_both_identity_clustering",
-  "decode_dir"        :"decode_dir/DailyDialog/trf_20_dropout-base_both_identity_clustering",
+  "train_dir"         :"train_dir/DailyDialog/seq2seq_base-base_both_identity_clustering",
+  "decode_dir"        :"decode_dir/DailyDialog/seq2seq_base-base_both_identity_clustering",
   "problem"           :"daily_dialog_chatbot",
-  "model"             :"transformer",
+  "model"             :"gradient_checkpointed_seq2seq",
   "hparams"           :"",  # this is empty if we use hparams defined in this file,
                             # otherwise you have to specify a registered hparams_set
   "profile_perform"   :"True",
 
   # training related flags
-  "memory_fraction"   :0.45,	# fraction of gpu memory to use
   "train_mode"        :"train_and_evaluate",
   "keep_checkpoints"  :3,       # how many checkpoints to keep at head
   "train_steps"       :1000000,
-  "save_every_n_hour" :0,       # save checkpoints every n hours
-  "save_every_n_secs" :1800,    # every n seconds, overrides hour param
+  "save_every_n_hour" :1,       # save checkpoints every n hours
+  "save_every_n_secs" :0,    # every n seconds, overrides hour param
   "evaluation_steps"  :1000,    # number of evaluation steps at each cycle
   "evaluation_freq"   :1000,    # evaluation cycle is run every n train steps
 
   # decoding related flags
-  "output_file_name"  :"inference_at_7k_identity_clustering_beams.txt",  # save the inference outputs
-  "input_file_name"   :"identity_clustering_filtered.txt",      # read inputs to be fed
+  "output_file_name"  :"2k_icp.txt",  # save the inference outputs
+  "input_file_name"   :"identity_clustering_paper.txt",      # read inputs to be fed
   "decode_mode"       :"file",   # can be: interactive, file, dataset
   "beam_size"         :10,
-  "return_beams"      :"True"           # if False return only the top beam, 
+  "return_beams"      :"False"           # if False return only the top beam, 
                                         # otherwise beam_size beams
 }
 
 DATA_FILTERING={
-  "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data/sentence_embedding/base",
-  "filter_problem"    :"sentence_embedding",  # can be: hash_jaccard, sentence_embedding, rnn_state
-  "filter_type"       :"both",  # can be: target_based, source_based, both
-  "source_clusters"   :51200,
-  "target_clusters"   :51200,
-  "min_cluster_size"  :2,     # clusters with fewer elements won't get filtered
+  "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data/hash_jaccard/word_1000_clusters_0.9",
+  "filter_problem"    :"hash_jaccard",  # can be: hash_jaccard, sentence_embedding, rnn_state
+  "filter_type"       :"target_based",  # can be: target_based, source_based, both
+  "num_clusters"      :5000,
+  "min_cluster_size"  :5,     # clusters with fewer elements won't get filtered
   "num_permutations"  :128,   # only for hash based clustering
   "character_level"   :False, # only for hash based clustering
-  "treshold"          :4,   # percentage treshold of entropy based filtering
-  "ckpt_number"       :20029  # only for sentence embedding clustering
+  "treshold"          :0.9,   # percentage treshold of entropy based filtering
+  "ckpt_number"       :22001  # only for sentence embedding clustering
 }
 
 PROBLEM_HPARAMS={
@@ -64,9 +62,9 @@ TRANSFORMER_HPARAMS={
 
   # hparams_set override
   "batch_size"        :4096,
-  "layer_dropout"     :0.2,
-  "attention_dropout" :0.1,
-  "relu_dropout"      :0.1,
+  "layer_dropout"     :0.4,
+  "attention_dropout" :0.2,
+  "relu_dropout"      :0.2,
   "embed_num_shards"  :16,    # shard the embedding matrix into n matrices
   "summarize_vars"    :True   # print out the model parameters at the start
 }
@@ -74,7 +72,7 @@ TRANSFORMER_HPARAMS={
 # These will be applied on top of the lstm_seq2seq hparams_set
 SEQ2SEQ_HPARAMS= {
   # my hparams
-  "lstm_hidden_size"  :2600,
+  "lstm_hidden_size"  :3072,
 
   # hparams_set override
   "optimizer"         :"Adafactor",
@@ -84,8 +82,8 @@ SEQ2SEQ_HPARAMS= {
   "embed_num_shards"  :10,    # shard the embedding matrix into n matrices
   "embedding_size"    :2048,
   "num_layers"        :2,
-  "batch_size"        :512,
-  "max_sentence_len"  :64,    # sentences longer than this will be ignored
+  "batch_size"        :2048,
+  "max_sentence_len"  :128,    # sentences longer than this will be ignored
   "shared_embedding_and_softmax_weights":True # if True, use 1 matrix for the 
                                               # softmax and embedding weights
 }

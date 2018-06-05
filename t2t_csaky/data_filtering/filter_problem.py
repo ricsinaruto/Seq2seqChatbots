@@ -417,10 +417,21 @@ class FilterProblem:
               and (num_cl not in indices or clusters_too_small):
             # filter one side
             for num_el, element in enumerate(cluster.elements):
+              target_cl=cluster.targets[num_el].cluster_index
+              clusters_too_small=len(
+                self.clusters["Target"][target_cl].elements) \
+                < self.min_cluster_size
               # check both sides in "both" case
-              if cluster.targets[num_el].cluster_index not in target_indices or self.type!="both":
+              if ((target_cl not in target_indices or clusters_too_small)
+                  or self.type!="both"):
                 source_string=element.string+"\n"
                 target_string=cluster.targets[num_el].string+"\n"
+
+                # reverse if Target
+                if source=="Target":
+                  tmp=source_string
+                  source_string=target_string
+                  target_string=tmp
                 file_dict[self.tag+"source_file"].write(source_string)
                 file_dict[self.tag+"target_file"].write(target_string)
 
