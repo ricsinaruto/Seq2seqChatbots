@@ -19,7 +19,9 @@ def main():
   parser.add_argument('--mode', type=str, help='Can be one of the following: {\
                                                 train,\
                                                 decode,\
-                                                generate_data}')
+                                                generate_data,\
+                                                filter_data,\
+                                                experiment}')
   args=parser.parse_args()
   
   # different modes will call different functions
@@ -41,6 +43,7 @@ def main():
     print("  decode")
     print("  generate_data")
     print("  filter_data")
+    print("  experiment")
 
 
 if __name__=="__main__":

@@ -34,11 +34,12 @@ FLAGS={
 }
 
 DATA_FILTERING={
-  "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data/sentence_embedding/100_clusters",
-  "filter_problem"    :"sentence_embedding",  # can be: hash_jaccard, sentence_embedding, rnn_state
+  "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data/identity_clustering/bigram_matrix",
+  "filter_problem"    :"identity_clustering",  # can be: hash_jaccard, sentence_embedding, rnn_state
   "filter_type"       :"both",  # can be: target_based, source_based, both
   "source_clusters"   :100,
   "target_clusters"   :100,
+  "max_length"        :64,    # max length when constructing bigram matrix, this needs to be set to 0 in order to normal filtering to run
   "min_cluster_size"  :2,     # clusters with fewer elements won't get filtered
   "num_permutations"  :128,   # only for hash based clustering
   "character_level"   :False, # only for hash based clustering
