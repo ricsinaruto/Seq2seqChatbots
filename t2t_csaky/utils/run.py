@@ -55,7 +55,7 @@ def training():
                --generate_data=False \
                --t2t_usr_dir="+FLAGS["t2t_usr_dir"]
             +" --data_dir="+FLAGS["data_dir"]
-            +" --problems="+FLAGS["problem"]
+            +" --problem="+FLAGS["problem"]
             +" --output_dir="+FLAGS["train_dir"]
             +" --model="+FLAGS["model"]
             +" --hparams_set="+hparam_string
@@ -91,7 +91,7 @@ def decoding():
                --generate_data=False \
                --t2t_usr_dir="+FLAGS["t2t_usr_dir"]
             +" --data_dir="+FLAGS["data_dir"]
-            +" --problems="+FLAGS["problem"]
+            +" --problem="+FLAGS["problem"]
             +" --output_dir="+FLAGS["train_dir"]
             +" --model="+FLAGS["model"]
             +" --worker_gpu_memory_fraction="+str(FLAGS["memory_fraction"])

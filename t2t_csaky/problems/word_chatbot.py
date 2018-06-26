@@ -141,11 +141,9 @@ class WordChatbot(text_problems.Text2TextProblem):
       }
     target_vocab_size = self._encoders["targets"].vocab_size
     p.target_modality = (registry.Modalities.SYMBOL, source_vocab_size)
-    if self.has_inputs:
-      p.input_space_id = self.input_space_id
-    p.target_space_id = self.target_space_id
-    if self.is_character_level:
+    if self.vocab_type == text_problems.VocabType.CHARACTER:
       p.loss_multiplier = 2.0
+
     if self.packed_length:
       identity = (registry.Modalities.GENERIC, None)
       if self.has_inputs:
@@ -198,21 +196,6 @@ class WordChatbot(text_problems.Text2TextProblem):
         while source and target:
           yield {"inputs": source.strip(), "targets": target.strip()}
           source, target = source_file.readline(), target_file.readline()
-
-  # Overwrite the feature encoders, so that I can give my own encoding process
-  def feature_encoders(self, data_dir):
-    if self.is_character_level:
-      encoder=text_encoder.ByteTextEncoder()
-    elif self.use_subword_tokenizer:
-      vocab_filename=os.path.join(data_dir,self.vocab_file)
-      encoder=text_encoder.SubwordTextEncoder(vocab_filename)
-    else:
-      vocab_filename=os.path.join(data_dir,self.vocab_file)
-      encoder=text_encoder.TokenTextEncoder(vocab_filename,
-                                            replace_oov="<unk>")
-    if self.has_inputs:
-      return {"inputs":encoder,"targets":encoder}
-    return {"targets":encoder}
 
   # save the vocabulary to a file
   def save_vocab(self, vocab):
