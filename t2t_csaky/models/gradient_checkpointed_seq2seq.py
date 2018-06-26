@@ -108,7 +108,7 @@ def lstm_seq2seq_internal_static(inputs, targets, hparams, train):
       
     return tf.expand_dims(projected_outputs, axis=2)
 
-
+#TODO: rename this (causes compatibility issues)
 @registry.register_model
 class GradientCheckpointedSeq2seq(t2t_model.T2TModel):
   """

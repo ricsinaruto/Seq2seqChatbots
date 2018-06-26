@@ -16,9 +16,6 @@ from tensorflow.python.ops import variables
 from tensorflow.python.ops import control_flow_ops
 from tensorflow.python.training import optimizer
 
-# gradient checkpointing
-from t2t_csaky.utils import memory_saving_gradients
-
 
 
 def optimize(loss, learning_rate, hparams):

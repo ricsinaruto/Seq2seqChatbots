@@ -8,6 +8,7 @@ import os
 
 # tensor2tensor imports
 from tensor2tensor.data_generators import problem
+from tensor2tensor.data_generators import text_problems
 from tensor2tensor.data_generators import text_encoder
 from tensor2tensor.utils import registry
 from tensor2tensor.utils import metrics
@@ -19,26 +20,30 @@ from t2t_csaky.config import *
 EOS = text_encoder.EOS_ID
 
 
-class WordChatbot(problem.Text2TextProblem):
+class WordChatbot(text_problems.Text2TextProblem):
   """
   An abstract base class for word based chatbot problems.
   """
 
   @property
-  def is_character_level(self):
-    return False
+  def vocab_type(self):
+    return text_problems.VocabType.TOKEN
 
   @property
-  def num_shards(self):
-    return PROBLEM_HPARAMS["num_train_shards"]
+  def is_generate_per_split(self):
+    return True
 
   @property
-  def num_dev_shards(self):
-    return PROBLEM_HPARAMS["num_dev_shards"]
+  def vocab_file(self):
+    return self.vocab_filename
 
   @property
-  def vocab_name(self):
-    return "vocab.chatbot"
+  def vocab_filename(self):
+    return "vocab.chatbot."+str(self.targeted_vocab_size)
+
+  @property
+  def oov_token(self):
+    return "<unk>"
 
   @property
   def use_subword_tokenizer(self):
@@ -65,6 +70,19 @@ class WordChatbot(problem.Text2TextProblem):
   @property
   def dataset_split(self):
     return PROBLEM_HPARAMS["dataset_split"]
+
+  @property
+  def dataset_splits(self):
+    return [{
+      "split": problem.DatasetSplit.TRAIN,
+      "shards": PROBLEM_HPARAMS["num_train_shards"],
+    }, {
+      "split": problem.DatasetSplit.EVAL,
+      "shards": PROBLEM_HPARAMS["num_dev_shards"],
+    }, {
+      "split": problem.DatasetSplit.TEST,
+      "shards": PROBLEM_HPARAMS["num_dev_shards"],
+    }]
 
   @property
   def data_dir(self):
@@ -145,7 +163,7 @@ class WordChatbot(problem.Text2TextProblem):
     ]
 
   # This function generates the train and validation pairs in t2t-datagen style
-  def generator(self, data_dir, tmp_dir, train):
+  def generate_samples(self, data_dir, tmp_dir, dataset_split):
     """ 
     The function assumes that if you have data at one level of the pipeline,
     you don't want to re-generate it, so for example if the 4 txt files exist,
@@ -154,63 +172,31 @@ class WordChatbot(problem.Text2TextProblem):
     you have to delete it first from the appropriate directories.
 
     Params:
-      :data_dir:  directory where the data will be generated
-                  the raw data has to be downloaded one directory level higher
-      :train:     whether we are in train or validation mode
+      :data_dir:      directory where the data will be generated
+                      the raw data has to be downloaded one directory level higher
+      :dataset_split: which data split to generate samples for
     """
 
     # determine whether we are in training or validation mode
-    mode = "train" if train else "dev"
-    print("t2t_csaky_log: "+mode+" data generation activated.")
+    mode = {
+      problem.DatasetSplit.TRAIN: "train",
+      problem.DatasetSplit.EVAL:  "dev",
+      problem.DatasetSplit.TEST:  "test"
+    }
+    print("t2t_csaky_log: "+mode[dataset_split]+" data generation activated.")
     self.data_dir=data_dir
-    sourcePath=os.path.join(data_dir, mode+"Source.txt")
-    targetPath=os.path.join(data_dir, mode+"Target.txt")
+    sourcePath=os.path.join(data_dir, mode[dataset_split]+"Source.txt")
+    targetPath=os.path.join(data_dir, mode[dataset_split]+"Target.txt")
 
     # create the source and target txt files from the raw data
-    self.preprocess_data(mode)
+    self.preprocess_data(mode[dataset_split])
 
-    # create a t2t symbolizer vocab from
-    symbolizer_vocab = text_encoder.TokenTextEncoder(
-      os.path.join(data_dir, self.vocab_file),
-      num_reserved_ids=0,
-      replace_oov="<unk>")
-
-    return self.token_generator(sourcePath,targetPath,symbolizer_vocab, EOS)
-
-  # Generator for sequence-to-sequence tasks that uses tokens.
-  def token_generator(self, source_path, target_path, token_vocab, eos=None):
-    """
-    This generator assumes the files at source_path and target_path have
-    the same number of lines and yields dictionaries of "inputs" and "targets"
-    where inputs are token ids from the " "-split source (and target, resp.)
-    lines converted to integers using the token_map.
-
-    Args:
-      source_path: path to the file with source sentences.
-      target_path: path to the file with target sentences.
-      token_vocab: text_encoder.TextEncoder object.
-      eos: integer to append at the end of each sequence (default: None).
-
-    Yields:
-      A dictionary {"inputs": source-line, "targets": target-line} where
-      the lines are integer lists converted from tokens in the file lines.
-    """
-    eos_list = [] if eos is None else [eos]
-    with tf.gfile.GFile(source_path, mode="r") as source_file:
-      with tf.gfile.GFile(target_path, mode="r") as target_file:
+    # open the files and yield source-target lines
+    with tf.gfile.GFile(sourcePath, mode="r") as source_file:
+      with tf.gfile.GFile(targetPath, mode="r") as target_file:
         source, target = source_file.readline(), target_file.readline()
         while source and target:
-          # try to encode the source and target sentences
-          try:
-            source_ints = token_vocab.encode(source.strip()) + eos_list
-          except KeyError:
-            print("t2t_csaky_log: WARNING:COULD NOT BE ENCODED: "+source)
-          try:
-            target_ints = token_vocab.encode(target.strip()) + eos_list
-          except KeyError:
-            print("t2t_csaky_log: WARNING:COULD NOT BE ENCODED: "+target)
-
-          yield {"inputs": source_ints, "targets": target_ints}
+          yield {"inputs": source.strip(), "targets": target.strip()}
           source, target = source_file.readline(), target_file.readline()
 
   # Overwrite the feature encoders, so that I can give my own encoding process
