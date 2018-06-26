@@ -191,7 +191,7 @@ class WordChatbot(text_problems.Text2TextProblem):
     # create the source and target txt files from the raw data
     self.preprocess_data(mode[dataset_split])
 
-    eos_list = [] if EOS is None else [EOS]
+    # open the files and yield source-target lines
     with tf.gfile.GFile(sourcePath, mode="r") as source_file:
       with tf.gfile.GFile(targetPath, mode="r") as target_file:
         source, target = source_file.readline(), target_file.readline()
