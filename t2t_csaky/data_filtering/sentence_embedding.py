@@ -30,7 +30,10 @@ class DataPoint:
   """
   A class that handles a hash example.
   """
-  vocab_dict=_load_vocab()
+  if os.path.exists(
+    os.path.join(FLAGS["data_dir"],
+                 "vocab.chatbot."+str(PROBLEM_HPARAMS["vocabulary_size"]))):
+    vocab_dict=_load_vocab()
   def __init__(self, string, index, only_string=True):
     """
     Params:
