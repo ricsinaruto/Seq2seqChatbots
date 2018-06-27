@@ -26,11 +26,12 @@ def main():
   
   # different modes will call different functions
   run_mode={
-  "train"         :run.training,
-  "decode"        :run.decoding,
-  "generate_data" :run.data_generating,
-  "filter_data"   :run.data_filtering,
-  "experiment"	  :run.experiment
+  "train"             :run.training,
+  "decode"            :run.decoding,
+  "generate_data"     :run.data_generating,
+  "filter_data"       :run.data_filtering,
+  "experiment"	      :run.experiment,
+  "state_extraction"  :run.state_extraction
   }
 
   # initialize a mode

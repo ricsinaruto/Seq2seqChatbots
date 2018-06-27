@@ -102,6 +102,39 @@ def decoding():
                                 +",return_beams="+FLAGS["return_beams"]+'"'
             +decode_mode_string)
 
+def state_extraction():
+  print("Program is running in state_extraction mode.")
+  save_config_file(FLAGS["decode_dir"])
+  # what hparams should we use
+  if FLAGS["hparams"]=="":
+    hparam_string="general_"+FLAGS["model"]+"_hparams"
+  else:
+    hparam_string=FLAGS["hparams"]
+
+  decode_mode_string=""
+  # determine the decode mode flag
+  if FLAGS["decode_mode"]=="interactive":
+    decode_mode_string=" --decode_interactive"
+  elif FLAGS["decode_mode"]=="file":
+    decode_mode_string=(" --decode_from_file="
+                        +FLAGS["decode_dir"]+"/"
+                        +FLAGS["input_file_name"])
+
+  os.system("python3 /media/patrik/1EDB65B8599DD93E/GitHub/Seq2seqChatbots/t2t_csaky/scripts/state_extraction.py \
+               --generate_data=False \
+               --t2t_usr_dir="+FLAGS["t2t_usr_dir"]
+            +" --data_dir="+FLAGS["data_dir"]
+            +" --problems="+FLAGS["problem"]
+            +" --output_dir="+FLAGS["train_dir"]
+            +" --model="+FLAGS["model"]
+            +" --worker_gpu_memory_fraction="+str(FLAGS["memory_fraction"])
+            +" --hparams_set="+hparam_string
+            +" --decode_to_file="+FLAGS["decode_dir"]+"/"
+                                 +FLAGS["output_file_name"]
+            +' --decode_hparams="beam_size='+str(FLAGS["beam_size"])
+                                +",return_beams="+FLAGS["return_beams"]+'"'
+            +decode_mode_string)
+
 # initialize a filtering problem
 def data_filtering():
   print("Program is running in data filtering mode.")
