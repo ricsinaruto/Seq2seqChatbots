@@ -24,52 +24,14 @@ from tensorflow.python.layers import base
 
 
 @registry.register_model
-class RouletteTransformer(transformer.Transformer):
+class ExtractedTransformer(transformer.Transformer):
   """
   A child class of the Transformer, implementing roulette wheel selection.
   """
-  
-  REGISTERED_NAME="transformer"
 
-  def __init__(self,
-               hparams,
-               mode,
-               problem_hparams=None,
-               problem_idx=0,
-               data_parallelism=None,
-               decode_hparams=None):
-    default_name = registry.default_name(type(self))
-    name = "transformer"
-    base.Layer.__init__(self,
-                        trainable = mode==tf.estimator.ModeKeys.TRAIN,
-                        name=name)
-    if data_parallelism is None:
-      data_parallelism = eu.Parallelism([""])
-    if problem_hparams is None:
-      problem_hparams = hparams.problems[0]
-
-    # If vocabularies differ, unset shared_embedding_and_softmax_weights.
-    hparams = copy.copy(hparams)
-    if hparams.shared_embedding_and_softmax_weights:
-      same_vocab_sizes = True
-      for problem in hparams.problems:
-        if "inputs" in problem.input_modality:
-          if problem.input_modality["inputs"] != problem.target_modality:
-            same_vocab_sizes = False
-      if not same_vocab_sizes:
-        tf.logging.info("Unsetting shared_embedding_and_softmax_weights.")
-        hparams.shared_embedding_and_softmax_weights = 0
-    self._original_hparams = hparams
-    self.set_mode(mode)
-    self._decode_hparams = copy.copy(decode_hparams)
-    self._data_parallelism = data_parallelism
-    self._num_datashards = data_parallelism.n
-    self._ps_devices = data_parallelism.ps_devices
-    self._problem_hparams = problem_hparams
-    self._problem_idx = problem_idx
-    self._create_modalities(problem_hparams, self._hparams)
-    self._var_store = t2t_model.create_eager_var_store()
-    self.attention_weights = dict()  # For vizualizing attention heads.
+  def __init__(self, *args, **kwargs):
+    super(ExtractedTransformer, self).__init__(*args, **kwargs)
+    self._name = "transformer"
 
   def _fast_decode(self,
                    features,
@@ -86,7 +48,7 @@ class RouletteTransformer(transformer.Transformer):
       beam_size: number of beams.
       top_beams: an integer. How many of the beams to return.
       alpha: Float that controls the length penalty. larger the alpha, stronger
-        the preference for slonger translations.
+        the preference for longer translations.
     Returns:
       A dict of decoding results {
           "outputs": integer `Tensor` of decoded ids of shape
@@ -99,7 +61,8 @@ class RouletteTransformer(transformer.Transformer):
       NotImplementedError: If there are multiple data shards.
     """
     if self._num_datashards != 1:
-      raise NotImplementedError("Fast decoding only supports a single shard.")
+      raise NotImplementedError(
+        "Fast decoding only supports a single shard.")
     dp = self._data_parallelism
     hparams = self._hparams
     target_modality = self._problem_hparams.target_modality
@@ -109,7 +72,9 @@ class RouletteTransformer(transformer.Transformer):
       if target_modality.is_class_modality:
         decode_length = 1
       else:
-        decode_length = common_layers.shape_list(inputs)[1] + decode_length
+        decode_length = (
+          common_layers.shape_list(inputs)[1] + features.get(
+            "decode_length", decode_length))
 
       # TODO(llion): Clean up this reshaping logic.
       inputs = tf.expand_dims(inputs, axis=1)
@@ -125,29 +90,48 @@ class RouletteTransformer(transformer.Transformer):
         inputs = input_modality.bottom_sharded(inputs, dp)
       with tf.variable_scope("body"):
         encoder_output, encoder_decoder_attention_bias = dp(
-            self.encode, inputs, features["target_space_id"], hparams,
-            features=features)
+          self.encode,
+          inputs,
+          features["target_space_id"],
+          hparams,
+          features=features)
       encoder_output = encoder_output[0]
       encoder_decoder_attention_bias = encoder_decoder_attention_bias[0]
       partial_targets = None
     else:
       # The problem has no inputs.
-      # In this case, features["inputs"] contains partial targets.
-      # We force the outputs to begin with these sequences.
       encoder_output = None
       encoder_decoder_attention_bias = None
-      partial_targets = tf.squeeze(tf.to_int64(features["inputs"]), [2, 3])
-      partial_targets_length = common_layers.shape_list(partial_targets)[1]
-      decode_length += partial_targets_length
-      batch_size = tf.shape(partial_targets)[0]
+
+      # Prepare partial targets.
+      # In either features["inputs"] or features["targets"].
+      # We force the outputs to begin with these sequences.
+      partial_targets = features.get("inputs")
+      if partial_targets is None:
+        partial_targets = features["targets"]
+      assert partial_targets is not None
+      partial_targets = common_layers.expand_squeeze_to_nd(partial_targets,
+                                                           2)
+      partial_targets = tf.to_int64(partial_targets)
+      partial_targets_shape = common_layers.shape_list(partial_targets)
+      partial_targets_length = partial_targets_shape[1]
+      decode_length = (
+        partial_targets_length + features.get("decode_length",
+                                              decode_length))
+      batch_size = partial_targets_shape[0]
 
     if hparams.pos == "timing":
-      timing_signal = common_attention.get_timing_signal_1d(
-          decode_length + 1, hparams.hidden_size)
+      positional_encoding = common_attention.get_timing_signal_1d(
+        decode_length + 1, hparams.hidden_size)
+    elif hparams.pos == "emb":
+      positional_encoding = common_attention.add_positional_embedding(
+        tf.zeros([1, decode_length, hparams.hidden_size]),
+        hparams.max_length, "body/targets_positional_embedding", None)
+    else:
+      positional_encoding = None
 
     def preprocess_targets(targets, i):
-      """
-      Performs preprocessing steps on the targets to prepare for the decoder.
+      """Performs preprocessing steps on the targets to prepare for the decoder.
       This includes:
         - Embedding the ids.
         - Flattening to 3D tensor.
@@ -168,8 +152,8 @@ class RouletteTransformer(transformer.Transformer):
       targets = tf.cond(
         tf.equal(i, 0), lambda: tf.zeros_like(targets), lambda: targets)
 
-      if hparams.pos == "timing":
-        targets += timing_signal[:, i:i + 1]
+      if positional_encoding is not None:
+        targets += positional_encoding[:, i:i + 1]
       return targets
 
     decoder_self_attention_bias = (
@@ -188,16 +172,19 @@ class RouletteTransformer(transformer.Transformer):
 
       with tf.variable_scope("body"):
         body_outputs = dp(
-            self.decode, targets, cache.get("encoder_output"),
-            cache.get("encoder_decoder_attention_bias"),
-            bias, hparams, cache,
-            nonpadding=features_to_nonpadding(features, "targets"))
+          self.decode,
+          targets,
+          cache.get("encoder_output"),
+          cache.get("encoder_decoder_attention_bias"),
+          bias,
+          hparams,
+          cache,
+          nonpadding=features_to_nonpadding(features, "targets"))
 
       with tf.variable_scope(target_modality.name):
         logits = target_modality.top_sharded(body_outputs, None, dp)[0]
 
-      ret=tf.squeeze(logits, axis=[1, 2, 3])
-
+      ret = tf.squeeze(logits, axis=[1, 2, 3])
       if partial_targets is not None:
         # If the position is within the given partial targets, we alter the
         # logits to always return those values.
@@ -205,27 +192,97 @@ class RouletteTransformer(transformer.Transformer):
         # iteration in order to fill the corresponding parts of the cache.
         # This would require broader changes, though.
         vocab_size = tf.shape(ret)[1]
+
         def forced_logits():
-          return tf.one_hot(tf.tile(partial_targets[:, i], [beam_size]),
-                            vocab_size, 0.0, -1e9)
+          return tf.one_hot(
+            tf.tile(partial_targets[:, i], [beam_size]), vocab_size, 0.0,
+            -1e9)
+
         ret = tf.cond(
-            tf.less(i, partial_targets_length), forced_logits, lambda: ret)
+          tf.less(i, partial_targets_length), forced_logits, lambda: ret)
       return ret, cache
 
     ret = fast_decode(
-        encoder_output=encoder_output,
-        encoder_decoder_attention_bias=encoder_decoder_attention_bias,
-        symbols_to_logits_fn=symbols_to_logits_fn,
-        hparams=hparams,
-        decode_length=decode_length,
-        vocab_size=target_modality.top_dimensionality,
-        beam_size=beam_size,
-        top_beams=top_beams,
-        alpha=alpha,
-        batch_size=batch_size)
+      encoder_output=encoder_output,
+      encoder_decoder_attention_bias=encoder_decoder_attention_bias,
+      symbols_to_logits_fn=symbols_to_logits_fn,
+      hparams=hparams,
+      decode_length=decode_length,
+      vocab_size=target_modality.top_dimensionality,
+      beam_size=beam_size,
+      top_beams=top_beams,
+      alpha=alpha,
+      batch_size=batch_size,
+      force_decode_length=self._decode_hparams.force_decode_length)
     if partial_targets is not None:
-      ret["outputs"] = ret["outputs"][:, partial_targets_length:]
+      if beam_size <= 1 or top_beams <= 1:
+        ret["outputs"] = ret["outputs"][:, partial_targets_length:]
+      else:
+        ret["outputs"] = ret["outputs"][:, :, partial_targets_length:]
+
     return ret
+
+  def estimator_spec_predict(self, features, use_tpu=False):
+    """Construct EstimatorSpec for PREDICT mode."""
+    decode_hparams = self._decode_hparams
+    infer_out = self.infer(
+      features,
+      beam_size=decode_hparams.beam_size,
+      top_beams=(decode_hparams.beam_size
+                 if decode_hparams.return_beams else 1),
+      alpha=decode_hparams.alpha,
+      decode_length=decode_hparams.extra_length,
+      use_tpu=use_tpu)
+
+    if isinstance(infer_out, dict):
+      outputs = infer_out["outputs"]
+      scores = infer_out["scores"]
+      encoder_outputs = infer_out["encoder_outputs"]
+
+    else:
+      outputs = infer_out
+      scores = None
+      encoder_outputs = None
+
+    inputs = features.get("inputs")
+    if inputs is None:
+      inputs = features["targets"]
+
+    predictions = {
+        "outputs": outputs,
+        "scores": scores,
+        "encoder_outputs": encoder_outputs,
+        "inputs": inputs,
+        "targets": features.get("infer_targets"),
+        "batch_prediction_key": features.get("batch_prediction_key"),
+    }
+    t2t_model._del_dict_nones(predictions)
+
+    export_out = {"outputs": predictions["outputs"]}
+    if "scores" in predictions:
+      export_out["scores"] = predictions["scores"]
+
+    # batch prediction API.
+    if "batch_prediction_key" in predictions:
+      export_out["batch_prediction_key"] = \
+          predictions["batch_prediction_key"]
+
+    t2t_model._remove_summaries()
+
+    export_outputs = {
+        tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY:
+            tf.estimator.export.PredictOutput(export_out)
+    }
+    if use_tpu:
+      return tf.contrib.tpu.TPUEstimatorSpec(
+          tf.estimator.ModeKeys.PREDICT,
+          predictions=predictions,
+          export_outputs=export_outputs)
+    else:
+      return tf.estimator.EstimatorSpec(
+          tf.estimator.ModeKeys.PREDICT,
+          predictions=predictions,
+          export_outputs=export_outputs)
 
 
 def fast_decode(encoder_output,
@@ -238,7 +295,8 @@ def fast_decode(encoder_output,
                 top_beams=1,
                 alpha=1.0,
                 eos_id=beam_search.EOS_ID,
-                batch_size=None):
+                batch_size=None,
+                force_decode_length=False):
   """Given encoder output and a symbols to logits function, does fast decoding.
   Implements both greedy and beam search decoding, uses beam search iff
   beam_size > 1, otherwise beam search related arguments are ignored.
@@ -254,9 +312,11 @@ def fast_decode(encoder_output,
     beam_size: number of beams.
     top_beams: an integer. How many of the beams to return.
     alpha: Float that controls the length penalty. larger the alpha, stronger
-      the preference for slonger translations.
+      the preference for longer translations.
     eos_id: End-of-sequence symbol in beam search.
     batch_size: an integer scalar - must be passed if there is no input
+    force_decode_length: bool, whether to force the full decode length, or if
+      False, stop when all beams hit eos_id.
   Returns:
       A dict of decoding results {
           "outputs": integer `Tensor` of decoded ids of shape
@@ -268,23 +328,44 @@ def fast_decode(encoder_output,
     Raises:
       NotImplementedError: If beam size > 1 with partial targets.
   """
-
   if encoder_output is not None:
     batch_size = common_layers.shape_list(encoder_output)[0]
-    
+
   key_channels = hparams.attention_key_channels or hparams.hidden_size
   value_channels = hparams.attention_value_channels or hparams.hidden_size
   num_layers = hparams.num_decoder_layers or hparams.num_hidden_layers
+  vars_3d_num_heads = (
+      hparams.num_heads if hparams.get("attention_variables_3d") else 0)
 
   cache = {
     "layer_%d" % layer: {
-      "k": tf.zeros([batch_size, 0, key_channels]),
-      "v": tf.zeros([batch_size, 0, value_channels]),
-    }
-    for layer in range(num_layers)
+      "k":
+        common_attention.split_heads(
+            tf.zeros([batch_size, 0, key_channels]), hparams.num_heads),
+      "v":
+        common_attention.split_heads(
+                  tf.zeros([batch_size, 0, value_channels]), hparams.num_heads),
+      "f":
+        tf.zeros([batch_size, 0, hparams.hidden_size]),
+    } for layer in range(num_layers)
   }
 
   if encoder_output is not None:
+    for layer in range(num_layers):
+      layer_name = "layer_%d" % layer
+      with tf.variable_scope(
+          "body/decoder/%s/encdec_attention/multihead_attention" % layer_name):
+        k_encdec = common_attention.compute_attention_component(
+            encoder_output, key_channels, name="k",
+            vars_3d_num_heads=vars_3d_num_heads)
+        k_encdec = common_attention.split_heads(k_encdec, hparams.num_heads)
+        v_encdec = common_attention.compute_attention_component(
+            encoder_output, value_channels, name="v",
+            vars_3d_num_heads=vars_3d_num_heads)
+        v_encdec = common_attention.split_heads(v_encdec, hparams.num_heads)
+      cache[layer_name]["k_encdec"] = k_encdec
+      cache[layer_name]["v_encdec"] = v_encdec
+
     cache["encoder_output"] = encoder_output
     cache["encoder_decoder_attention_bias"] = encoder_decoder_attention_bias
 
@@ -303,73 +384,59 @@ def fast_decode(encoder_output,
 
     if top_beams == 1:
       decoded_ids = decoded_ids[:, 0, 1:]
+      scores = scores[:, 0]
     else:
       decoded_ids = decoded_ids[:, :top_beams, 1:]
-
-    """ t2t_csaky code """
-    # do roulette wheel selection or inverse roulette wheel selection
-    if hparams.roulette=="Normal" or hparams.roulette=="Inverse":
-      if hparams.roulette=="Normal":
-        probabilities=tf.pow(tf.constant(2.0),scores)
-        start=0
-      else:
-        probabilities=tf.subtract(
-          tf.constant(1.0),tf.pow(tf.constant(2.0),scores))
-        start=beam_size-hparams.roulette_beam_size
-
-      ex_probs=tf.divide(probabilities,tf.reduce_sum(probabilities))
-      #ex_probs=tf.nn.softmax(probabilities)
-
-      # sample a number between 0 and 1
-      wheel=tf.random_uniform([1])
-      upper_bound=tf.constant(0.0)
-
-      # change this as well if using inverse
-      for i in range(start ,hparams.roulette_beam_size):
-        upper_bound=tf.add(ex_probs[:,i], upper_bound)
-        truthValue=tf.squeeze(tf.logical_and(wheel>=upper_bound-ex_probs[:,i],
-                                             wheel<=upper_bound))
-        decoded_ids,scores,i=tf.cond(
-          truthValue,
-          lambda: (decoded_ids[:,i,:], scores[:,i], beam_size),
-          lambda: (decoded_ids, scores, i))
-
+      scores = scores[:, :top_beams]
   else:  # Greedy
 
-    def inner_loop(i, finished, next_id, decoded_ids, cache):
+    def inner_loop(i, hit_eos, next_id, decoded_ids, cache, log_prob):
       """One step of greedy decoding."""
       logits, cache = symbols_to_logits_fn(next_id, i, cache)
+      log_probs = common_layers.log_prob_from_logits(logits)
       temperature = (0.0 if hparams.sampling_method == "argmax" else
                      hparams.sampling_temp)
       next_id = common_layers.sample_with_temperature(logits, temperature)
-      finished |= tf.equal(next_id, eos_id)
+      hit_eos |= tf.equal(next_id, eos_id)
+
+      log_prob_indices = tf.stack(
+          [tf.range(tf.to_int64(batch_size)), next_id], axis=1)
+      log_prob += tf.gather_nd(log_probs, log_prob_indices)
+
       next_id = tf.expand_dims(next_id, axis=1)
       decoded_ids = tf.concat([decoded_ids, next_id], axis=1)
-      return i + 1, finished, next_id, decoded_ids, cache
+      return i + 1, hit_eos, next_id, decoded_ids, cache, log_prob
 
-    def is_not_finished(i, finished, *_):
-      return (i < decode_length) & tf.logical_not(tf.reduce_all(finished))
+    def is_not_finished(i, hit_eos, *_):
+      finished = i >= decode_length
+      if not force_decode_length:
+        finished |= tf.reduce_all(hit_eos)
+      return tf.logical_not(finished)
 
     decoded_ids = tf.zeros([batch_size, 0], dtype=tf.int64)
-    finished = tf.fill([batch_size], False)
+    hit_eos = tf.fill([batch_size], False)
     next_id = tf.zeros([batch_size, 1], dtype=tf.int64)
-    _, _, _, decoded_ids, _ = tf.while_loop(
+    initial_log_prob = tf.zeros([batch_size], dtype=tf.float32)
+    _, _, _, decoded_ids, _, log_prob = tf.while_loop(
         is_not_finished,
-        inner_loop,
-        [tf.constant(0), finished, next_id, decoded_ids, cache],
+        inner_loop, [
+            tf.constant(0), hit_eos, next_id, decoded_ids, cache,
+            initial_log_prob
+        ],
         shape_invariants=[
             tf.TensorShape([]),
             tf.TensorShape([None]),
             tf.TensorShape([None, None]),
             tf.TensorShape([None, None]),
             nest.map_structure(beam_search.get_state_shape_invariants, cache),
+            tf.TensorShape([None]),
         ])
-    scores = None
+    scores = log_prob
 
   return {
-      "outputs":         decoded_ids,
-      "encoder_outputs": encoder_output,
-      "scores":          scores
+    "outputs": decoded_ids,
+    "encoder_outputs": encoder_output,
+    "scores": scores
   }
 
 
