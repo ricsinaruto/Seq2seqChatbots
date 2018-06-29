@@ -30,6 +30,24 @@ def general_gradient_checkpointed_seq2seq_hparams():
   hparams.max_length = SEQ2SEQ_HPARAMS["max_sentence_len"]
   return hparams
 
+@registry.register_hparams
+def general_extracted_seq2seq_hparams():
+  hparams=lstm.lstm_seq2seq()
+
+  hparams.clip_grad_norm=0.0
+  hparams.shared_embedding_and_softmax_weights = \
+    SEQ2SEQ_HPARAMS["shared_embedding_and_softmax_weights"]
+  hparams.optimizer=SEQ2SEQ_HPARAMS["optimizer"]
+  hparams.use_fixed_batch_size=SEQ2SEQ_HPARAMS["fixed_batch_size"]
+  hparams.summarize_vars=SEQ2SEQ_HPARAMS["summarize_vars"]
+
+  hparams.symbol_modality_num_shards=SEQ2SEQ_HPARAMS["embed_num_shards"]
+  hparams.hidden_size=SEQ2SEQ_HPARAMS["embedding_size"]
+  hparams.num_hidden_layers=SEQ2SEQ_HPARAMS["num_layers"]
+  hparams.batch_size=SEQ2SEQ_HPARAMS["batch_size"]
+  hparams.max_length = SEQ2SEQ_HPARAMS["max_sentence_len"]
+  return hparams
+
 """ From this only the hidden_size is used for the lstm_seq2seq model. """
 def chatbot_lstm_hparams():
   hparams=chatbot_lstm_batch_256()

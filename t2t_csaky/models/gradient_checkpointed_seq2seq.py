@@ -67,7 +67,7 @@ def lstm_seq2seq_internal_dynamic(inputs, targets, hparams, train):
           activation=None,
           use_bias=False)
 
-    return tf.expand_dims(projected_outputs, axis=2)
+    return tf.expand_dims(projected_outputs, axis=2), final_encoder_state[0]
 
 def lstm_seq2seq_internal_static(inputs, targets, hparams, train):
   """The basic LSTM seq2seq model, main step used for training."""
@@ -109,11 +109,10 @@ def lstm_seq2seq_internal_static(inputs, targets, hparams, train):
                                         activation=None,
                                         use_bias=False)
       
-    return tf.expand_dims(projected_outputs, axis=2)
+    return tf.expand_dims(projected_outputs, axis=2), final_encoder_state
 
 #TODO: rename this (causes compatibility issues)
-@registry.register_model
-class GradientCheckpointedSeq2seq(extracted_t2t_model.ExtractedT2TModel):
+class GradientCheckpointedSeq2seq(t2t_model.T2TModel):
   """
   A class where I replaced the internal hparams with my own function call.
   This way the hidden_size param of chatbot_lstm_hparams refers to the size
@@ -134,7 +133,7 @@ class GradientCheckpointedSeq2seq(extracted_t2t_model.ExtractedT2TModel):
         features.get("inputs"),
         features["targets"],
         seq2seq_hparams.chatbot_lstm_hparams(),
-        train)
+        train)[0]
 
   # Change the optimizer to a new one, which uses gradient checkpointing
   def optimize(self, loss, num_async_replicas=1):
@@ -153,5 +152,7 @@ class GradientCheckpointedSeq2seq(extracted_t2t_model.ExtractedT2TModel):
     lr /= math.sqrt(float(num_async_replicas))
     train_op = optimizer.optimize(loss, lr, self.hparams)
     return train_op
+
+
 
 

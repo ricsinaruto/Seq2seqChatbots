@@ -1,3 +1,4 @@
+
 import os
 import math
 import numpy as np
@@ -5,7 +6,6 @@ from collections import Counter
 
 # my imports
 from config import *
-
 
 
 class DataPoint:

@@ -27,7 +27,7 @@ FLAGS={
   # decoding related flags
   "output_file_name"  :"inference_at_11k.txt",  # save the inference outputs
   "input_file_name"   :"NCM_examples.txt",      # read inputs to be fed
-  "decode_mode"       :"file",   # can be: interactive, file, dataset
+  "decode_mode"       :"dataset",   # can be: interactive, file, dataset
   "beam_size"         :10,
   "return_beams"      :"True"           # if False return only the top beam, 
                                         # otherwise beam_size beams
