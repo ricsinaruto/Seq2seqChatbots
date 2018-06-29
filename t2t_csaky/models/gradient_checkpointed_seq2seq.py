@@ -16,6 +16,7 @@ import math
 # my imports
 from t2t_csaky.hparams import seq2seq_hparams
 from t2t_csaky.utils import optimizer
+from t2t_csaky.utils import extracted_t2t_model
 
 
 def lstm(inputs, hparams, train, name, initial_state=None):
@@ -46,6 +47,7 @@ def lstm_seq2seq_internal_dynamic(inputs, targets, hparams, train):
       # LSTM encoder.
       _, final_encoder_state = lstm(
           tf.reverse(inputs, axis=[1]), hparams, train, "encoder")
+
     else:
       final_encoder_state = None
     # LSTM decoder.
@@ -79,6 +81,7 @@ def lstm_seq2seq_internal_static(inputs, targets, hparams, train):
 
       # LSTM encoder.
       _, final_encoder_state = lstm(input_list, hparams, train, "encoder")
+      print(final_encoder_state)
     else:
       final_encoder_state = None
     input_list.clear()
@@ -110,7 +113,7 @@ def lstm_seq2seq_internal_static(inputs, targets, hparams, train):
 
 #TODO: rename this (causes compatibility issues)
 @registry.register_model
-class GradientCheckpointedSeq2seq(t2t_model.T2TModel):
+class GradientCheckpointedSeq2seq(extracted_t2t_model.ExtractedT2TModel):
   """
   A class where I replaced the internal hparams with my own function call.
   This way the hidden_size param of chatbot_lstm_hparams refers to the size
@@ -123,7 +126,7 @@ class GradientCheckpointedSeq2seq(t2t_model.T2TModel):
   Moreover, in this class gradient checkpointing is implemented.
   https://github.com/openai/gradient-checkpointing
   """
-  def body(self,features):
+  def body(self, features):
     if self._hparams.initializer == "orthogonal":
       raise ValueError("LSTM models fail with orthogonal initializer.")
     train=self._hparams.mode==tf.estimator.ModeKeys.TRAIN
@@ -150,3 +153,5 @@ class GradientCheckpointedSeq2seq(t2t_model.T2TModel):
     lr /= math.sqrt(float(num_async_replicas))
     train_op = optimizer.optimize(loss, lr, self.hparams)
     return train_op
+
+

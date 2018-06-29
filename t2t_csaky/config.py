@@ -6,7 +6,7 @@ for the current run. This file will also be copied to the provided directory.
 FLAGS={
   "t2t_usr_dir"       :"t2t_csaky", # tensor2tensor imports from this dir
   "data_dir"          :"data_dir/DailyDialog/base_with_numbers",
-  "train_dir"         :"train_dir/DailyDialog/seq2seq_base-base_both_identity_clustering",
+  "train_dir"         :"train_dir/DailyDialog/seq2seq_base-base_with_numbers",
   "decode_dir"        :"decode_dir/DailyDialog/trf_20_dropout-base",
   "problem"           :"daily_dialog_chatbot",
   "model"             :"gradient_checkpointed_seq2seq",
@@ -75,7 +75,7 @@ TRANSFORMER_HPARAMS={
 # These will be applied on top of the lstm_seq2seq hparams_set
 SEQ2SEQ_HPARAMS= {
   # my hparams
-  "lstm_hidden_size"  :2600,
+  "lstm_hidden_size"  :3072,
 
   # hparams_set override
   "optimizer"         :"Adafactor",
