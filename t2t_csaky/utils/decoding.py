@@ -124,6 +124,9 @@ def decode_from_dataset(estimator,
       decode_filename = decode_to_file + ("%.2d" % decode_hp.shard_id)
     else:
       decode_filename = decode_to_file
+
+    # TODO fix filename
+
     output_filepath = _decode_filename(decode_filename, problem_name, decode_hp)
     parts = output_filepath.split(".")
     parts[-1] = "targets"
