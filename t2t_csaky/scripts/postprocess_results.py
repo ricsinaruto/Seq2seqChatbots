@@ -1,6 +1,6 @@
 """ basically prepare a latex table """
 
-q=open("NCM_examples/NCM_examples.txt")
+q=open("NCM_examples/fullSource.txt")
 a=open("NCM_examples/NCM_responses.txt")
 cornell=open("NCM_examples/results_for_tdk/cornell.txt")
 cornellS=open("NCM_examples/results_for_tdk/cornellS.txt")

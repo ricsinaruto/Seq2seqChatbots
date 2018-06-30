@@ -37,7 +37,7 @@ class GradientCheckpointedSeq2seq(
     if self._hparams.initializer == "orthogonal":
       raise ValueError("LSTM models fail with orthogonal initializer.")
     train=self._hparams.mode==tf.estimator.ModeKeys.TRAIN
-    print('\n\n{}\n\n'.format(self._name))
+
     return gradient_checkpointed_seq2seq.lstm_seq2seq_internal_dynamic(
         features.get("inputs"),
         features["targets"],

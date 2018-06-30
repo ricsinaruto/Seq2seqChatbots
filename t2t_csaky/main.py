@@ -31,7 +31,6 @@ def main():
   "generate_data"     :run.data_generating,
   "filter_data"       :run.data_filtering,
   "experiment"	      :run.experiment,
-  "state_extraction"  :run.state_extraction
   }
 
   # initialize a mode

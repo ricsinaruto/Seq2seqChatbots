@@ -27,15 +27,15 @@ FLAGS={
   # decoding related flags
   "output_file_name"  :"inference_at_11k.txt",  # save the inference outputs
   "input_file_name"   :"NCM_examples.txt",      # read inputs to be fed
-  "decode_mode"       :"dataset",   # can be: interactive, file, dataset
+  "decode_mode"       :"file",   # can be: interactive, file, dataset
   "beam_size"         :10,
   "return_beams"      :"True"           # if False return only the top beam, 
                                         # otherwise beam_size beams
 }
 
 DATA_FILTERING={
-  "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data/identity_clustering/bigram_matrix",
-  "filter_problem"    :"identity_clustering",  # can be: hash_jaccard, sentence_embedding, rnn_state
+  "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data/identity_clustering/rnn_state_data",
+  "filter_problem"    :"rnn_state",  # can be: hash_jaccard, sentence_embedding, rnn_state
   "filter_type"       :"both",  # can be: target_based, source_based, both
   "source_clusters"   :100,
   "target_clusters"   :100,

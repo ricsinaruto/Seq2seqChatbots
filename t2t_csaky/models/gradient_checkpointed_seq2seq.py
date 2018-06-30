@@ -16,7 +16,6 @@ import math
 # my imports
 from t2t_csaky.hparams import seq2seq_hparams
 from t2t_csaky.utils import optimizer
-from t2t_csaky.utils import extracted_t2t_model
 
 
 def lstm(inputs, hparams, train, name, initial_state=None):
@@ -81,7 +80,6 @@ def lstm_seq2seq_internal_static(inputs, targets, hparams, train):
 
       # LSTM encoder.
       _, final_encoder_state = lstm(input_list, hparams, train, "encoder")
-      print(final_encoder_state)
     else:
       final_encoder_state = None
     input_list.clear()

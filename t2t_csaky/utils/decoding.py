@@ -276,6 +276,7 @@ def decode_from_file(estimator,
 
   tf.logging.info("Writing inputs into %s" % decode_filename)
   tf.logging.info("Writing encoder outputs into %s" % encode_filename)
+  print("Writing encoder outputs into %s" % encode_filename)
   outfile = tf.gfile.Open(decode_filename, "w")
 
   if decode_to_file:
