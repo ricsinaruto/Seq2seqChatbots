@@ -22,7 +22,7 @@ class DataPoint(filter_problem.DataPoint):
   """
   A simple class that handles a string example.
   """
-  def __init__(self, meaning_vector, string, index, only_string=True):
+  def __init__(self, string, index, only_string=True, meaning_vector=None):
     super().__init__(string, index, only_string)
     self.meaning_vector = meaning_vector
 
@@ -31,20 +31,15 @@ class RNNState(filter_problem.FilterProblem):
 
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
-    self._ordered_data_path = FLAGS["decode_dir"] + \
-                               "/" + FLAGS["output_file_name"]
-
-    base = os.path.basename(self._ordered_data_path).split('.')
-    dirname = os.path.dirname(self._ordered_data_path)
-    self._state_data_path = \
-      os.path.join(dirname, '{}-enc{}'.format(base[0], '.npy'))
+    self.decode_dir = FLAGS["decode_dir"]
+    self.paths = {}
 
   @property
   def DataPointClass(self):
     return DataPoint
 
   def clustering(self, data_tag):
-    meaning_vectors = np.load(self._state_data_path)
+    meaning_vectors = np.load(self.paths[data_tag]['npy'])
     k = 3
     niter = 10
 
@@ -58,6 +53,8 @@ class RNNState(filter_problem.FilterProblem):
       clusters[cluster_index].add_element(data_point)
       data_point.cluster_index = cluster_index
 
+    self.clusters[data_tag] = clusters
+
   # this function will read the data and make it ready for clustering
   def read_inputs(self):
     def read_sentences(file):
@@ -67,25 +64,40 @@ class RNNState(filter_problem.FilterProblem):
           sentences.append(line.strip('\n'))
       return sentences
 
+    def data_path(name, ext=''):
+      return os.path.join(
+        self.input_data_dir, self.tag + "{}.{}".format(name, ext))
+
     def read(data_tag):
       # if the encodings exists they will not be generated again
       # TODO meaning vector and decode output path fix
       # sentence meaning vector
+      data_filter_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), '..', '..')
+      self.paths[data_tag] = {
+        'txt': os.path.join(
+                data_filter_path, self._decode_data_path(data_tag, 'txt')),
+        'npy': os.path.join(
+              data_filter_path, self._decode_data_path(data_tag, 'npy'))
+      }
 
-      if (not os.path.exists(self._ordered_data_path) or
-          not os.path.exists(self._state_data_path)):
-        generate_encoder_states(self._data_path(data_tag, 'txt'))
+      if (not os.path.exists(self.paths[data_tag]['txt']) or
+          not os.path.exists(self.paths[data_tag]['npy'])):
 
-      meaning_vectors = np.load(self._state_data_path)
+        generate_encoder_states(
+          data_path(data_tag, 'txt'), '{}.txt'.format(data_tag))
+
+      meaning_vectors = np.load(self.paths[data_tag]['npy'])
 
       sentence_dict = dict(zip(
-        read_sentences(self._ordered_data_path), meaning_vectors))
+        read_sentences(self.paths[data_tag]['txt']), meaning_vectors))
 
-      file = open(self._data_path(data_tag, 'txt'), 'r', encoding='utf-8')
+      file = open(data_path(data_tag, 'txt'), 'r',
+                  encoding='utf-8')
 
       for index, line in enumerate(file):
         self.data_points[data_tag].append(self.DataPointClass(
-          sentence_dict[line.strip('\n')], line, index, False))
+          line, index, False, sentence_dict[line.strip('\n')]))
 
       file.close()
 
@@ -94,12 +106,13 @@ class RNNState(filter_problem.FilterProblem):
 
     print("Finished reading " + self.tag + " data.")
 
-  def _data_path(self, name, ext=''):
+  def _decode_data_path(self, tag, ext=''):
     return os.path.join(
-        self.input_data_dir, self.tag + "{}.{}".format(name, ext))
+      self.decode_dir, '{}.{}'.format(tag, ext)
+    )
 
 
-def generate_encoder_states(input_file_name):
+def generate_encoder_states(input_file_path, output_file_name):
   # what hparams should we use
   if FLAGS["hparams"] == "":
     hparam_string = "general_" + FLAGS["model"] + "_hparams"
@@ -112,7 +125,7 @@ def generate_encoder_states(input_file_name):
     decode_mode_string = " --decode_interactive"
   elif FLAGS["decode_mode"] == "file":
     decode_mode_string = (" --decode_from_file="
-                          + input_file_name)
+                          + input_file_path)
 
   script_path = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
@@ -128,7 +141,7 @@ def generate_encoder_states(input_file_name):
             + " --worker_gpu_memory_fraction=" + str(FLAGS["memory_fraction"])
             + " --hparams_set=" + hparam_string
             + " --decode_to_file=" + FLAGS["decode_dir"] + "/" +
-            FLAGS["output_file_name"]
+            output_file_name
             + ' --decode_hparams="beam_size=' + str(FLAGS["beam_size"])
             + ",return_beams=" + FLAGS["return_beams"] + '"'
             + decode_mode_string)

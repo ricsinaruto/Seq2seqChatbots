@@ -5,7 +5,7 @@ for the current run. This file will also be copied to the provided directory.
 
 FLAGS={
   "t2t_usr_dir"       :"t2t_csaky", # tensor2tensor imports from this dir
-  "data_dir"          :"data_dir/DailyDialog/base_with_numbers",
+  "data_dir"          :"data_dir/DailyDialog/base_both_rnnstate_clustering",
   "train_dir"         :"train_dir/DailyDialog/seq2seq_base-base_with_numbers",
   "decode_dir"        :"decode_dir/DailyDialog/trf_20_dropout-base",
   "problem"           :"daily_dialog_chatbot",
@@ -34,12 +34,12 @@ FLAGS={
 }
 
 DATA_FILTERING={
-  "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data/identity_clustering/rnn_state_data",
+  "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data/rnn_state_clustering",
   "filter_problem"    :"rnn_state",  # can be: hash_jaccard, sentence_embedding, rnn_state
   "filter_type"       :"both",  # can be: target_based, source_based, both
   "source_clusters"   :100,
   "target_clusters"   :100,
-  "max_length"        :64,    # max length when constructing bigram matrix, this needs to be set to 0 in order to normal filtering to run
+  "max_length"        :0,    # max length when constructing bigram matrix, this needs to be set to 0 in order to normal filtering to run
   "min_cluster_size"  :2,     # clusters with fewer elements won't get filtered
   "num_permutations"  :128,   # only for hash based clustering
   "character_level"   :False, # only for hash based clustering

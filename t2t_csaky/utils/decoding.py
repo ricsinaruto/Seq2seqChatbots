@@ -272,7 +272,7 @@ def decode_from_file(estimator,
 
   base = os.path.basename(decode_filename).split('.')
   dirname = os.path.dirname(decode_filename)
-  encode_filename = os.path.join(dirname, '{}-enc{}'.format(base[0], '.npy'))
+  encode_filename = os.path.join(dirname, '{}{}'.format(base[0], '.npy'))
 
   tf.logging.info("Writing inputs into %s" % decode_filename)
   tf.logging.info("Writing encoder outputs into %s" % encode_filename)
