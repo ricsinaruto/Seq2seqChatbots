@@ -282,7 +282,10 @@ def decode_from_file(estimator,
   if decode_to_file:
     for i, (e_output, d_input) in \
             enumerate(zip(encoder_outputs, decoded_inputs)):
-      outfile.write("{}".format(str(d_input) + decode_hp.delimiter))
+      outfile.write("{}".format(' '.join(
+        [word for word in str(d_input).strip().split() if word.strip() != ''
+         and word.strip() != '<unk>'])
+                                + decode_hp.delimiter))
 
     np.save(encode_filename, np.array(encoder_outputs))
 

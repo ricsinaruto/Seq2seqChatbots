@@ -44,7 +44,10 @@ DATA_FILTERING={
   "num_permutations"  :128,   # only for hash based clustering
   "character_level"   :False, # only for hash based clustering
   "treshold"          :4,   # percentage treshold of entropy based filtering
-  "ckpt_number"       :22001  # only for sentence embedding clustering
+  "ckpt_number"       :22001,  # only for sentence embedding clustering
+  "cluster_method"    :"mean_shift",  # kmeans or mean_shift
+  "kmeans_K"          :36,
+  "m_shift_bw"        :12,  # mean shift bandwidth
 }
 
 PROBLEM_HPARAMS={

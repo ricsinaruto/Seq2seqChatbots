@@ -13,6 +13,8 @@ except ImportError:
   from sklearn.cluster import KMeans
   _use_faiss = False
 
+from sklearn.cluster import MeanShift
+
 # my imports
 from . import filter_problem
 from config import *
@@ -40,18 +42,33 @@ class RNNState(filter_problem.FilterProblem):
 
   def clustering(self, data_tag):
     meaning_vectors = np.load(self.paths[data_tag]['npy'])
-    k = 3
-    niter = 10
 
-    centroids, kmeans = calculate_centroids(meaning_vectors, k, niter)
-    clusters = [filter_problem.Cluster(centroid) for centroid in centroids]
+    if DATA_FILTERING["cluster_method"] == "mean_shift":
+      centroids, method = calculate_centroids_mean_shift(
+        meaning_vectors, DATA_FILTERING['m_shift_bw'])
+
+    else:  # default is kmeans
+      centroids, method = calculate_centroids_kmeans(
+        meaning_vectors, DATA_FILTERING['kmeans_K'], niter=20)
+
+    data_point_vectors = np.array([data_point.meaning_vector
+                          for data_point in self.data_points[data_tag]])
+
+    clusters = [filter_problem.Cluster(
+      self.data_points[data_tag][simple_knn(centroid, data_point_vectors)])
+     for centroid in centroids]
+
+    # TODO check against the real cluster centroids
+
+    rev_tag = "Target" if data_tag == "Source" else "Source"
 
     for data_point in self.data_points[data_tag]:
       cluster_index = calculate_nearest_index(
-        data_point.meaning_vector, kmeans)
-
+        data_point.meaning_vector.reshape(1, -1), method)
       clusters[cluster_index].add_element(data_point)
       data_point.cluster_index = cluster_index
+      clusters[cluster_index]\
+        .targets.append(self.data_points[rev_tag][data_point.index])
 
     self.clusters[data_tag] = clusters
 
@@ -61,7 +78,9 @@ class RNNState(filter_problem.FilterProblem):
       sentences = []
       with open(file, 'r', encoding='utf-8') as f:
         for line in f:
-          sentences.append(line.strip('\n'))
+          sentences.append(' '.join(
+        [word for word in str(line).strip().split() if word.strip() != ''
+         and word.strip() != '<unk>']))
       return sentences
 
     def data_path(name, ext=''):
@@ -89,15 +108,41 @@ class RNNState(filter_problem.FilterProblem):
 
       meaning_vectors = np.load(self.paths[data_tag]['npy'])
 
+      # REGULAR
+      # begin
+
+      # sentence_dict = dict(zip(
+      #   read_sentences(self.paths[data_tag]['txt']), meaning_vectors))
+      #
+      # file = open(data_path(data_tag, 'txt'), 'r',
+      #             encoding='utf-8')
+      #
+      # for index, line in enumerate(file):
+      #   processed_line = ' '.join(line.strip().split())
+      #   self.data_points[data_tag].append(self.DataPointClass(
+      #     line, index, False, sentence_dict[processed_line]))
+      #
+      #file.close()
+
+      # end
+
+      # OOV CORECTION
+      # begin
+
       sentence_dict = dict(zip(
-        read_sentences(self.paths[data_tag]['txt']), meaning_vectors))
+        read_sentences(self.paths[data_tag]['txt']),
+        zip(read_sentences(data_path(data_tag + 'Original', 'txt')),
+            meaning_vectors)))
 
       file = open(data_path(data_tag, 'txt'), 'r',
                   encoding='utf-8')
 
+      #end
+
       for index, line in enumerate(file):
         self.data_points[data_tag].append(self.DataPointClass(
-          line, index, False, sentence_dict[line.strip('\n')]))
+          sentence_dict[line.strip()][0],
+          index, False, sentence_dict[line.strip()][1]))
 
       file.close()
 
@@ -147,7 +192,11 @@ def generate_encoder_states(input_file_path, output_file_name):
             + decode_mode_string)
 
 
-def calculate_centroids(data_set, k, niter):
+def simple_knn(data_point, data_set):
+  return np.argmin(np.sum((data_set - data_point)**2, 1))
+
+
+def calculate_centroids_kmeans(data_set, k, niter):
   if _use_faiss:
     verbose = True
     d = data_set.shape[1]
@@ -162,10 +211,18 @@ def calculate_centroids(data_set, k, niter):
   return centroids, kmeans
 
 
-def calculate_nearest_index(data_point, kmeans):
+def calculate_centroids_mean_shift(data_set, band_width):
+  mean_shift = MeanShift(bandwidth=band_width).fit(data_set)
+  centroids = mean_shift.cluster_centers_
+
+  return centroids, mean_shift
+
+
+def calculate_nearest_index(data, method):
   if _use_faiss:
-    _, index = kmeans.index.search(data_point, 1)
+    _, index = method.index.search(data, 1)
+
   else:
-    index = kmeans.predict(data_point.reshape(1, -1))[0]
+    index = method.predict(data)[0]
 
   return index
