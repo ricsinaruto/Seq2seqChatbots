@@ -139,6 +139,10 @@ class SentenceEmbedding(FilterProblem):
       self.extract_weights()
       self.create_vocab_matrix()
 
+    # save the sentence matrix to a numpy file
+    self.sentence_to_numpy_matrix(data_tag)
+
+    """
     # load vocab distance matrix
     if data_tag=="Source":
       self.load_distance_matrix()
@@ -153,6 +157,7 @@ class SentenceEmbedding(FilterProblem):
     # stop processes
     for process in processes:
       process.join()
+    """
 
     """
     # initialize clusters
@@ -302,16 +307,23 @@ class SentenceEmbedding(FilterProblem):
     out.close()
 
   # load the sentence matrix
-  def load_sentence_matrix(self, data_tag):
-    self.sentence_matrix={}
-    matrix_file=open(
-      os.path.join(self.input_data_dir, data_tag+"SentenceMatrix.txt"))
+  def sentence_to_numpy_matrix(self, data_tag):
+    length=len(self.data_points[data_tag])
+    sentence_matrix=np.ndarray(shape=(length, length), dtype=float)
 
-    i=0
-    for line in matrix_file:
-      distances=line.split(";")[:-1]
-      for j, dist in enumerate(distances):
-        self.sentence_matrix[(i, j)]=float(dist)
-      i+=1
+    total_idx=0
+    # load the txt files
+    for i in range(16):
+      matrix_file=open(os.path.join(self.input_data_dir,
+                                    data_tag+"SentenceMatrix"+str(i)+".txt"))
+      for line in matrix_file:
+        distances=line.split(";")[:-1]
+        for j, dist in enumerate(distances):
+          sentence_matrix[total_idx, j]=float(dist)
+        total_idx+=1
 
-    matrix_file.close()
+      matrix_file.close()
+
+    # save to numpy file
+    np.save(os.path.join(self.input_data_dir, data_tag+"SentenceMatrix"),
+            sentence_matrix)
