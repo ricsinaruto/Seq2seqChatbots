@@ -89,7 +89,6 @@ class RNNState(filter_problem.FilterProblem):
 
     def read(data_tag):
       # if the encodings exists they will not be generated again
-      # TODO meaning vector and decode output path fix
       # sentence meaning vector
       data_filter_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), '..', '..')
