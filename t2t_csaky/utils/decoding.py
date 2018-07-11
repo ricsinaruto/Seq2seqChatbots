@@ -73,11 +73,11 @@ def log_encoding_results(inputs,
   else:
     decoded_inputs = inputs_vocab.decode(_save_until_eos(inputs, False))
 
-  tf.logging.info("State extraction results INPUT: %s" % decoded_inputs)
+  # tf.logging.info("State extraction results INPUT: %s" % decoded_inputs)
 
-  if encoder_output is not None:
-    tf.logging.info("State extraction results ENCODER OUTPUT: {}"
-                    .format(encoder_output))
+  # if encoder_output is not None:
+    # tf.logging.info("State extraction results ENCODER OUTPUT: {}"
+                    # .format(encoder_output))
 
   return decoded_inputs
 

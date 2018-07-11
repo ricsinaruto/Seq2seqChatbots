@@ -17,7 +17,7 @@ from sklearn.cluster import MeanShift
 
 # my imports
 from . import filter_problem
-from config import *
+from config import DATA_FILTERING, FLAGS
 
 
 class DataPoint(filter_problem.DataPoint):
@@ -29,11 +29,10 @@ class DataPoint(filter_problem.DataPoint):
     self.meaning_vector = meaning_vector
 
 
-class RNNState(filter_problem.FilterProblem):
+class MeaningBased(filter_problem.FilterProblem):
 
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
-    self.decode_dir = FLAGS["decode_dir"]
     self.paths = {}
 
   @property
@@ -74,86 +73,170 @@ class RNNState(filter_problem.FilterProblem):
 
   # this function will read the data and make it ready for clustering
   def read_inputs(self):
-    def read_sentences(file):
-      sentences = []
-      with open(file, 'r', encoding='utf-8') as f:
-        for line in f:
-          sentences.append(' '.join(
-        [word for word in str(line).strip().split() if word.strip() != ''
-         and word.strip() != '<unk>']))
-      return sentences
-
-    def data_path(name, ext=''):
-      return os.path.join(
-        self.input_data_dir, self.tag + "{}.{}".format(name, ext))
-
-    def read(data_tag):
-      # if the encodings exists they will not be generated again
-      # sentence meaning vector
-      data_filter_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), '..', '..')
-      self.paths[data_tag] = {
-        'txt': os.path.join(
-                data_filter_path, self._decode_data_path(data_tag, 'txt')),
-        'npy': os.path.join(
-              data_filter_path, self._decode_data_path(data_tag, 'npy'))
-      }
-
-      if (not os.path.exists(self.paths[data_tag]['txt']) or
-          not os.path.exists(self.paths[data_tag]['npy'])):
-
-        generate_encoder_states(
-          data_path(data_tag, 'txt'), '{}.txt'.format(data_tag))
-
-      meaning_vectors = np.load(self.paths[data_tag]['npy'])
-
-      # REGULAR
-      # begin
-
-      # sentence_dict = dict(zip(
-      #   read_sentences(self.paths[data_tag]['txt']), meaning_vectors))
-      #
-      # file = open(data_path(data_tag, 'txt'), 'r',
-      #             encoding='utf-8')
-      #
-      # for index, line in enumerate(file):
-      #   processed_line = ' '.join(line.strip().split())
-      #   self.data_points[data_tag].append(self.DataPointClass(
-      #     line, index, False, sentence_dict[processed_line]))
-      #
-      #file.close()
-
-      # end
-
-      # OOV CORECTION
-      # begin
-
-      sentence_dict = dict(zip(
-        read_sentences(self.paths[data_tag]['txt']),
-        zip(read_sentences(data_path(data_tag + 'Original', 'txt')),
-            meaning_vectors)))
-
-      file = open(data_path(data_tag, 'txt'), 'r',
-                  encoding='utf-8')
-
-      #end
-
-      for index, line in enumerate(file):
-        self.data_points[data_tag].append(self.DataPointClass(
-          sentence_dict[line.strip()][0],
-          index, False, sentence_dict[line.strip()][1]))
-
-      file.close()
-
-    read('Source')
-    read('Target')
+    self._read('Source')
+    self._read('Target')
 
     print("Finished reading " + self.tag + " data.")
+
+  def _read(self, data_tag):
+    raise NotImplementedError
+
+  def _data_path(self, name, ext=''):
+    return os.path.join(
+      self.input_data_dir, self.tag + "{}.{}".format(name, ext))
+
+
+class RNNState(MeaningBased):
+
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    self.decode_dir = FLAGS["decode_dir"]
 
   def _decode_data_path(self, tag, ext=''):
     return os.path.join(
       self.decode_dir, '{}.{}'.format(tag, ext)
     )
+
+  def _read(self, data_tag):
+    # if the encodings exists they will not be generated again
+    # sentence meaning vector
+    project_path = os.path.join(
+      os.path.dirname(os.path.abspath(__file__)), '..', '..')
+    self.paths[data_tag] = {
+      'txt': os.path.join(
+        project_path, self._decode_data_path(data_tag, 'txt')),
+      'npy': os.path.join(
+        project_path, self._decode_data_path(data_tag, 'npy'))
+    }
+
+    if (not os.path.exists(self.paths[data_tag]['txt']) or
+          not os.path.exists(self.paths[data_tag]['npy'])):
+
+      generate_encoder_states(
+        self._data_path(data_tag, 'txt'),
+        '{}.txt'.format(data_tag))
+
+    meaning_vectors = np.load(self.paths[data_tag]['npy'])
+
+    # REGULAR
+    # begin
+
+    # sentence_dict = dict(zip(
+    #   read_sentences(self.paths[data_tag]['txt']), meaning_vectors))
+    #
+    # file = open(data_path(data_tag, 'txt'), 'r',
+    #             encoding='utf-8')
+    #
+    # for index, line in enumerate(file):
+    #   processed_line = ' '.join(line.strip().split())
+    #   self.data_points[data_tag].append(self.DataPointClass(
+    #     line, index, False, sentence_dict[processed_line]))
+    #
+    # file.close()
+
+    # end
+
+    # The data contains out of vocab words: 1st an *Original.txt is created
+    # by the adjust_text_to_vocab.py script
+    # These sentences are then paired in a dict with their tokenized
+    # counterpart, so the original datapoints can be used for clustering
+    # after the s2s processed the states, by using this dict as a lookup
+    # begin
+
+    sentence_dict = dict(zip(
+      read_sentences(self.paths[data_tag]['txt']),
+      zip(read_sentences(self._data_path(data_tag + 'Original', 'txt')),
+          meaning_vectors)))
+
+    file = open(self._data_path(data_tag, 'txt'), 'r',
+                encoding='utf-8')
+
+    for index, line in enumerate(file):
+      self.data_points[data_tag].append(self.DataPointClass(
+        sentence_dict[line.strip()][0],
+        index, False, sentence_dict[line.strip()][1]))
+
+    file.close()
+
+
+class AverageWordEmbedding(MeaningBased):
+
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+
+  def _read(self, data_tag):
+    # if the encodings exists they will not be generated again
+    # sentence meaning vector
+    project_path = os.path.join(
+      os.path.dirname(os.path.abspath(__file__)), '..', '..')
+
+    self.paths[data_tag] = os.path.join(
+      project_path, self._sentence_embedding_data_path(data_tag, 'npy'))
+
+    if not os.path.exists(self.paths[data_tag]):
+      generate_average_word_embeddings(
+        os.path.join(project_path,
+                     self._sentence_embedding_data_path('vocab')),
+        self._data_path(data_tag, 'txt'),
+        self.paths[data_tag])
+
+    meaning_vectors = np.load(self.paths[data_tag]['npy'])
+
+    file = open(self._data_path(data_tag, 'txt'), 'r',
+                encoding='utf-8')
+
+    for index, line in enumerate(file):
+      self.data_points[data_tag].append(self.DataPointClass(
+        line.strip(), index, False, meaning_vectors[index]))
+
+    file.close()
+
+  def _sentence_embedding_data_path(self, name, ext=''):
+    return os.path.join(
+      self.input_data_dir, '{}.{}'.format(name, ext)
+    )
+
+def read_sentences(file):
+  sentences = []
+  with open(file, 'r', encoding='utf-8') as f:
+    for line in f:
+      sentences.append(' '.join(
+    [word for word in str(line).strip().split() if word.strip() != ''
+     and word.strip() != '<unk>']))
+  return sentences
+
+
+def generate_average_word_embeddings(
+        vocab_path, input_file_path, output_file_path):
+
+  vocab = {}
+  with open(vocab_path, 'r') as v:
+    for line in v:
+      line_as_list = line.strip().strip()
+      vocab[line_as_list[0]] = \
+        np.array([float(num) for num in line_as_list[1:]])
+
+  # TODO vocab DIM
+  dim = 300
+
+  meaning_vectors = []
+  with open(input_file_path, 'r') as f:
+    for line in f:
+      line_as_list = line.strip().split()
+      vectors = []
+      for word in line_as_list:
+
+        vector = vocab.get(word)
+        if vector is not None:
+          vectors.append(vector)
+
+      if len(vectors) == 0:
+        meaning_vectors.append(np.zeros(dim))
+      else:
+        meaning_vectors.append(np.sum(np.array(vectors), axis=1)/
+                               len(vectors))
+
+  np.save(output_file_path, np.array(meaning_vectors).reshape(-1, 300))
 
 
 def generate_encoder_states(input_file_path, output_file_name):

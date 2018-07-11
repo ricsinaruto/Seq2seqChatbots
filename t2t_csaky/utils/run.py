@@ -8,7 +8,7 @@ import select
 # my imports
 from config import *
 from data_filtering.hash_jaccard import HashJaccard
-from data_filtering.rnn_state import RNNState
+from data_filtering.meaning_based_clustering import RNNState
 from data_filtering.sentence_embedding import SentenceEmbedding
 from data_filtering.identity_clustering import IdentityClustering
 
