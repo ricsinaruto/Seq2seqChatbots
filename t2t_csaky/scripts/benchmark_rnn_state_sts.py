@@ -253,7 +253,7 @@ def create_benchmark(sts_file_path, fst_dict, snd_dict, vocab):
     (target_correlation - predicted_correlation) ** 2)) / \
           len(predicted_correlation)
 
-  logger.info('Correlation error (MSE): {}, Pearson correlation {}, pvalue {}'.format(error, corr, pvalue))
+  logger.info('RNNState Correlation error (MSE): {}, Pearson correlation {}, pvalue {}'.format(error, corr, pvalue))
 
 
 def calculate_correlation(fst_vector, snd_vector):

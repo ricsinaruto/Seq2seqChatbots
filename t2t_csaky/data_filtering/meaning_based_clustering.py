@@ -83,7 +83,7 @@ class MeaningBased(filter_problem.FilterProblem):
 
   def _data_path(self, name, ext=''):
     return os.path.join(
-      self.input_data_dir, self.tag + "{}.{}".format(name, ext))
+      self.input_data_dir, self.tag + "{}{}".format(name, ext))
 
 
 class RNNState(MeaningBased):
@@ -94,7 +94,7 @@ class RNNState(MeaningBased):
 
   def _decode_data_path(self, tag, ext=''):
     return os.path.join(
-      self.decode_dir, '{}.{}'.format(tag, ext)
+      self.decode_dir, '{}{}'.format(tag, ext)
     )
 
   def _read(self, data_tag):
@@ -104,16 +104,16 @@ class RNNState(MeaningBased):
       os.path.dirname(os.path.abspath(__file__)), '..', '..')
     self.paths[data_tag] = {
       'txt': os.path.join(
-        project_path, self._decode_data_path(data_tag, 'txt')),
+        project_path, self._decode_data_path(data_tag, '.txt')),
       'npy': os.path.join(
-        project_path, self._decode_data_path(data_tag, 'npy'))
+        project_path, self._decode_data_path(data_tag, '.npy'))
     }
 
     if (not os.path.exists(self.paths[data_tag]['txt']) or
           not os.path.exists(self.paths[data_tag]['npy'])):
 
       generate_encoder_states(
-        self._data_path(data_tag, 'txt'),
+        self._data_path(data_tag, '.txt'),
         '{}.txt'.format(data_tag))
 
     meaning_vectors = np.load(self.paths[data_tag]['npy'])
@@ -145,10 +145,10 @@ class RNNState(MeaningBased):
 
     sentence_dict = dict(zip(
       read_sentences(self.paths[data_tag]['txt']),
-      zip(read_sentences(self._data_path(data_tag + 'Original', 'txt')),
+      zip(read_sentences(self._data_path(data_tag + 'Original', '.txt')),
           meaning_vectors)))
 
-    file = open(self._data_path(data_tag, 'txt'), 'r',
+    file = open(self._data_path(data_tag, '.txt'), 'r',
                 encoding='utf-8')
 
     for index, line in enumerate(file):
@@ -170,19 +170,19 @@ class AverageWordEmbedding(MeaningBased):
     project_path = os.path.join(
       os.path.dirname(os.path.abspath(__file__)), '..', '..')
 
-    self.paths[data_tag] = os.path.join(
-      project_path, self._sentence_embedding_data_path(data_tag, 'npy'))
+    self.paths[data_tag] = {'npy': os.path.join(
+      project_path, self._sentence_embedding_data_path(data_tag, '.npy'))}
 
-    if not os.path.exists(self.paths[data_tag]):
+    if not os.path.exists(self.paths[data_tag]['npy']):
       generate_average_word_embeddings(
         os.path.join(project_path,
                      self._sentence_embedding_data_path('vocab')),
-        self._data_path(data_tag, 'txt'),
+        self._data_path(data_tag, '.txt'),
         self.paths[data_tag])
 
     meaning_vectors = np.load(self.paths[data_tag]['npy'])
 
-    file = open(self._data_path(data_tag, 'txt'), 'r',
+    file = open(self._data_path(data_tag, '.txt'), 'r',
                 encoding='utf-8')
 
     for index, line in enumerate(file):
@@ -193,7 +193,7 @@ class AverageWordEmbedding(MeaningBased):
 
   def _sentence_embedding_data_path(self, name, ext=''):
     return os.path.join(
-      self.input_data_dir, '{}.{}'.format(name, ext)
+      self.input_data_dir, '{}{}'.format(name, ext)
     )
 
 def read_sentences(file):
@@ -212,7 +212,7 @@ def generate_average_word_embeddings(
   vocab = {}
   with open(vocab_path, 'r') as v:
     for line in v:
-      line_as_list = line.strip().strip()
+      line_as_list = line.strip().split()
       vocab[line_as_list[0]] = \
         np.array([float(num) for num in line_as_list[1:]])
 
@@ -233,7 +233,7 @@ def generate_average_word_embeddings(
       if len(vectors) == 0:
         meaning_vectors.append(np.zeros(dim))
       else:
-        meaning_vectors.append(np.sum(np.array(vectors), axis=1)/
+        meaning_vectors.append(np.sum(np.array(vectors), axis=0)/
                                len(vectors))
 
   np.save(output_file_path, np.array(meaning_vectors).reshape(-1, 300))

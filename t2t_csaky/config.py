@@ -5,7 +5,7 @@ for the current run. This file will also be copied to the provided directory.
 
 FLAGS={
   "t2t_usr_dir"       :"t2t_csaky", # tensor2tensor imports from this dir
-  "data_dir"          :"data_dir/DailyDialog/base_both_rnnstate_clustering",
+  "data_dir"          :"data_dir/DailyDialog/base_both_avgembedding_clustering",
   "train_dir"         :"train_dir/DailyDialog/seq2seq_base-base_with_numbers",
   "decode_dir"        :"decode_dir/DailyDialog/trf_20_dropout-base",
   "problem"           :"daily_dialog_chatbot",
@@ -34,8 +34,8 @@ FLAGS={
 }
 
 DATA_FILTERING={
-  "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data/rnn_state_clustering",
-  "filter_problem"    :"rnn_state",  # can be: hash_jaccard, sentence_embedding, rnn_state
+  "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data/avg_embedding_clustering",
+  "filter_problem"    :"avg_embedding",  # can be: hash_jaccard, sentence_embedding, rnn_state
   "filter_type"       :"both",  # can be: target_based, source_based, both
   "source_clusters"   :100,
   "target_clusters"   :100,
@@ -46,7 +46,7 @@ DATA_FILTERING={
   "treshold"          :4,   # percentage treshold of entropy based filtering
   "ckpt_number"       :22001,  # only for sentence embedding clustering
   "cluster_method"    :"kmeans",  # kmeans or mean_shift
-  "kmeans_K"          :1000,
+  "kmeans_K"          :50,
   "m_shift_bw"        :12,  # mean shift bandwidth
 }
 

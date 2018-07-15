@@ -9,6 +9,7 @@ import select
 from config import *
 from data_filtering.hash_jaccard import HashJaccard
 from data_filtering.meaning_based_clustering import RNNState
+from data_filtering.meaning_based_clustering import AverageWordEmbedding
 from data_filtering.sentence_embedding import SentenceEmbedding
 from data_filtering.identity_clustering import IdentityClustering
 
@@ -112,7 +113,8 @@ def data_filtering():
     "hash_jaccard"      : HashJaccard,
     "sentence_embedding": SentenceEmbedding,
     "rnn_state"         : RNNState,
-    "identity_clustering":IdentityClustering
+    "identity_clustering":IdentityClustering,
+    "avg_embedding"      :AverageWordEmbedding
   }
 
   problem=filter_problems[DATA_FILTERING["filter_problem"]]("full")
