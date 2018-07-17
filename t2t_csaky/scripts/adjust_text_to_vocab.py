@@ -11,7 +11,6 @@ def main():
   parser.add_argument('-si', '--sourceinput', type=str)
   parser.add_argument('-so', '--sourceoutput', type=str)
 
-  # TODO set correct path
   data_dir = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     '..', 'data_dir', 'base_both_rnnstate_clustering')

@@ -5,11 +5,13 @@ import subprocess
 import sys
 import select
 
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+
 # my imports
 from config import *
 from data_filtering.hash_jaccard import HashJaccard
-from data_filtering.meaning_based_clustering import RNNState
-from data_filtering.meaning_based_clustering import AverageWordEmbedding
+from data_filtering.encoder_state_clustering import EncoderState
+from data_filtering.averaged_embedding_clustering import AverageWordEmbedding
 from data_filtering.sentence_embedding import SentenceEmbedding
 from data_filtering.identity_clustering import IdentityClustering
 
@@ -112,7 +114,7 @@ def data_filtering():
   filter_problems= {
     "hash_jaccard"      : HashJaccard,
     "sentence_embedding": SentenceEmbedding,
-    "rnn_state"         : RNNState,
+    "rnn_state"         : EncoderState,
     "identity_clustering":IdentityClustering,
     "avg_embedding"      :AverageWordEmbedding
   }

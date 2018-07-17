@@ -107,7 +107,7 @@ def lstm_seq2seq_internal_static(inputs, targets, hparams, train):
                                         activation=None,
                                         use_bias=False)
       
-    return tf.expand_dims(projected_outputs, axis=2), final_encoder_state
+    return tf.expand_dims(projected_outputs, axis=2)
 
 #TODO: rename this (causes compatibility issues)
 class GradientCheckpointedSeq2seq(t2t_model.T2TModel):

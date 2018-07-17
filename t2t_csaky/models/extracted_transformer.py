@@ -179,7 +179,7 @@ class ExtractedTransformer(transformer.Transformer):
           bias,
           hparams,
           cache,
-          nonpadding=features_to_nonpadding(features, "targets"))
+          nonpadding=transformer.features_to_nonpadding(features, "targets"))
 
       with tf.variable_scope(target_modality.name):
         logits = target_modality.top_sharded(body_outputs, None, dp)[0]
@@ -438,10 +438,3 @@ def fast_decode(encoder_output,
     "encoder_outputs": encoder_output,
     "scores": scores
   }
-
-
-def features_to_nonpadding(features, inputs_or_targets="inputs"):
-  key = inputs_or_targets + "_segmentation"
-  if features and key in features:
-    return tf.minimum(tf.to_float(features[key]), 1.0)
-  return None

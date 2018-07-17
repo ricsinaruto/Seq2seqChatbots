@@ -4,11 +4,15 @@ import argparse
 import logging
 import numpy
 import scipy
-from sklearn.metrics.pairwise import cosine_similarity
-
 
 import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+
+from scripts.utils import split_sts_data
+from scripts.utils import tokenize_sentence
+from scripts.utils import calculate_correlation
+from scripts.utils import process_correlations
+
 
 from config import FLAGS
 
@@ -52,7 +56,6 @@ def main():
 
   output_file_path_fst = os.path.join(
     args.output, '{}-first{}'.format(file[0], file[1]))
-
   output_file_path_snd = os.path.join(
     args.output, '{}-second{}'.format(file[0], file[1]))
 
@@ -61,11 +64,10 @@ def main():
 
   temp_fst = os.path.join(
     args.output, '{}-first-temp{}'.format(file[0], file[1]))
-
   temp_snd = os.path.join(
     args.output, '{}-second-temp{}'.format(file[0], file[1]))
 
-  split_input_fst, split_input_snd = generate_input_data_for_model(
+  split_input_fst, split_input_snd = split_sts_data(
     args.input, file, args.output)
 
   fst_sentence_dict = {}
@@ -160,39 +162,6 @@ def generate_states(input_file_path, output_file_path):
             + decode_mode_string)
 
 
-def generate_input_data_for_model(input_file_path, file, output_dir):
-
-  split_input_path_fst = os.path.join(
-    output_dir, '{}-first-split{}'.format(file[0], file[1]))
-
-  split_output_path_snd = os.path.join(
-    output_dir, '{}-second-split{}'.format(file[0], file[1]))
-
-  with open(input_file_path, 'r', encoding='utf-8') as i_f:
-    with open(split_input_path_fst, 'w', encoding='utf-8') as o_fst:
-      with open(split_output_path_snd, 'w', encoding='utf-8') as o_snd:
-        for line in i_f:
-          line_as_list = line.strip().split('\t')
-          o_fst.write(line_as_list[5].strip() + '\n')
-          o_snd.write(line_as_list[6].strip() + '\n')
-
-  return split_input_path_fst, split_output_path_snd
-
-
-def tokenize_sentence(line_as_list):
-  tokenized_line = []
-  for word in line_as_list:
-    if word[-1] == '.':
-      tokenized_line.append(word[:-1])
-      tokenized_line.append('.')
-    elif word[-1] == ',':
-      tokenized_line.append(word[:-1])
-      tokenized_line.append(',')
-    else:
-      tokenized_line.append(word)
-  return tokenized_line
-    
-
 def create_sentence_dicts(fst_split_csv_path,
                           snd_split_csv_path,
                           fst_split_npy_path,
@@ -205,7 +174,8 @@ def create_sentence_dicts(fst_split_csv_path,
   with open(fst_split_csv_path, 'r') as f:
     for index, line in enumerate(f):
       fst_sentence_dict[' '.join(
-        [word for word in tokenize_sentence(line.strip().split()) if word in vocab])] = \
+        [word for word in tokenize_sentence(
+          line.strip().split()) if word in vocab])] = \
         sentence_states[index]
 
   del sentence_states
@@ -216,7 +186,8 @@ def create_sentence_dicts(fst_split_csv_path,
   with open(snd_split_csv_path, 'r') as f:
     for index, line in enumerate(f):
       snd_sentence_dict[' '.join(
-        [word for word in tokenize_sentence(line.strip().split()) if word in vocab])]\
+        [word for word in tokenize_sentence(
+          line.strip().split()) if word in vocab])]\
         = sentence_states[index]
 
   del sentence_states
@@ -225,15 +196,16 @@ def create_sentence_dicts(fst_split_csv_path,
 
 
 def create_benchmark(sts_file_path, fst_dict, snd_dict, vocab):
-
   target_correlation = []
   predicted_correlation =[]
   with open(sts_file_path, 'r') as f:
     for line in f:
       line_as_list = line.split('\t')
-      first_sentence = [word for word in tokenize_sentence(line_as_list[5].strip().split())
+      first_sentence = \
+        [word for word in tokenize_sentence(line_as_list[5].strip().split())
                              if word in vocab and word != '']
-      second_sentence = [word for word in tokenize_sentence(line_as_list[6].strip().split())
+      second_sentence = \
+        [word for word in tokenize_sentence(line_as_list[6].strip().split())
                              if word in vocab and word != '']
       if len(first_sentence) > 2 and len(second_sentence) > 2:
         predicted_correlation.append(calculate_correlation(
@@ -242,27 +214,18 @@ def create_benchmark(sts_file_path, fst_dict, snd_dict, vocab):
         target_correlation.append(float(line_as_list[4].strip()))
 
   target_correlation = numpy.array(target_correlation)
-
   predicted_correlation = numpy.array(predicted_correlation).reshape(-1)
-
   predicted_correlation = process_correlations(predicted_correlation)
 
-  corr, pvalue = scipy.stats.spearmanr(target_correlation, predicted_correlation)
+  corr, pvalue = scipy.stats.spearmanr(target_correlation,
+                                       predicted_correlation)
 
   error = numpy.sqrt(numpy.sum(
     (target_correlation - predicted_correlation) ** 2)) / \
           len(predicted_correlation)
 
-  logger.info('RNNState Correlation error (MSE): {}, Pearson correlation {}, pvalue {}'.format(error, corr, pvalue))
-
-
-def calculate_correlation(fst_vector, snd_vector):
-  return cosine_similarity(fst_vector.reshape(1, -1),
-                           snd_vector.reshape(1, -1))
-
-
-def process_correlations(correlations):
-  return (correlations - numpy.min(correlations)) / numpy.max(correlations) * 5
+  logger.info('RNNState Correlation error (MSE): {}, '
+              'Pearson correlation {}, pvalue {}'.format(error, corr, pvalue))
 
 
 if __name__ == '__main__':
