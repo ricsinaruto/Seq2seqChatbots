@@ -40,6 +40,12 @@ class EncoderState(SemanticClustering):
         project_path, self._decode_data_path(data_tag, '.npy'))
     }
 
+    if not os.path.exists(self._data_path(data_tag + 'Original', '.txt')):
+      script_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        '..', 'scripts', 'adjust_text_to_vocab.py')
+      os.system('python3 {}'.format(script_path))
+
     if (not os.path.exists(self.paths[data_tag]['txt']) or
           not os.path.exists(self.paths[data_tag]['npy'])):
 

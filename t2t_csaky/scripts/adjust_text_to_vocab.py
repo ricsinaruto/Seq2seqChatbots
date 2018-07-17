@@ -4,6 +4,11 @@ import os
 
 
 def main():
+  """
+  This script creates a new copy of the provided source and target
+  data files, by removing the words in every sentence, which are not
+  present in the provided vocabulary file.
+  """
   parser = argparse.ArgumentParser()
   parser.add_argument('v', '--vocab', type=str)
   parser.add_argument('-ti', '--targetinput', type=str)
@@ -13,7 +18,7 @@ def main():
 
   data_dir = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
-    '..', 'data_dir', 'base_both_rnnstate_clustering')
+    '..', 'data_dir', 'base_both_rnn_state_clustering')
 
   args = parser.parse_args([
         '-v', data_dir + '/' + 'vocab.chatbot.16384',

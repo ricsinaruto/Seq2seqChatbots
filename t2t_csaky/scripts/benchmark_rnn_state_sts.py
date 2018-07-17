@@ -8,10 +8,10 @@ import scipy
 import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
-from scripts.utils import split_sts_data
-from scripts.utils import tokenize_sentence
-from scripts.utils import calculate_correlation
-from scripts.utils import process_correlations
+from utils.utils import split_sts_data
+from utils.utils import tokenize_sentence
+from utils.utils import calculate_correlation
+from utils.utils import process_correlations
 
 
 from config import FLAGS
@@ -35,9 +35,12 @@ logger.addHandler(consoleHandler)
 
 def main():
   parser = argparse.ArgumentParser()
-  parser.add_argument('-i', '--input', type=str)
-  parser.add_argument('-o', '--output', type=str)
-  parser.add_argument('-v', '--vocab', type=str)
+  parser.add_argument('-i', '--input', type=str, help='path of the STS'
+                                                      'benchmark data')
+  parser.add_argument('-o', '--output', type=str, help='output directory')
+  parser.add_argument('-v', '--vocab', type=str, help='vocabulary, that has'
+                                                      'been used by the'
+                                                      'model during training')
 
   args = parser.parse_args(['-i', '/media/patrik/1EDB65B8599DD93E/Downloads'
                                   '/stsbenchmark/sts-train.csv',
@@ -128,7 +131,16 @@ def main():
 
   create_benchmark(args.input, fst_dict, snd_dict,vocab)
 
+
 def generate_states(input_file_path, output_file_path):
+  """
+  Calls the Seq2Seq model to generate encoder states for the sentences
+  of the provided file.
+  The output will be a .txt with the reordered input sentences and
+  a .npy containing a data_size x s2s_hidden_dim matrix. The vector
+  at the n-th index of this matrix is the hidden encoder representation
+  of the n-th sentence in the reordered .txt file.
+  """
 
   # what hparams should we use
   if FLAGS["hparams"] == "":
@@ -167,7 +179,10 @@ def create_sentence_dicts(fst_split_csv_path,
                           fst_split_npy_path,
                           snd_split_npy_path,
                           vocab):
-
+  """
+  Creates a mapping between the original STS benchmark sentences,
+  and their modified versions, where every out of vocab words are removed.
+  """
   fst_sentence_dict = {}
   sentence_states = numpy.load(fst_split_npy_path)
 
@@ -196,6 +211,11 @@ def create_sentence_dicts(fst_split_csv_path,
 
 
 def create_benchmark(sts_file_path, fst_dict, snd_dict, vocab):
+  """
+  Creates the STS benchmark, by using the sentence dictionaries, that
+  map the original sentences to their encoder states produced by
+  the Seq2Seq model.
+  """
   target_correlation = []
   predicted_correlation =[]
   with open(sts_file_path, 'r') as f:

@@ -84,6 +84,9 @@ def decode_from_dataset(estimator,
   inputs_vocab_key = "inputs" if has_input else "targets"
   inputs_vocab = problem_hparams.vocabulary[inputs_vocab_key]
 
+  ##### Modified #####
+  # Encoder outputs list created
+
   encoder_outputs = []
   decoded_inputs = []
 
@@ -96,6 +99,9 @@ def decode_from_dataset(estimator,
 
     encoder_outputs.append(encoder_output)
     decoded_inputs.append(decoded_input)
+
+    ##### Modified #####
+    # Writing encoder_outputs list to file
 
     if decode_to_file:
       for i, (e_output, d_input) in \
@@ -136,8 +142,6 @@ def decode_from_file(estimator,
         "decode_hp.batch_size not specified; default=%d" %
         decode_hp.batch_size)
 
-  # Inputs vocabulary is set to targets if there are no inputs in the problem,
-  # e.g., for language models where the inputs are just a prefix of targets.
   p_hp = hparams.problem_hparams
   has_input = "inputs" in p_hp.vocabulary
   inputs_vocab_key = "inputs" if has_input else "targets"
@@ -158,6 +162,9 @@ def decode_from_file(estimator,
     gen_fn = decoding.make_input_fn_from_generator(input_gen)
     example = gen_fn()
     return decoding._decode_input_tensor_to_features_dict(example, hparams)
+
+  ##### Modified #####
+  # Encoder outputs list created
 
   decoded_inputs = []
   encoder_outputs = []
@@ -189,13 +196,9 @@ def decode_from_file(estimator,
   tf.logging.info("Averaged Single Token Generation Time: %5.7f" %
                   (total_time_per_step / total_cnt))
 
-  # Reversing the decoded inputs and outputs because they were reversed in
-  # _decode_batch_input_fn
   decoded_inputs.reverse()
   encoder_outputs.reverse()
-  # If decode_to_file was provided use it as the output filename without change
-  # (except for adding shard_id if using more shards for decoding).
-  # Otherwise, use the input filename plus model, hp, problem, beam, alpha.
+
   decode_filename = decode_to_file if decode_to_file else filename
 
   if decode_hp.shards > 1:
@@ -213,6 +216,9 @@ def decode_from_file(estimator,
   tf.logging.info("Writing encoder outputs into %s" % encode_filename)
   print("Writing encoder outputs into %s" % encode_filename)
   outfile = tf.gfile.Open(decode_filename, "w")
+
+  ##### Modified #####
+  # Writing encoder_outputs list to file
 
   if decode_to_file:
     for i, (e_output, d_input) in \

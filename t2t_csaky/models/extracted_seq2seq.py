@@ -43,7 +43,7 @@ class GradientCheckpointedSeq2seq(
       raise ValueError("LSTM models fail with orthogonal initializer.")
     train=self._hparams.mode==tf.estimator.ModeKeys.TRAIN
 
-    # Modified
+    ##### Modified #####
     # using the custom lstm_seq2seq_internal_dynamic
 
     return gradient_checkpointed_seq2seq.lstm_seq2seq_internal_dynamic(
@@ -61,7 +61,7 @@ class GradientCheckpointedSeq2seq(
     with self._eager_var_store.as_default():
       self._fill_problem_hparams_features(features)
 
-      # Modified
+      ##### Modified #####
       # passing the encoder state reference in 'sharded_enc_ou' variable
 
       sharded_features = self._shard_features(features)
@@ -84,7 +84,7 @@ class GradientCheckpointedSeq2seq(
     t2t_model.summarize_features(sharded_features, num_shards=dp.n)
     datashard_to_features = self._to_features_per_datashard(sharded_features)
 
-    # Modified
+    ##### Modified #####
     # passing the encoder state reference in 'enc_out' variable
 
     sharded_logits, sharded_losses, enc_out \
@@ -111,7 +111,7 @@ class GradientCheckpointedSeq2seq(
       with tf.variable_scope("body"):
         t2t_model.log_info("Building model body")
 
-        # Modified
+        ##### Modified #####
         # passing the encoder state reference in 'enc_out' variable
 
         body_out, enc_out = self.body(transformed_features)
@@ -142,7 +142,7 @@ class GradientCheckpointedSeq2seq(
         decode_length=decode_hparams.extra_length,
         use_tpu=use_tpu)
 
-    # Modified
+    ##### Modified #####
     # retrieving encoder output reference from inference output, and
     # adding it to the output predictions dictionary
 
@@ -169,7 +169,7 @@ class GradientCheckpointedSeq2seq(
     }
     t2t_model._del_dict_nones(predictions)
 
-    # Modified
+    ##### Modified #####
     # Added encoder outputs to export outputs dictionary
 
     export_out = {"outputs": predictions["outputs"]}
@@ -179,8 +179,6 @@ class GradientCheckpointedSeq2seq(
     if "encoder_outputs" in predictions:
       export_out["encoder_outputs"] = predictions["encoder_outputs"]
 
-    # Necessary to rejoin examples in the correct order with the Cloud ML Engine
-    # batch prediction API.
     if "batch_prediction_key" in predictions:
       export_out["batch_prediction_key"] = predictions["batch_prediction_key"]
 
@@ -208,36 +206,8 @@ class GradientCheckpointedSeq2seq(
             top_beams=1,
             alpha=0.0,
             use_tpu=False):
-    """A inference method.
-
-    Quadratic time in decode_length.
-
-    Args:
-      features: an map of string to `Tensor`
-      decode_length: an integer.  How many additional timesteps to decode.
-      beam_size: number of beams.
-      top_beams: an integer. How many of the beams to return.
-      alpha: Float that controls the length penalty. larger the alpha, stronger
-        the preference for longer translations.
-      use_tpu: bool, whether to build the inference graph for TPU.
-
-    Returns:
-      A dict of decoding results {
-          "outputs": integer `Tensor` of decoded ids of shape
-              [batch_size, <= decode_length] if beam_size == 1 or
-              [batch_size, top_beams, <= decode_length]
-          "scores": decoding log probs from the beam search,
-              None if using greedy decoding (beam_size=1)
-      }
-      if slow greedy decoding is used then the dict will also contain {
-          "logits": `Tensor` of shape [batch_size, time, 1, 1, vocab_size].
-          "losses": a dictionary: {loss-name (string): floating point `Scalar`
-      }
-    """
     t2t_model.set_custom_getter_compose(self._custom_getter)
     with self._eager_var_store.as_default():
-      # TODO(rsepassi): Make decoding work with real-valued model outputs
-      # (i.e. if the target modality is RealModality).
       self.prepare_features_for_infer(features)
       if not self.has_input and beam_size > 1:
         t2t_model.log_warn("Beam searching for a model with no inputs.")
@@ -251,7 +221,7 @@ class GradientCheckpointedSeq2seq(
           beam_size = 1  # No use to run beam-search for a single class.
       t2t_model.log_info("Greedy Decoding")
 
-      # Modified
+      ##### Modified #####
       # Removed every other decoding option, but the greedy method
 
       results = self._greedy_infer(features, decode_length, use_tpu)
@@ -259,24 +229,6 @@ class GradientCheckpointedSeq2seq(
       return results
 
   def _slow_greedy_infer(self, features, decode_length):
-    """A slow greedy inference method.
-
-    Quadratic time in decode_length.
-
-    Args:
-      features: an map of string to `Tensor`
-      decode_length: an integer.  How many additional timesteps to decode.
-
-    Returns:
-      A dict of decoding results {
-          "outputs": integer `Tensor` of decoded ids of shape
-              [batch_size, <= decode_length] if beam_size == 1 or
-              [batch_size, top_beams, <= decode_length]
-          "scores": None
-          "logits": `Tensor` of shape [batch_size, time, 1, 1, vocab_size].
-          "losses": a dictionary: {loss-name (string): floating point `Scalar`}
-      }
-    """
     if not features:
       features = {}
     inputs_old = None
@@ -284,16 +236,10 @@ class GradientCheckpointedSeq2seq(
       inputs_old = features["inputs"]
       features["inputs"] = tf.expand_dims(features["inputs"], 2)
     if not self.has_input:
-      # Prepare partial targets.
-      # In either features["inputs"] or features["targets"].
-      # We force the outputs to begin with these sequences.
       partial_targets = features.get("inputs")
       if partial_targets is None:
         partial_targets = features["targets"]
       features["partial_targets"] = tf.to_int64(partial_targets)
-    # Save the targets in a var and reassign it after the tf.while loop to avoid
-    # having targets being in a 'while' frame. This ensures targets when used
-    # in metric functions stays in the same frame as other vars.
     targets_old = features.get("targets", None)
 
     target_modality = self._problem_hparams.target_modality
@@ -308,11 +254,8 @@ class GradientCheckpointedSeq2seq(
           recent_output.set_shape([None, None, None, 1])
       padded = tf.pad(recent_output, [[0, 0], [0, 1], [0, 0], [0, 0]])
       features["targets"] = padded
-      # This is inefficient in that it generates samples at all timesteps,
-      # not just the last one, except if target_modality is pointwise.
+
       samples, logits, losses, enc_out = self.sample(features)
-      # Concatenate the already-generated recent_output with last timestep
-      # of the newly-generated samples.
       if target_modality.top_is_pointwise:
         cur_sample = samples[:, -1, :, :]
       else:
@@ -327,13 +270,10 @@ class GradientCheckpointedSeq2seq(
         if not tf.contrib.eager.in_eager_mode():
           samples.set_shape([None, None, None, 1])
 
-      # Assuming we have one shard for logits.
       logits = tf.concat([recent_logits, logits[:, -1:]], 1)
       loss = sum([l for l in losses.values() if l is not None])
       return samples, logits, loss, enc_out
 
-    # Create an initial output tensor. This will be passed
-    # to the infer_step, which adds one timestep at every iteration.
     if "partial_targets" in features:
       initial_output = tf.to_int64(features["partial_targets"])
       while len(initial_output.get_shape().as_list()) < 4:
@@ -346,8 +286,7 @@ class GradientCheckpointedSeq2seq(
         initial_output = tf.zeros((batch_size, 0, 1, dim), dtype=tf.float32)
       else:
         initial_output = tf.zeros((batch_size, 0, 1, 1), dtype=tf.int64)
-    # Hack: foldl complains when the output shape is less specified than the
-    # input shape, so we confuse it about the input shape.
+
     initial_output = tf.slice(initial_output, [0, 0, 0, 0],
                               common_layers.shape_list(initial_output))
     target_modality = self._problem_hparams.target_modality
@@ -360,13 +299,11 @@ class GradientCheckpointedSeq2seq(
         prefix_length = common_layers.shape_list(features["inputs"])[1]
       decode_length = prefix_length + decode_length
 
-    # Initial values of result, logits and loss.
     result = initial_output
     if self._target_modality_is_real:
       logits = tf.zeros((batch_size, 0, 1, target_modality.top_dimensionality))
       logits_shape_inv = [None, None, None, None]
     else:
-      # tensor of shape [batch_size, time, 1, 1, vocab_size]
       logits = tf.zeros((batch_size, 0, 1, 1,
                          target_modality.top_dimensionality))
       logits_shape_inv = [None, None, None, None, None]
@@ -377,9 +314,8 @@ class GradientCheckpointedSeq2seq(
 
     result, logits, loss, enc_out = infer_step(result, logits, loss)
 
-    if inputs_old is not None:  # Restore to not confuse Estimator.
+    if inputs_old is not None:
       features["inputs"] = inputs_old
-    # Reassign targets back to the previous value.
     if targets_old is not None:
       features["targets"] = targets_old
     losses = {"training": loss}
@@ -389,8 +325,8 @@ class GradientCheckpointedSeq2seq(
       result = tf.slice(result, [0, partial_target_length, 0, 0],
                         [-1, -1, -1, -1])
 
-    # Modified
-    # Added encoder outputs
+      ##### Modified #####
+    # Added encoder outputs to inference outputs dictionary
 
     return {
         "outputs": result,
@@ -401,17 +337,7 @@ class GradientCheckpointedSeq2seq(
     }
 
   def sample(self, features):
-    """Run the model and extract samples.
-
-    Args:
-      features: an map of string to `Tensor`.
-
-    Returns:
-       samples: an integer `Tensor`.
-       logits: a list of `Tensor`s, one per datashard.
-       losses: a dictionary: {loss-name (string): floating point `Scalar`}.
-    """
-    # Modified
+    ###### Modified #####
     # Passing encoder output reference
 
     logits, losses, enc_out = self(features)  # pylint: disable=not-callable

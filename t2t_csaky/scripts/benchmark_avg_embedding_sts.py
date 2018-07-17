@@ -8,10 +8,10 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
-from scripts.utils import split_sts_data
-from scripts.utils import tokenize_sentence
-from scripts.utils import calculate_correlation
-from scripts.utils import process_correlations
+from utils.utils import split_sts_data
+from utils.utils import tokenize_sentence
+from utils.utils import calculate_correlation
+from utils.utils import process_correlations
 
 
 logFormatter = logging.Formatter(
@@ -51,6 +51,8 @@ def main():
   split_input_fst, split_input_snd = split_sts_data(
       args.input, file, args.output)
 
+  # Collecting the existing words in the data, and records their frequency
+
   word_count = 0
   vocab = {}
   with open(split_input_fst, 'r') as f:
@@ -68,6 +70,9 @@ def main():
   for word in vocab:
     vocab[word] /= word_count
 
+  # Iterating through the provided word vector vocabulary, and
+  # pairing each word of the data with their frequency and embedding vector
+
   dictionary = {}
   with open(args.vocab, 'r') as v:
     for line in v:
@@ -83,8 +88,15 @@ def main():
 
 
 def create_benchmark(sts_file_path, vocab):
+  """
+  Creates a benchmark for the provided sts file.
+  Each sentence will be represented by the weighted average of the
+  word embeddings in that sentence vectors.
+  """
+
   def w_avg(freq):
     return 0.001 / (0.001 + freq)
+
   target_correlation = []
   predicted_correlation = []
   with open(sts_file_path, 'r') as f:

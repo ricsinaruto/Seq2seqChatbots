@@ -5,24 +5,24 @@ import numpy as np
 import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__))))
 
-
-try:
-
-  import faiss
-  _use_faiss = True
-
-except ImportError:
-
-  print('Failed to import faiss, using SKLearn clustering instead.')
-  from sklearn.cluster import KMeans
-  _use_faiss = False
-
-from sklearn.cluster import MeanShift
-
-# my imports
-
 import filter_problem
 from config import DATA_FILTERING, FLAGS
+
+_use_faiss = False
+
+if DATA_FILTERING['use_faiss']:
+  try:
+
+    import faiss
+    _use_faiss = True
+
+  except ImportError:
+    print('Failed to import faiss, using SKLearn clustering instead.')
+
+if not _use_faiss:
+  from sklearn.cluster import KMeans
+
+from sklearn.cluster import MeanShift
 
 
 class DataPoint(filter_problem.DataPoint):
@@ -157,7 +157,7 @@ class SemanticClustering(filter_problem.FilterProblem):
     data_point_vectors = np.array([data_point.meaning_vector
                           for data_point in self.data_points[data_tag]])
 
-    clusters = [filter_problem.Cluster(
+    clusters = [self.ClusterClass(
       self.data_points[data_tag][self.simple_knn(
         centroid, data_point_vectors)])
      for centroid in centroids]

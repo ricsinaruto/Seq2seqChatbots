@@ -46,8 +46,9 @@ DATA_FILTERING={
   "treshold"          :4,   # percentage treshold of entropy based filtering
   "ckpt_number"       :22001,  # only for sentence embedding clustering
   "semantic_clustering_method"  :"kmeans",  # kmeans or mean_shift
-  "kmeans_n_clusters"           :100,
+  "kmeans_n_clusters"           :1000,
   "mean_shift_bw"               :12,  # mean shift bandwidth
+  "use_faiss"         :False
 }
 
 PROBLEM_HPARAMS={

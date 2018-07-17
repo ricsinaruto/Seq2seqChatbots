@@ -5,6 +5,11 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 def split_sts_data(input_file_path, file, output_dir):
+  """
+  Convenience function that is used exclusively for processsing
+  the STS benchmark data. The file contains sentences-pairs,
+  which will be split into two separate files.
+  """
   split_input_path_fst = os.path.join(
       output_dir, '{}-first-split{}'.format(file[0], file[1]))
 
@@ -23,6 +28,10 @@ def split_sts_data(input_file_path, file, output_dir):
 
 
 def tokenize_sentence(line_as_list):
+  """
+  Tokenizes the sentence by separating punctuation marks at the end of
+  each word.
+  """
   tokenized_line = []
   for word in line_as_list:
     if word[-1] == '.':
@@ -37,10 +46,16 @@ def tokenize_sentence(line_as_list):
 
 
 def calculate_correlation(fst_vector, snd_vector):
+  """
+  Calcualtes the cosine similarity of two vectors for STS benchmarking.
+  """
   return cosine_similarity(fst_vector.reshape(1, -1),
                            snd_vector.reshape(1, -1))
 
 
 def process_correlations(correlations):
+  """
+  Rescales the vectors into a 0-5 interval.
+  """
   return (correlations - numpy.min(correlations)) / numpy.max(
     correlations) * 5
