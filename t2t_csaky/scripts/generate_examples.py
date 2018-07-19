@@ -1,6 +1,6 @@
 """ annotate the example inputs with speaker names """
 
-f=open("NCM_examples/fullSource.txt")
+f=open("NCM_examples/NCM_examples.txt")
 
 f1=open("NCM_examples/sep_names/NCM_examples_with_sep_matching_common_names.txt","w")
 f2=open("NCM_examples/sep_names/NCM_examples_with_sep_different_common_names.txt","w")
