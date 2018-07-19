@@ -9,6 +9,8 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__))))
 from semantic_clustering import SemanticClustering
 from config import DATA_FILTERING, FLAGS
 
+from utils.utils import read_sentences
+
 
 class EncoderState(SemanticClustering):
   """
@@ -35,12 +37,13 @@ class EncoderState(SemanticClustering):
       os.path.dirname(os.path.abspath(__file__)), '..', '..')
     self.paths[data_tag] = {
       'txt': os.path.join(
-        project_path, self._decode_data_path(data_tag, '.txt')),
+        project_path, self._data_path('{}.txt'.format(data_tag))),
       'npy': os.path.join(
-        project_path, self._decode_data_path(data_tag, '.npy'))
+        project_path,self._data_path('{}.npy'.format(data_tag)))
     }
 
-    if not os.path.exists(self._data_path(data_tag + 'Original', '.txt')):
+    if not os.path.exists(self._data_path(
+                            self.tag + data_tag + 'Original', '.txt')):
       script_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         '..', 'scripts', 'adjust_text_to_vocab.py')
@@ -50,17 +53,18 @@ class EncoderState(SemanticClustering):
           not os.path.exists(self.paths[data_tag]['npy'])):
 
       self.generate_encoder_states(
-        self._data_path(data_tag, '.txt'),
-        '{}.txt'.format(data_tag))
+        self._data_path(self.tag + data_tag, '.txt'),
+        self._data_path('{}.txt'.format(data_tag)))
 
     meaning_vectors = np.load(self.paths[data_tag]['npy'])
 
     sentence_dict = dict(zip(
-      self.read_sentences(self.paths[data_tag]['txt']),
-      zip(self.read_sentences(self._data_path(data_tag + 'Original', '.txt')),
+      read_sentences(self.paths[data_tag]['txt']),
+      zip(read_sentences(self._data_path(
+        self.tag + data_tag + 'Original', '.txt')),
           meaning_vectors)))
 
-    file = open(self._data_path(data_tag, '.txt'), 'r',
+    file = open(self._data_path(self.tag + data_tag, '.txt'), 'r',
                 encoding='utf-8')
 
     for index, line in enumerate(file):
@@ -70,7 +74,7 @@ class EncoderState(SemanticClustering):
 
     file.close()
 
-  def generate_encoder_states(self, input_file_path, output_file_name):
+  def generate_encoder_states(self, input_file_path, output_path):
     """
     Generates the encoder hidden state representations for the provided
     input file. The output will be the reordered sentences (.txt), and the
@@ -104,8 +108,7 @@ class EncoderState(SemanticClustering):
               + " --worker_gpu_memory_fraction=" + str(
       FLAGS["memory_fraction"])
               + " --hparams_set=" + hparam_string
-              + " --decode_to_file=" + FLAGS["decode_dir"] + "/" +
-              output_file_name
+              + " --decode_to_file=" + output_path
               + ' --decode_hparams="beam_size=' + str(FLAGS["beam_size"])
               + ",return_beams=" + FLAGS["return_beams"] + '"'
               + decode_mode_string)

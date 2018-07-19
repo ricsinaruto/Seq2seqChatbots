@@ -95,6 +95,9 @@ def create_benchmark(sts_file_path, vocab):
   """
 
   def w_avg(freq):
+    """
+    Inverse frequency weight
+    """
     return 0.001 / (0.001 + freq)
 
   target_correlation = []
@@ -105,14 +108,26 @@ def create_benchmark(sts_file_path, vocab):
 
       valid_words = 0
       vectors = []
+
+      # STS data is a .csv, where the 5. and 6. columns hold the sentences,
+      # and the 4. column holds the correlations
+
       first_sentence = None
       for word in tokenize_sentence(line_as_list[5].strip().split()):
+
+        # Each sentence is split into words, and the vector corresponding
+        # to each element will be weighted, and summed
+
         vector = vocab.get(word)
         if vector is not None:
           vectors.append(vector[1] * w_avg(vector[0]))
           valid_words += 1
 
       if valid_words != 0:
+
+        # If there were any words in the sentence, to find a vector for,
+        # represent the sentence by the average of these vectors
+
         first_sentence = numpy.sum(numpy.array(vectors), axis=0) / valid_words
 
       vectors = []
@@ -128,10 +143,17 @@ def create_benchmark(sts_file_path, vocab):
         second_sentence = numpy.sum(numpy.array(vectors), axis=0) / valid_words
 
       if first_sentence is not None and second_sentence is not None:
+
+        # If both vectors contain more than 0 words in the vocab,
+        # calculate their cosine similarity
+
         predicted_correlation.append(calculate_correlation(
           first_sentence,
           second_sentence))
         target_correlation.append(float(line_as_list[4].strip()))
+
+  # The predicted similarity and the target similarity is compared
+  # with pearson rang correlation
 
   target_correlation = numpy.array(target_correlation)
   predicted_correlation = numpy.array(predicted_correlation).reshape(-1)

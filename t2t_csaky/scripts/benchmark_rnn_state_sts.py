@@ -13,7 +13,6 @@ from utils.utils import tokenize_sentence
 from utils.utils import calculate_correlation
 from utils.utils import process_correlations
 
-
 from config import FLAGS
 
 
@@ -142,14 +141,13 @@ def generate_states(input_file_path, output_file_path):
   of the n-th sentence in the reordered .txt file.
   """
 
-  # what hparams should we use
   if FLAGS["hparams"] == "":
     hparam_string = "general_" + FLAGS["model"] + "_hparams"
   else:
     hparam_string = FLAGS["hparams"]
 
   decode_mode_string = ""
-  # determine the decode mode flag
+
   if FLAGS["decode_mode"] == "interactive":
     decode_mode_string = " --decode_interactive"
   elif FLAGS["decode_mode"] == "file":

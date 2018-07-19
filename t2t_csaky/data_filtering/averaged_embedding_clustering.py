@@ -15,9 +15,6 @@ class AverageWordEmbedding(SemanticClustering):
   sentence is created by the weighted average of the word vectors.
   """
 
-  def __init__(self, *args, **kwargs):
-    super().__init__(*args, **kwargs)
-
   def _read(self, data_tag):
     # if the encodings exists they will not be generated again
     # sentence meaning vector
@@ -25,18 +22,18 @@ class AverageWordEmbedding(SemanticClustering):
       os.path.dirname(os.path.abspath(__file__)), '..', '..')
 
     self.paths[data_tag] = {'npy': os.path.join(
-      project_path, self._input_data_path(data_tag, '.npy'))}
+      project_path, self._data_path(data_tag, '.npy'))}
 
     if not os.path.exists(self.paths[data_tag]['npy']):
       self.generate_average_word_embeddings(
         os.path.join(project_path,
-                     self._input_data_path('vocab')),
-        self._data_path(data_tag, '.txt'),
+                     self._data_path('vocab')),
+        self._data_path(self.tag + data_tag, '.txt'),
         self.paths[data_tag])
 
     meaning_vectors = np.load(self.paths[data_tag]['npy'])
 
-    file = open(self._data_path(data_tag, '.txt'), 'r',
+    file = open(self._data_path(self.tag + data_tag, '.txt'), 'r',
                 encoding='utf-8')
 
     for index, line in enumerate(file):
@@ -45,18 +42,10 @@ class AverageWordEmbedding(SemanticClustering):
 
     file.close()
 
-  def _input_data_path(self, name, ext=''):
-    """
-    Convenience method for reaching the path of the input data.
-    """
-    return os.path.join(
-      self.input_data_dir, '{}{}'.format(name, ext))
-
   def generate_average_word_embeddings(self,
                                        vocab_path,
                                        input_file_path,
-                                       output_file_path,
-                                       dim=300):
+                                       output_file_path):
     """
     Generates the word embeddings for a given file.
 
@@ -71,6 +60,8 @@ class AverageWordEmbedding(SemanticClustering):
         line_as_list = line.strip().split()
         vocab[line_as_list[0]] = [0,
           np.array([float(num) for num in line_as_list[1:]])]
+
+    embedding_dim = len(vocab[list(vocab)[0]][1])
 
     word_count = 0
     with open(input_file_path, 'r') as f:
@@ -96,9 +87,10 @@ class AverageWordEmbedding(SemanticClustering):
                            (0.001 + vector[0] / word_count))
 
         if len(vectors) == 0:
-          meaning_vectors.append(np.zeros(dim))
+          meaning_vectors.append(np.zeros(embedding_dim))
         else:
           meaning_vectors.append(np.sum(np.array(vectors), axis=0) /
                                  len(vectors))
 
-    np.save(output_file_path, np.array(meaning_vectors).reshape(-1, dim))
+    np.save(output_file_path, np.array(meaning_vectors).
+            reshape(-1, embedding_dim))
