@@ -5,10 +5,13 @@ import subprocess
 import sys
 import select
 
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+
 # my imports
 from config import *
 from data_filtering.hash_jaccard import HashJaccard
-from data_filtering.rnn_state import RNNState
+from data_filtering.encoder_state_clustering import EncoderState
+from data_filtering.averaged_embedding_clustering import AverageWordEmbedding
 from data_filtering.sentence_embedding import SentenceEmbedding
 from data_filtering.identity_clustering import IdentityClustering
 
@@ -102,6 +105,7 @@ def decoding():
                                 +",return_beams="+FLAGS["return_beams"]+'"'
             +decode_mode_string)
 
+
 # initialize a filtering problem
 def data_filtering():
   print("Program is running in data filtering mode.")
@@ -110,8 +114,9 @@ def data_filtering():
   filter_problems= {
     "hash_jaccard"      : HashJaccard,
     "sentence_embedding": SentenceEmbedding,
-    "rnn_state"         : RNNState,
-    "identity_clustering":IdentityClustering
+    "rnn_state"         : EncoderState,
+    "identity_clustering":IdentityClustering,
+    "avg_embedding"      :AverageWordEmbedding
   }
 
   problem=filter_problems[DATA_FILTERING["filter_problem"]]("full")

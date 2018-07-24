@@ -15,6 +15,7 @@ from tensor2tensor.models import transformer
 from tensor2tensor.utils import t2t_model
 from tensor2tensor.utils import beam_search
 from tensor2tensor.utils import registry
+from tensor2tensor.utils import expert_utils as eu
 
 # tensorflow imports
 from tensorflow.python.eager import context
@@ -307,14 +308,14 @@ def fast_decode(encoder_output,
 
     """ t2t_csaky code """
     # do roulette wheel selection or inverse roulette wheel selection
-    if self._hparams.roulette=="Normal" or self._hparams.roulette=="Inverse":
-      if self._hparams.roulette=="Normal":
+    if hparams.roulette=="Normal" or hparams.roulette=="Inverse":
+      if hparams.roulette=="Normal":
         probabilities=tf.pow(tf.constant(2.0),scores)
         start=0
       else:
         probabilities=tf.subtract(
           tf.constant(1.0),tf.pow(tf.constant(2.0),scores))
-        start=beam_size-self._hparams.roulette_beam_size
+        start=beam_size-hparams.roulette_beam_size
 
       ex_probs=tf.divide(probabilities,tf.reduce_sum(probabilities))
       #ex_probs=tf.nn.softmax(probabilities)
@@ -324,7 +325,7 @@ def fast_decode(encoder_output,
       upper_bound=tf.constant(0.0)
 
       # change this as well if using inverse
-      for i in range(start ,self._hparams.roulette_beam_size):
+      for i in range(start ,hparams.roulette_beam_size):
         upper_bound=tf.add(ex_probs[:,i], upper_bound)
         truthValue=tf.squeeze(tf.logical_and(wheel>=upper_bound-ex_probs[:,i],
                                              wheel<=upper_bound))
@@ -365,4 +366,8 @@ def fast_decode(encoder_output,
         ])
     scores = None
 
-  return {"outputs": decoded_ids, "scores": scores}
+  return {
+      "outputs":         decoded_ids,
+      "encoder_outputs": encoder_output,
+      "scores":          scores
+  }

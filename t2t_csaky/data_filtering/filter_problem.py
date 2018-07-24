@@ -1,3 +1,4 @@
+
 import os
 import math
 import numpy as np
@@ -5,7 +6,6 @@ from collections import Counter
 
 # my imports
 from config import *
-
 
 
 class DataPoint:
@@ -170,7 +170,7 @@ class FilterProblem:
     fTarget=open(os.path.join(self.output_data_dir, "DLOSS_target.txt"), "w")
 
     # loop through distinct inputs
-    for cl in self.clusters["Source"]:      
+    for cl in self.clusters["Source"]:
       max_len=0
       # loop through the targets to get the longest
       for target in cl.targets:
