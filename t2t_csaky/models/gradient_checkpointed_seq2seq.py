@@ -46,6 +46,7 @@ def lstm_seq2seq_internal_dynamic(inputs, targets, hparams, train):
       # LSTM encoder.
       _, final_encoder_state = lstm(
           tf.reverse(inputs, axis=[1]), hparams, train, "encoder")
+
     else:
       final_encoder_state = None
     # LSTM decoder.
@@ -65,7 +66,7 @@ def lstm_seq2seq_internal_dynamic(inputs, targets, hparams, train):
           activation=None,
           use_bias=False)
 
-    return tf.expand_dims(projected_outputs, axis=2)
+    return tf.expand_dims(projected_outputs, axis=2), final_encoder_state[0]
 
 def lstm_seq2seq_internal_static(inputs, targets, hparams, train):
   """The basic LSTM seq2seq model, main step used for training."""
@@ -109,7 +110,6 @@ def lstm_seq2seq_internal_static(inputs, targets, hparams, train):
     return tf.expand_dims(projected_outputs, axis=2)
 
 #TODO: rename this (causes compatibility issues)
-@registry.register_model
 class GradientCheckpointedSeq2seq(t2t_model.T2TModel):
   """
   A class where I replaced the internal hparams with my own function call.
@@ -123,7 +123,7 @@ class GradientCheckpointedSeq2seq(t2t_model.T2TModel):
   Moreover, in this class gradient checkpointing is implemented.
   https://github.com/openai/gradient-checkpointing
   """
-  def body(self,features):
+  def body(self, features):
     if self._hparams.initializer == "orthogonal":
       raise ValueError("LSTM models fail with orthogonal initializer.")
     train=self._hparams.mode==tf.estimator.ModeKeys.TRAIN
@@ -131,7 +131,7 @@ class GradientCheckpointedSeq2seq(t2t_model.T2TModel):
         features.get("inputs"),
         features["targets"],
         seq2seq_hparams.chatbot_lstm_hparams(),
-        train)
+        train)[0]
 
   # Change the optimizer to a new one, which uses gradient checkpointing
   def optimize(self, loss, num_async_replicas=1):
@@ -150,3 +150,7 @@ class GradientCheckpointedSeq2seq(t2t_model.T2TModel):
     lr /= math.sqrt(float(num_async_replicas))
     train_op = optimizer.optimize(loss, lr, self.hparams)
     return train_op
+
+
+
+

@@ -162,7 +162,7 @@ class WordChatbot(text_problems.Text2TextProblem):
 
   # This function generates the train and validation pairs in t2t-datagen style
   def generate_samples(self, data_dir, tmp_dir, dataset_split):
-    """ 
+    """
     The function assumes that if you have data at one level of the pipeline,
     you don't want to re-generate it, so for example if the 4 txt files exist,
     the function continues by generating the t2t-datagen format files.
@@ -199,7 +199,7 @@ class WordChatbot(text_problems.Text2TextProblem):
 
   # save the vocabulary to a file
   def save_vocab(self, vocab):
-    """ 
+    """
     Params:
       :vocab: vocabulary list
     """

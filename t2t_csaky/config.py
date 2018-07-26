@@ -5,11 +5,11 @@ for the current run. This file will also be copied to the provided directory.
 
 FLAGS={
   "t2t_usr_dir"       :"t2t_csaky", # tensor2tensor imports from this dir
-  "data_dir"          :"data_dir/DailyDialog/base_with_numbers",
-  "train_dir"         :"train_dir/DailyDialog/trf_40_dropout-base_with_numbers",
+  "data_dir"          :"data_dir/DailyDialog/base_both_rnn_state_clustering",
+  "train_dir"         :"train_dir/DailyDialog/seq2seq_base-base_with_numbers",
   "decode_dir"        :"decode_dir/DailyDialog/trf_20_dropout-base",
   "problem"           :"daily_dialog_chatbot",
-  "model"             :"transformer",
+  "model"             :"gradient_checkpointed_seq2seq",
   "hparams"           :"",  # this is empty if we use hparams defined in this file,
                             # otherwise you have to specify a registered hparams_set
   "profile_perform"   :"True",
@@ -27,24 +27,27 @@ FLAGS={
   # decoding related flags
   "output_file_name"  :"inference_at_11k.txt",  # save the inference outputs
   "input_file_name"   :"NCM_examples.txt",      # read inputs to be fed
-  "decode_mode"       :"interactive",   # can be: interactive, file, dataset
+  "decode_mode"       :"file",   # can be: interactive, file, dataset
   "beam_size"         :10,
   "return_beams"      :"True"           # if False return only the top beam, 
                                         # otherwise beam_size beams
 }
 
 DATA_FILTERING={
-  "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data",
-  "filter_problem"    :"sentence_embedding",  # can be: hash_jaccard, sentence_embedding, rnn_state
+  "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data/rnn_state_clustering",
+  "filter_problem"    :"rnn_state",  # can be: hash_jaccard, sentence_embedding, rnn_state
   "filter_type"       :"both",  # can be: target_based, source_based, both
   "source_clusters"   :100,
   "target_clusters"   :100,
-  "max_length"        :64,    # max length when constructing bigram matrix, this needs to be set to 0 in order to normal filtering to run
+  "max_length"        :0,    # max length when constructing bigram matrix, this needs to be set to 0 in order to normal filtering to run
   "min_cluster_size"  :2,     # clusters with fewer elements won't get filtered
   "num_permutations"  :128,   # only for hash based clustering
   "character_level"   :False, # only for hash based clustering
   "treshold"          :4,   # percentage treshold of entropy based filtering
-  "ckpt_number"       :22001  # only for sentence embedding clustering
+  "ckpt_number"       :22001,  # only for sentence embedding clustering
+  "semantic_clustering_method"  :"kmeans",  # kmeans or mean_shift
+  "mean_shift_bw"               :12,  # mean shift bandwidth
+  "use_faiss"         :False
 }
 
 PROBLEM_HPARAMS={
@@ -75,7 +78,7 @@ TRANSFORMER_HPARAMS={
 # These will be applied on top of the lstm_seq2seq hparams_set
 SEQ2SEQ_HPARAMS= {
   # my hparams
-  "lstm_hidden_size"  :2600,
+  "lstm_hidden_size"  :3072,
 
   # hparams_set override
   "optimizer"         :"Adafactor",

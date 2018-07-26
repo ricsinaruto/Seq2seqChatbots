@@ -28,6 +28,14 @@ def general_transformer_hparams():
 
   return hparams
 
+@registry.register_hparams
+def general_roulette_transformer_hparams():
+  return general_transformer_hparams()
+
+@registry.register_hparams
+def general_extracted_transformer_hparams():
+  return general_transformer_hparams()
+
 
 # Exactly replicates the base transformer model described in the paper.
 @registry.register_hparams

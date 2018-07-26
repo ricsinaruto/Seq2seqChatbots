@@ -30,6 +30,10 @@ def general_gradient_checkpointed_seq2seq_hparams():
   hparams.max_length = SEQ2SEQ_HPARAMS["max_sentence_len"]
   return hparams
 
+@registry.register_hparams
+def general_extracted_seq2seq_hparams():
+  return general_gradient_checkpointed_seq2seq_hparams()
+
 """ From this only the hidden_size is used for the lstm_seq2seq model. """
 def chatbot_lstm_hparams():
   hparams=chatbot_lstm_batch_256()
