@@ -5,18 +5,18 @@ for the current run. This file will also be copied to the provided directory.
 
 FLAGS={
   "t2t_usr_dir"       :"t2t_csaky", # tensor2tensor imports from this dir
-  "data_dir"          :"data_dir/DailyDialog/base_both_rnn_state_clustering",
-  "train_dir"         :"train_dir/DailyDialog/seq2seq_base-base_with_numbers",
+  "data_dir"          :"data_dir/DailyDialog/base_both_avg_embedding_clustering_train",
+  "train_dir"         :"train_dir/DailyDialog/trf_base-both_avg_embedding_clustering",
   "decode_dir"        :"decode_dir/DailyDialog/trf_20_dropout-base",
   "problem"           :"daily_dialog_chatbot",
-  "model"             :"gradient_checkpointed_seq2seq",
+  "model"             :"transformer",
   "hparams"           :"",  # this is empty if we use hparams defined in this file,
                             # otherwise you have to specify a registered hparams_set
   "profile_perform"   :"True",
 
   # training related flags
   "train_mode"        :"train_and_evaluate",
-  "memory_fraction"   :0.95,
+  "memory_fraction"   :0.8,
   "keep_checkpoints"  :3,       # how many checkpoints to keep at head
   "train_steps"       :1000000,
   "save_every_n_hour" :0,       # save checkpoints every n hours
@@ -27,26 +27,26 @@ FLAGS={
   # decoding related flags
   "output_file_name"  :"inference_at_11k.txt",  # save the inference outputs
   "input_file_name"   :"NCM_examples.txt",      # read inputs to be fed
-  "decode_mode"       :"file",   # can be: interactive, file, dataset
+  "decode_mode"       :"interactive",   # can be: interactive, file, dataset
   "beam_size"         :10,
   "return_beams"      :"True"           # if False return only the top beam, 
                                         # otherwise beam_size beams
 }
 
 DATA_FILTERING={
-  "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data/rnn_state_clustering",
-  "filter_problem"    :"rnn_state",  # can be: hash_jaccard, sentence_embedding, rnn_state
+  "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data/avg_embedding_clustering",
+  "filter_problem"    :"avg_embedding",  # can be: hash_jaccard, sentence_embedding, rnn_state
   "filter_type"       :"both",  # can be: target_based, source_based, both
-  "source_clusters"   :100,
-  "target_clusters"   :100,
+  "source_clusters"   :0,
+  "target_clusters"   :0,
   "max_length"        :0,    # max length when constructing bigram matrix, this needs to be set to 0 in order to normal filtering to run
   "min_cluster_size"  :2,     # clusters with fewer elements won't get filtered
   "num_permutations"  :128,   # only for hash based clustering
   "character_level"   :False, # only for hash based clustering
   "treshold"          :4,   # percentage treshold of entropy based filtering
   "ckpt_number"       :22001,  # only for sentence embedding clustering
-  "semantic_clustering_method"  :"kmeans",  # kmeans or mean_shift
-  "mean_shift_bw"               :12,  # mean shift bandwidth
+  "semantic_clustering_method"  :"mean_shift",  # kmeans or mean_shift
+  "mean_shift_bw"               :0.7,  # mean shift bandwidth
   "use_faiss"         :False
 }
 

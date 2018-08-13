@@ -10,14 +10,15 @@ from config import DATA_FILTERING, FLAGS
 
 from utils.utils import calculate_centroids_mean_shift
 from utils.utils import calculate_centroids_kmeans
-from utils.utils import simple_knn
-from utils.utils import calculate_nearest_index
+
+from sklearn.neighbors import BallTree
 
 
 class DataPoint(filter_problem.DataPoint):
   """
   A simple class that handles a string example.
   """
+
   def __init__(self, string, index, only_string=True, meaning_vector=None):
     """
     Params:
@@ -55,31 +56,35 @@ class SemanticClustering(filter_problem.FilterProblem):
     meaning_vectors = np.load(self.paths[data_tag]['npy'])
 
     if DATA_FILTERING["semantic_clustering_method"] == "mean_shift":
-      centroids, method = calculate_centroids_mean_shift(
+      centroids, method, = calculate_centroids_mean_shift(
         meaning_vectors)
 
     else:
       n_clusters = DATA_FILTERING['{}_clusters'.format(data_tag.lower())]
-      centroids, method = calculate_centroids_kmeans(
+      centroids, method, = calculate_centroids_kmeans(
         meaning_vectors, niter=20, n_clusters=n_clusters)
 
     data_point_vectors = np.array([data_point.meaning_vector
                           for data_point in self.data_points[data_tag]])
 
+    tree = BallTree(data_point_vectors)
+    _, centroids = tree.query(centroids, k=1)
+    tree = BallTree(centroids)
+    _, labels = tree.query(data_point_vectors, k=1)
+
     clusters = [self.ClusterClass(
-      self.data_points[data_tag][simple_knn(
-        centroid, data_point_vectors)])
-     for centroid in centroids]
+      self.data_points[data_tag][index])
+     for index in {labels[_index] for _index in range(len(labels))}]
 
     rev_tag = "Target" if data_tag == "Source" else "Source"
 
-    for data_point in self.data_points[data_tag]:
-      cluster_index = calculate_nearest_index(
-        data_point.meaning_vector.reshape(1, -1), method)
+    for data_point, cluster_index in zip(self.data_points[data_tag], labels):
       clusters[cluster_index].add_element(data_point)
+
       data_point.cluster_index = cluster_index
-      clusters[cluster_index]\
-        .targets.append(self.data_points[rev_tag][data_point.index])
+
+      clusters[cluster_index].targets.append(
+        self.data_points[rev_tag][data_point.index])
 
     self.clusters[data_tag] = clusters
 

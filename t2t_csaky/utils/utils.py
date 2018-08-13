@@ -1,6 +1,7 @@
 
 import os
 import sys
+import tensorflow as tf
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy
@@ -47,6 +48,7 @@ def split_sts_data(input_file_path, file, output_dir):
 
   return split_input_path_fst, split_output_path_snd
 
+
 def tokenize_sentence(line_as_list):
   """
   Tokenizes the sentence by separating punctuation marks at the end of
@@ -64,6 +66,7 @@ def tokenize_sentence(line_as_list):
       tokenized_line.append(word)
   return tokenized_line
 
+
 def calculate_correlation(fst_vector, snd_vector):
   """
   Calcualtes the cosine similarity of two vectors for STS benchmarking.
@@ -71,12 +74,14 @@ def calculate_correlation(fst_vector, snd_vector):
   return cosine_similarity(fst_vector.reshape(1, -1),
                            snd_vector.reshape(1, -1))
 
+
 def process_correlations(correlations):
   """
   Rescales the vectors into a 0-5 interval.
   """
   return (correlations - numpy.min(correlations)) / numpy.max(
     correlations) * 5
+
 
 def simple_knn(data_point, data_set):
   """
@@ -90,6 +95,7 @@ def simple_knn(data_point, data_set):
     Index of the nearest neighbour for the provided vector.
   """
   return numpy.argmin(numpy.sum((data_set - data_point) ** 2, 1))
+
 
 def calculate_centroids_kmeans(data_set, niter, n_clusters):
   """
@@ -116,6 +122,7 @@ def calculate_centroids_kmeans(data_set, niter, n_clusters):
 
   return centroids, kmeans
 
+
 def calculate_centroids_mean_shift(data_set):
   """
   Clusters the provided dataset, using mean shift clustering.
@@ -124,10 +131,12 @@ def calculate_centroids_mean_shift(data_set):
     :data_set: A set of vectors.
   """
   mean_shift = MeanShift(
-    bandwidth=DATA_FILTERING['mean_shift_bw']).fit(data_set)
+    bandwidth=DATA_FILTERING['mean_shift_bw'], n_jobs=10)
+  mean_shift.fit(data_set)
   centroids = mean_shift.cluster_centers_
 
   return centroids, mean_shift
+
 
 def calculate_nearest_index(data, method):
   """
@@ -140,6 +149,7 @@ def calculate_nearest_index(data, method):
     index = method.predict(data)[0]
 
   return index
+
 
 def read_sentences(file):
   """
