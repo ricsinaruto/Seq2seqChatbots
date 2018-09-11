@@ -25,6 +25,21 @@ if not _use_faiss:
 from sklearn.cluster import MeanShift
 
 
+# Temporary helper function to load a vocabulary.
+def load_vocab():
+  vocab = open(
+    os.path.join(FLAGS["data_dir"],
+                 "vocab.chatbot."+str(PROBLEM_HPARAMS["vocabulary_size"])))
+  vocab_dict={}
+  # read the vocab file
+  i=0
+  for word in vocab:
+    vocab_dict[word.strip("\n")]=i
+    i+=1
+  vocab.close()
+
+  return vocab_dict
+
 def split_sts_data(input_file_path, file, output_dir):
   """
   Convenience function that is used exclusively for processsing

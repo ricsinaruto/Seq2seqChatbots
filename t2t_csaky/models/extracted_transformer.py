@@ -2,33 +2,23 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-# general imports
-import copy
-import re
 import tensorflow as tf
+from tensorflow.python.util import nest
 
-# tensor2tensor imports
-from tensor2tensor.data_generators import problem
+# Tensor2tensor imports.
 from tensor2tensor.layers import common_attention
 from tensor2tensor.layers import common_layers
 from tensor2tensor.models import transformer
 from tensor2tensor.utils import t2t_model
 from tensor2tensor.utils import beam_search
 from tensor2tensor.utils import registry
-from tensor2tensor.utils import expert_utils as eu
-
-# tensorflow imports
-from tensorflow.python.eager import context
-from tensorflow.python.util import nest
-from tensorflow.python.layers import base
 
 
 @registry.register_model
 class ExtractedTransformer(transformer.Transformer):
   """
-  A child class of the Transformer, implementing roulette wheel selection.
+  A child class of the Transformer, for extracting the encoder state.
   """
-
   def __init__(self, *args, **kwargs):
     super(ExtractedTransformer, self).__init__(*args, **kwargs)
     self._name = "transformer"
@@ -37,13 +27,13 @@ class ExtractedTransformer(transformer.Transformer):
     """Construct EstimatorSpec for PREDICT mode."""
     decode_hparams = self._decode_hparams
     infer_out = self.infer(
-      features,
-      beam_size=decode_hparams.beam_size,
-      top_beams=(decode_hparams.beam_size
-                 if decode_hparams.return_beams else 1),
-      alpha=decode_hparams.alpha,
-      decode_length=decode_hparams.extra_length,
-      use_tpu=use_tpu)
+        features,
+        beam_size=decode_hparams.beam_size,
+        top_beams=(decode_hparams.beam_size
+                   if decode_hparams.return_beams else 1),
+        alpha=decode_hparams.alpha,
+        decode_length=decode_hparams.extra_length,
+        use_tpu=use_tpu)
 
     if isinstance(infer_out, dict):
       outputs = infer_out["outputs"]
@@ -59,9 +49,8 @@ class ExtractedTransformer(transformer.Transformer):
     if inputs is None:
       inputs = features["targets"]
 
-    ##### Modified #####
-    # Added encoder outputs to predicion dictionary
-
+    """ Modified """
+    # Added encoder outputs to predicion dictionary.
     predictions = {
         "outputs": outputs,
         "scores": scores,
@@ -120,16 +109,13 @@ def fast_decode(encoder_output,
       hparams.num_heads if hparams.get("attention_variables_3d") else 0)
 
   cache = {
-    "layer_%d" % layer: {
-      "k":
-        common_attention.split_heads(
-            tf.zeros([batch_size, 0, key_channels]), hparams.num_heads),
-      "v":
-        common_attention.split_heads(
-                  tf.zeros([batch_size, 0, value_channels]), hparams.num_heads),
-      "f":
-        tf.zeros([batch_size, 0, hparams.hidden_size]),
-    } for layer in range(num_layers)
+      "layer_%d" % layer: {
+          "k": common_attention.split_heads(
+              tf.zeros([batch_size, 0, key_channels]), hparams.num_heads),
+          "v": common_attention.split_heads(
+              tf.zeros([batch_size, 0, value_channels]), hparams.num_heads),
+          "f": tf.zeros([batch_size, 0, hparams.hidden_size]),
+      } for layer in range(num_layers)
   }
 
   if encoder_output is not None:
@@ -215,11 +201,10 @@ def fast_decode(encoder_output,
         ])
     scores = log_prob
 
-  ##### Modified #####
-  # Added encoder outputs to predicion dictionary
-
+  """ Modified """
+  # Added encoder outputs to predicion dictionary.
   return {
-    "outputs": decoded_ids,
-    "encoder_outputs": encoder_output,
-    "scores": scores
+      "outputs": decoded_ids,
+      "encoder_outputs": encoder_output,
+      "scores": scores
   }

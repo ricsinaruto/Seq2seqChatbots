@@ -10,10 +10,11 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 # my imports
 from config import *
 from data_filtering.hash_jaccard import HashJaccard
-from data_filtering.encoder_state_clustering import EncoderState
-from data_filtering.averaged_embedding_clustering import AverageWordEmbedding
+from data_filtering.encoder_state import EncoderState
+from data_filtering.average_word_embedding import AverageWordEmbedding
 from data_filtering.sentence_embedding import SentenceEmbedding
 from data_filtering.identity_clustering import IdentityClustering
+from data_filtering.identity_clustering import DistributionLoss
 
 
 
@@ -116,7 +117,8 @@ def data_filtering():
     "sentence_embedding": SentenceEmbedding,
     "rnn_state"         : EncoderState,
     "identity_clustering":IdentityClustering,
-    "avg_embedding"      :AverageWordEmbedding
+    "avg_embedding"      :AverageWordEmbedding,
+    "distribution_loss"   :DistributionLoss
   }
 
   problem=filter_problems[DATA_FILTERING["filter_problem"]]("full")

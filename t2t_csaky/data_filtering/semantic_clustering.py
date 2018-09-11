@@ -1,13 +1,9 @@
-
 import os
 import numpy as np
 
-import sys
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-
-import filter_problem
-from config import DATA_FILTERING, FLAGS
-
+# My imports.
+from data_filtering import filter_problem
+from config import DATA_FILTERING
 from utils.utils import calculate_centroids_mean_shift
 from utils.utils import calculate_centroids_kmeans
 from utils.utils import simple_knn
@@ -21,10 +17,10 @@ class DataPoint(filter_problem.DataPoint):
   def __init__(self, string, index, only_string=True, meaning_vector=None):
     """
     Params:
-      :string:  String to be stored
-      :index: Number of the line in the file from which this sentence was read
-      :only_string: Whether to only store string
-      :meaning_vector: Numpy embedding vector for the sentence
+      :string:  String to be stored.
+      :index: Number of the line in the file from which this sentence was read.
+      :only_string: Whether to only store string.
+      :meaning_vector: Numpy embedding vector for the sentence.
     """
     super().__init__(string, index, only_string)
     self.meaning_vector = meaning_vector
@@ -38,7 +34,6 @@ class SemanticClustering(filter_problem.FilterProblem):
   the semantic vector representation of the sentence, which will be used
   by the clustering logic.
   """
-
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.paths = {}
@@ -50,36 +45,36 @@ class SemanticClustering(filter_problem.FilterProblem):
   def clustering(self, data_tag):
     """
     Params:
-      :data_tag: Whether it's source or target data
+      :data_tag: Whether it's source or target data.
     """
     meaning_vectors = np.load(self.paths[data_tag]['npy'])
 
     if DATA_FILTERING["semantic_clustering_method"] == "mean_shift":
-      centroids, method = calculate_centroids_mean_shift(
-        meaning_vectors)
-
+      centroids, method = calculate_centroids_mean_shift(meaning_vectors)
     else:
       n_clusters = DATA_FILTERING['{}_clusters'.format(data_tag.lower())]
-      centroids, method = calculate_centroids_kmeans(
-        meaning_vectors, niter=20, n_clusters=n_clusters)
+      centroids, method = calculate_centroids_kmeans(meaning_vectors,
+                                                     niter=20,
+                                                     n_clusters=n_clusters)
 
-    data_point_vectors = np.array([data_point.meaning_vector
-                          for data_point in self.data_points[data_tag]])
+    data_point_vectors = np.array([data_point.meaning_vector for
+                                   data_point in self.data_points[data_tag]])
 
-    clusters = [self.ClusterClass(
-      self.data_points[data_tag][simple_knn(
-        centroid, data_point_vectors)])
-     for centroid in centroids]
+    clusters = [
+        self.ClusterClass(
+            self.data_points[data_tag][simple_knn(
+                centroid, data_point_vectors)])
+        for centroid in centroids]
 
     rev_tag = "Target" if data_tag == "Source" else "Source"
 
     for data_point in self.data_points[data_tag]:
       cluster_index = calculate_nearest_index(
-        data_point.meaning_vector.reshape(1, -1), method)
+          data_point.meaning_vector.reshape(1, -1), method)
       clusters[cluster_index].add_element(data_point)
       data_point.cluster_index = cluster_index
-      clusters[cluster_index]\
-        .targets.append(self.data_points[rev_tag][data_point.index])
+      clusters[cluster_index].targets.append(
+          self.data_points[rev_tag][data_point.index])
 
     self.clusters[data_tag] = clusters
 
@@ -107,8 +102,7 @@ class SemanticClustering(filter_problem.FilterProblem):
     Convenience method for creating paths to the input data directory.
 
     Params:
-      name: Name of the file
+      :name: Name of the file
       :ext: Extension of the file
     """
-    return os.path.join(
-      self.input_data_dir, "{}{}".format(name, ext))
+    return os.path.join(self.input_data_dir, "{}{}".format(name, ext))

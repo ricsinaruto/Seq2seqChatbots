@@ -1,7 +1,7 @@
-""" 
-This file is the main python file of the project importing all my
+"""
+This file is the main python file of the project importing all
   problem,
-  model, 
+  model,
   hparam registrations
 """
 
