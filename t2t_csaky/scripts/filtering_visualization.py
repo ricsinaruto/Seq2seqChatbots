@@ -180,6 +180,6 @@ def print_clusters(source_cl, target_cl,
                               reverse=True)):
     print('=====================================================')
     print('Medoid: {} Entropy: {}'.format(medoid, entropies[medoid]))
-    # print('Size: {}'.format(len(clusters[medoid])))
-    # print('Elements: \n{}\n\n'.format('\n'.join(clusters[medoid])))
+    print('Size: {}'.format(len(clusters[medoid])))
+    print('Elements: \n{}\n\n'.format('\n'.join(clusters[medoid])))
 

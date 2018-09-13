@@ -189,16 +189,16 @@ class SentenceEmbedding(FilterProblem):
 
   # start sentence distance matrix
   def start_sentence_matrix(self):
-  # create a sentence distance matrix
-  processes=[]
-  for i in range(16):
-    p=Process(target=self.create_sentence_distance_matrix, args=(data_tag,i))
-    processes.append(p)
-    p.start()
+    # create a sentence distance matrix
+    processes=[]
+    for i in range(16):
+      p=Process(target=self.create_sentence_distance_matrix, args=(data_tag,i))
+      processes.append(p)
+      p.start()
 
-  # stop processes
-  for process in processes:
-    process.join()
+    # stop processes
+    for process in processes:
+      process.join()
 
   # extract embedding weights
   def extract_weights(self):
