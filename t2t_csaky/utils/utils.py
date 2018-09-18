@@ -1,18 +1,18 @@
-
 import os
 import sys
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__))))
-
 import numpy
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.cluster import MeanShift
 
-from config import DATA_FILTERING, FLAGS
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__))))
+
+# My imports.
+from config import DATA_FILTERING, FLAGS, PROBLEM_HPARAMS
 
 _use_faiss = False
 
 if DATA_FILTERING['use_faiss']:
   try:
-
     import faiss
     _use_faiss = True
 
@@ -22,23 +22,21 @@ if DATA_FILTERING['use_faiss']:
 if not _use_faiss:
   from sklearn.cluster import KMeans
 
-from sklearn.cluster import MeanShift
-
 
 # Temporary helper function to load a vocabulary.
 def load_vocab():
-  vocab = open(
-    os.path.join(FLAGS["data_dir"],
-                 "vocab.chatbot."+str(PROBLEM_HPARAMS["vocabulary_size"])))
-  vocab_dict={}
-  # read the vocab file
-  i=0
+  vocab = open(os.path.join(FLAGS["data_dir"],
+               "vocab.chatbot." + str(PROBLEM_HPARAMS["vocabulary_size"])))
+  vocab_dict = {}
+  # Read the vocab file.
+  i = 0
   for word in vocab:
-    vocab_dict[word.strip("\n")]=i
-    i+=1
-  vocab.close()
+    vocab_dict[word.strip("\n")] = i
+    i += 1
 
+  vocab.close()
   return vocab_dict
+
 
 def split_sts_data(input_file_path, file, output_dir):
   """
@@ -62,6 +60,7 @@ def split_sts_data(input_file_path, file, output_dir):
 
   return split_input_path_fst, split_output_path_snd
 
+
 def tokenize_sentence(line_as_list):
   """
   Tokenizes the sentence by separating punctuation marks at the end of
@@ -79,6 +78,7 @@ def tokenize_sentence(line_as_list):
       tokenized_line.append(word)
   return tokenized_line
 
+
 def calculate_correlation(fst_vector, snd_vector):
   """
   Calcualtes the cosine similarity of two vectors for STS benchmarking.
@@ -86,12 +86,13 @@ def calculate_correlation(fst_vector, snd_vector):
   return cosine_similarity(fst_vector.reshape(1, -1),
                            snd_vector.reshape(1, -1))
 
+
 def process_correlations(correlations):
   """
   Rescales the vectors into a 0-5 interval.
   """
-  return (correlations - numpy.min(correlations)) / numpy.max(
-    correlations) * 5
+  return (correlations - numpy.min(correlations)) / numpy.max(correlations) * 5
+
 
 def simple_knn(data_point, data_set):
   """
@@ -105,6 +106,7 @@ def simple_knn(data_point, data_set):
     Index of the nearest neighbour for the provided vector.
   """
   return numpy.argmin(numpy.sum((data_set - data_point) ** 2, 1))
+
 
 def calculate_centroids_kmeans(data_set, niter, n_clusters):
   """
@@ -131,6 +133,7 @@ def calculate_centroids_kmeans(data_set, niter, n_clusters):
 
   return centroids, kmeans
 
+
 def calculate_centroids_mean_shift(data_set):
   """
   Clusters the provided dataset, using mean shift clustering.
@@ -139,10 +142,11 @@ def calculate_centroids_mean_shift(data_set):
     :data_set: A set of vectors.
   """
   mean_shift = MeanShift(
-    bandwidth=DATA_FILTERING['mean_shift_bw']).fit(data_set)
+      bandwidth=DATA_FILTERING['mean_shift_bw']).fit(data_set)
   centroids = mean_shift.cluster_centers_
 
   return centroids, mean_shift
+
 
 def calculate_nearest_index(data, method):
   """
@@ -150,11 +154,11 @@ def calculate_nearest_index(data, method):
   """
   if _use_faiss:
     _, index = method.index.search(data, 1)
-
   else:
     index = method.predict(data)[0]
 
   return index
+
 
 def read_sentences(file):
   """
@@ -164,6 +168,6 @@ def read_sentences(file):
   with open(file, 'r', encoding='utf-8') as f:
     for line in f:
       sentences.append(' '.join(
-        [word for word in line.strip().split() if word.strip() != ''
-         and word.strip() != '<unk>']))
+          [word for word in line.strip().split() if
+           word.strip() != '' and word.strip() != '<unk>']))
   return sentences

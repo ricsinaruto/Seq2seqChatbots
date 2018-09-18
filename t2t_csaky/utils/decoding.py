@@ -67,11 +67,11 @@ def decode_from_dataset(estimator,
     else:
       decode_filename = decode_to_file
 
-    output_filepath = decoding._decode_filename(
-      decode_filename, problem_name, decode_hp)
+    output_filepath = decoding._decode_filename(decode_filename,
+                                                problem_name,
+                                                decode_hp)
     parts = output_filepath.split(".")
     parts[-1] = "targets"
-    target_filepath = ".".join(parts)
     parts[-1] = "inputs"
     input_filepath = ".".join(parts)
     parts[-1] = "enc_state"
@@ -84,9 +84,8 @@ def decode_from_dataset(estimator,
   inputs_vocab_key = "inputs" if has_input else "targets"
   inputs_vocab = problem_hparams.vocabulary[inputs_vocab_key]
 
-  ##### Modified #####
-  # Encoder outputs list created
-
+  """ Modified """
+  # Encoder outputs list created.
   encoder_outputs = []
   decoded_inputs = []
 
@@ -95,23 +94,20 @@ def decode_from_dataset(estimator,
     inputs = prediction["inputs"]
     encoder_output = prediction["encoder_outputs"]
     decoded_input = inputs_vocab.decode(
-      decoding._save_until_eos(inputs, False))
+        decoding._save_until_eos(inputs, False))
 
     encoder_outputs.append(encoder_output)
     decoded_inputs.append(decoded_input)
 
-    ##### Modified #####
-    # Writing encoder_outputs list to file
-
+    """ Modified """
+    # Writing encoder_outputs list to file.
     if decode_to_file:
       for i, (e_output, d_input) in \
               enumerate(zip(encoder_outputs, decoded_inputs)):
-
         input_file.write("{}:\t{}".
                          format(i, str(d_input) + decode_hp.delimiter))
 
       np.save(encoder_state_file_path, np.array(encoder_outputs))
-
     if (0 <= decode_hp.num_samples <= num_predictions):
       break
 
@@ -150,7 +146,7 @@ def decode_from_file(estimator,
   tf.logging.info("Performing decoding from a file.")
   sorted_inputs, sorted_keys = decoding._get_sorted_inputs(filename,
                                                            decode_hp.shards,
-                                                  decode_hp.delimiter)
+                                                           decode_hp.delimiter)
   num_decode_batches = (len(sorted_inputs) - 1) // decode_hp.batch_size + 1
 
   def input_fn():
@@ -158,14 +154,13 @@ def decode_from_file(estimator,
                                                 sorted_inputs,
                                                 inputs_vocab,
                                                 decode_hp.batch_size,
-                                       decode_hp.max_input_size)
+                                                decode_hp.max_input_size)
     gen_fn = decoding.make_input_fn_from_generator(input_gen)
     example = gen_fn()
     return decoding._decode_input_tensor_to_features_dict(example, hparams)
 
-  ##### Modified #####
-  # Encoder outputs list created
-
+  """ Modified """
+  # Encoder outputs list created.
   decoded_inputs = []
   encoder_outputs = []
   result_iter = estimator.predict(input_fn, checkpoint_path=checkpoint_path)
@@ -186,7 +181,7 @@ def decode_from_file(estimator,
 
   for elapsed_time, result in timer(result_iter):
     decoded_input = inputs_vocab.decode(
-      decoding._save_until_eos(result["inputs"], False))
+        decoding._save_until_eos(result["inputs"], False))
     decoded_inputs.append(decoded_input)
     encoder_outputs.append(np.array(result["encoder_outputs"]))
 
@@ -217,16 +212,15 @@ def decode_from_file(estimator,
   print("Writing encoder outputs into %s" % encode_filename)
   outfile = tf.gfile.Open(decode_filename, "w")
 
-  ##### Modified #####
-  # Writing encoder_outputs list to file
-
+  """ Modified """
+  # Writing encoder_outputs list to file.
   if decode_to_file:
     for i, (e_output, d_input) in \
             enumerate(zip(encoder_outputs, decoded_inputs)):
       outfile.write("{}".format(' '.join(
-        [word for word in str(d_input).strip().split() if word.strip() != ''
-         and word.strip() != '<unk>'])
-                                + decode_hp.delimiter))
+          [word for word in str(d_input).strip().split() if
+           word.strip() != '' and word.strip() != '<unk>']) +
+          decode_hp.delimiter))
 
     np.save(encode_filename, np.array(encoder_outputs))
 

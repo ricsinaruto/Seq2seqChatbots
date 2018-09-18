@@ -2,11 +2,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-# tensor2tensor imports
 from tensor2tensor.utils import yellowfin
 from tensor2tensor.utils import optimize as t2t_opt
-
-import numpy as np
 
 import tensorflow as tf
 from tensorflow.python.framework import dtypes
@@ -15,7 +12,6 @@ from tensorflow.python.util import nest
 from tensorflow.python.ops import variables
 from tensorflow.python.ops import control_flow_ops
 from tensorflow.python.training import optimizer
-
 
 
 def optimize(loss, learning_rate, hparams):

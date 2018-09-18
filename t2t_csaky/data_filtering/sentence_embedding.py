@@ -266,12 +266,9 @@ class SentenceEmbedding(FilterProblem):
         os.path.join(self.weights_folder, "distance_matrix.txt"))
 
     i = -1
-    vocab_list = []
     # Load the distances into a dictionary.
     for line in matrix_file:
-      if i == -1:
-        vocab_list = line.split(";")[1:-1]
-      else:
+      if not i == -1:
         distances = line.split(";")[:-1]
         for j, dist in enumerate(distances[1:]):
           self.dist_matrix[i, j] = float(dist)

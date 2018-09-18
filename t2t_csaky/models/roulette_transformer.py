@@ -1,14 +1,9 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
-# general imports
 import copy
-import re
 import tensorflow as tf
 
-# tensor2tensor imports
-from tensor2tensor.data_generators import problem
 from tensor2tensor.layers import common_attention
 from tensor2tensor.layers import common_layers
 from tensor2tensor.models import transformer
@@ -17,10 +12,11 @@ from tensor2tensor.utils import beam_search
 from tensor2tensor.utils import registry
 from tensor2tensor.utils import expert_utils as eu
 
-# tensorflow imports
-from tensorflow.python.eager import context
 from tensorflow.python.util import nest
 from tensorflow.python.layers import base
+
+
+""" UNSUPPORTED, NEEDS REFACTOR """
 
 
 @registry.register_model
@@ -28,8 +24,7 @@ class RouletteTransformer(transformer.Transformer):
   """
   A child class of the Transformer, implementing roulette wheel selection.
   """
-  
-  REGISTERED_NAME="transformer"
+  REGISTERED_NAME = "transformer"
 
   def __init__(self,
                hparams,
@@ -38,10 +33,9 @@ class RouletteTransformer(transformer.Transformer):
                problem_idx=0,
                data_parallelism=None,
                decode_hparams=None):
-    default_name = registry.default_name(type(self))
     name = "transformer"
     base.Layer.__init__(self,
-                        trainable = mode==tf.estimator.ModeKeys.TRAIN,
+                        trainable=mode == tf.estimator.ModeKeys.TRAIN,
                         name=name)
     if data_parallelism is None:
       data_parallelism = eu.Parallelism([""])
@@ -166,17 +160,17 @@ class RouletteTransformer(transformer.Transformer):
 
       # TODO(llion): Explain! Is this even needed?
       targets = tf.cond(
-        tf.equal(i, 0), lambda: tf.zeros_like(targets), lambda: targets)
+          tf.equal(i, 0), lambda: tf.zeros_like(targets), lambda: targets)
 
       if hparams.pos == "timing":
         targets += timing_signal[:, i:i + 1]
       return targets
 
     decoder_self_attention_bias = (
-      common_attention.attention_bias_lower_triangle(decode_length))
+        common_attention.attention_bias_lower_triangle(decode_length))
     if hparams.proximity_bias:
       decoder_self_attention_bias += common_attention.attention_bias_proximal(
-        decode_length)
+          decode_length)
 
     def symbols_to_logits_fn(ids, i, cache):
       """Go from ids to logits for next symbol."""

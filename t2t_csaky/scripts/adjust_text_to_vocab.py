@@ -1,4 +1,3 @@
-
 import argparse
 import os
 
@@ -16,17 +15,16 @@ def main():
   parser.add_argument('-si', '--sourceinput', type=str)
   parser.add_argument('-so', '--sourceoutput', type=str)
 
-  data_dir = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    '..', 'data_dir', 'base_both_rnn_state_clustering')
+  data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                          '..',
+                          'data_dir',
+                          'base_both_rnn_state_clustering')
 
-  args = parser.parse_args([
-        '-v', data_dir + '/' + 'vocab.chatbot.16384',
-        '-si', data_dir + '/' + 'fullSourceOriginal.txt',
-        '-so', data_dir + '/' + 'fullSource.txt'
-        '-ti', data_dir + '/' + 'fullTargetOriginal.txt'
-        '-to', data_dir + '/' + 'fullTarget.txt'
-  ])
+  args = parser.parse_args(['-v', data_dir + '/' + 'vocab.chatbot.16384',
+                            '-si', data_dir + '/' + 'fullSourceOriginal.txt',
+                            '-so', data_dir + '/' + 'fullSource.txt'
+                            '-ti', data_dir + '/' + 'fullTargetOriginal.txt'
+                            '-to', data_dir + '/' + 'fullTarget.txt'])
 
   vocab = set()
   with open(args.vocab, 'r', encoding='utf-8') as v:
