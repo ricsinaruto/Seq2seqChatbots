@@ -35,6 +35,7 @@ class EncoderState(SemanticClustering):
     """
     project_path = os.path.join(
       os.path.dirname(os.path.abspath(__file__)), '..', '..')
+
     self.paths[data_tag] = {
       'txt': os.path.join(
         project_path, self._data_path('{}.txt'.format(data_tag))),

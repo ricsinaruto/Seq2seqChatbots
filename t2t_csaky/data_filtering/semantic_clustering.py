@@ -4,14 +4,17 @@ import numpy as np
 
 import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__))))
 
 import filter_problem
 from config import DATA_FILTERING, FLAGS
 
+
 from utils.utils import calculate_centroids_mean_shift
 from utils.utils import calculate_centroids_kmeans
-from utils.utils import simple_knn
-from utils.utils import calculate_nearest_index
+
+
+from sklearn.neighbors import BallTree
 
 
 class DataPoint(filter_problem.DataPoint):
@@ -55,31 +58,46 @@ class SemanticClustering(filter_problem.FilterProblem):
     meaning_vectors = np.load(self.paths[data_tag]['npy'])
 
     if DATA_FILTERING["semantic_clustering_method"] == "mean_shift":
-      centroids, method = calculate_centroids_mean_shift(
+      centroids, method, = calculate_centroids_mean_shift(
         meaning_vectors)
 
     else:
       n_clusters = DATA_FILTERING['{}_clusters'.format(data_tag.lower())]
-      centroids, method = calculate_centroids_kmeans(
+      centroids, method, = calculate_centroids_kmeans(
         meaning_vectors, niter=20, n_clusters=n_clusters)
 
-    data_point_vectors = np.array([data_point.meaning_vector
-                          for data_point in self.data_points[data_tag]])
+    data_point_vectors = np.array(
+      [data_point.meaning_vector for data_point
+       in self.data_points[data_tag]]).reshape(
+      -1, self.data_points[data_tag][0].meaning_vector.shape[-1])
 
-    clusters = [self.ClusterClass(
-      self.data_points[data_tag][simple_knn(
-        centroid, data_point_vectors)])
-     for centroid in centroids]
+    tree = BallTree(data_point_vectors)
+    _, centroids = tree.query(centroids, k=1)
+    tree = BallTree(data_point_vectors[np.array(centroids).reshape(-1)])
+    _, labels = tree.query(data_point_vectors, k=1)
+
+    labels = labels.reshape(-1)
+
+    clusters = {index: self.ClusterClass(
+      self.data_points[data_tag][index])
+     for index in {labels[_index] for _index in range(len(labels))}}
+
+    clusters = [(clusters[cluster_index], cluster_index) for cluster_index in
+                sorted(list(clusters))]
+
+    label_lookup = {c[1]: i for i, c in enumerate(clusters)}
+    clusters = [c[0] for c in clusters]
 
     rev_tag = "Target" if data_tag == "Source" else "Source"
 
-    for data_point in self.data_points[data_tag]:
-      cluster_index = calculate_nearest_index(
-        data_point.meaning_vector.reshape(1, -1), method)
+    for data_point, cluster_index in zip(self.data_points[data_tag], labels):
+      cluster_index = label_lookup[cluster_index]
       clusters[cluster_index].add_element(data_point)
+
       data_point.cluster_index = cluster_index
-      clusters[cluster_index]\
-        .targets.append(self.data_points[rev_tag][data_point.index])
+
+      clusters[cluster_index].targets.append(
+        self.data_points[rev_tag][data_point.index])
 
     self.clusters[data_tag] = clusters
 
@@ -111,4 +129,11 @@ class SemanticClustering(filter_problem.FilterProblem):
       :ext: Extension of the file
     """
     return os.path.join(
-      self.input_data_dir, "{}{}".format(name, ext))
+      self.input_data_dir, self.tag + "{}{}".format(name, ext))
+
+  def _input_data_path(self, name, ext=''):
+    """
+    Convenience method for reaching the path of the input data.
+    """
+    return os.path.join(
+      self.input_data_dir, '{}{}'.format(name, ext))
