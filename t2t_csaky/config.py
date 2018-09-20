@@ -36,18 +36,20 @@ FLAGS={
 DATA_FILTERING={
   "data_dir"          :"data_dir/DailyDialog/base_with_numbers/filtered_data/avg_embedding_clustering",
   "filter_problem"    :"avg_embedding",  # can be: hash_jaccard, sentence_embedding, rnn_state
-  "filter_type"       :"both",  # can be: target_based, source_based, both
+  "filter_type"       :"target_based",  # can be: target_based, source_based, both
   "source_clusters"   :0,
   "target_clusters"   :0,
   "max_length"        :0,    # max length when constructing bigram matrix, this needs to be set to 0 in order to normal filtering to run
   "min_cluster_size"  :2,     # clusters with fewer elements won't get filtered
   "num_permutations"  :128,   # only for hash based clustering
   "character_level"   :False, # only for hash based clustering
-  "treshold"          :4,   # percentage treshold of entropy based filtering
+  "treshold"          :3,   # percentage treshold of entropy based filtering
   "ckpt_number"       :22001,  # only for sentence embedding clustering
   "semantic_clustering_method"  :"mean_shift",  # kmeans or mean_shift
   "mean_shift_bw"               :0.7,  # mean shift bandwidth
-  "use_faiss"         :False
+  "use_faiss"         :False,
+  "max_avg_length"    :15,
+  "max_medoid_length" :10
 }
 
 PROBLEM_HPARAMS={

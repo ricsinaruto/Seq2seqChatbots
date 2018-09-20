@@ -169,12 +169,17 @@ def print_clusters(source_cl, target_cl,
       [medoid, entropy, size] = line.split(';')
       entropies[medoid] = float(entropy)
 
+  num_removed = 0
+  num_all = 0
   for medoid in cluster_element_lengths:
+    num_all += len(clusters[medoid])
     if ((cluster_element_lengths[medoid] /
       len(clusters[medoid]) if len(clusters[medoid]) > 0 else 1) > 20 or
-            len(medoid.split()) > 20 or entropies[medoid] < 3.5):
+            len(medoid.split()) > 15 or entropies[medoid] < 2.8):
+      num_removed += len(clusters[medoid])
       del clusters[medoid]
 
+  print(num_removed / num_all)
   for _, medoid in zip(range(top_k),
                        sorted(list(clusters), key=lambda x: entropies[x],
                               reverse=True)):

@@ -66,6 +66,8 @@ class FilterProblem:
     self.dist_matrix=np.ndarray(shape=(PROBLEM_HPARAMS["vocabulary_size"],
                                        PROBLEM_HPARAMS["vocabulary_size"]))
     self.treshold=DATA_FILTERING["treshold"]
+    self.max_avg_length=DATA_FILTERING["max_avg_length"]
+    self.max_medoid_length=DATA_FILTERING["max_medoid_length"]
     self.min_cluster_size=DATA_FILTERING["min_cluster_size"]
     self.clusters= {
       "Source" : [],
@@ -560,8 +562,9 @@ class FilterProblem:
           (len(cluster.elements) if len(cluster.elements) > 0 else 1)
 
         # filter
-        if (cluster.entropy>self.treshold and avg_element_length < 10 and
-            len(cluster.medoid.string.split()) < 10):
+        if (cluster.entropy>self.treshold and
+            avg_element_length < self.max_avg_length and
+            len(cluster.medoid.string.split()) < self.max_medoid_length):
           indices.append(num_cl)
           print('Medoid: "'+cluster.medoid.string+'" got filtered.')
 
