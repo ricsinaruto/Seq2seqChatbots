@@ -24,11 +24,8 @@ def main():
 
   with open(args.input, 'r') as fin, open(out_file, 'w') as fou:
     for line in fin:
-      ou_line = []
-      for word in line.strip().split():
-        if word not in tokens:
-          ou_line.append(word)
-      fou.write(' '.join(ou_line) + '\n')
+      fou.write(' '.join([word for word in line.strip().split()
+                          if word not in tokens]) + '\n')
 
 
 if __name__ == '__main__':

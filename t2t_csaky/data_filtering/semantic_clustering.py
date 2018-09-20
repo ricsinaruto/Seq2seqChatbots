@@ -3,26 +3,17 @@ import os
 import numpy as np
 
 import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__))))
 
 import filter_problem
 from config import DATA_FILTERING, FLAGS
 
-_use_faiss = False
 
-if DATA_FILTERING['use_faiss']:
-  try:
+from utils.utils import calculate_centroids_mean_shift
+from utils.utils import calculate_centroids_kmeans
 
-    import faiss
-    _use_faiss = True
 
-  except ImportError:
-    print('Failed to import faiss, using SKLearn clustering instead.')
-
-if not _use_faiss:
-  from sklearn.cluster import MiniBatchKMeans
-
-from sklearn.cluster import MeanShift
 from sklearn.neighbors import BallTree
 
 
@@ -55,87 +46,6 @@ class SemanticClustering(filter_problem.FilterProblem):
     super().__init__(*args, **kwargs)
     self.paths = {}
 
-  @staticmethod
-  def simple_knn(data_point, data_set):
-    """
-    Finds the index of the nearest vector to the provided vector.
-
-    Params:
-      :data_point: A single data point, to find the nearest index for.
-      :data_set: A set of data points.
-
-    Returns:
-      Index of the nearest neighbour for the provided vector.
-    """
-    return np.argmin(np.sum((data_set - data_point) ** 2, 1))
-
-  @staticmethod
-  def calculate_centroids_kmeans(data_set, niter, n_clusters):
-    """
-    Clusters the provided data set with kmeans with either the faiss or
-    the sklearn implementation.
-
-    Params:
-      :data_set: A set of vectors.
-      :niter: Number of max iterations.
-    """
-    if _use_faiss:
-      verbose = True
-      d = data_set.shape[1]
-      kmeans = faiss.Kmeans(d, n_clusters,
-                            niter, verbose)
-      kmeans.train(data_set)
-      centroids = kmeans.centroids
-
-    else:
-      kmeans = MiniBatchKMeans(n_clusters=n_clusters,
-                      random_state=0, batch_size=10000).fit(data_set)
-      print('Iterations: {}'.format(kmeans.n_iter_))
-
-      centroids = kmeans.cluster_centers_
-
-    return centroids, kmeans
-
-  @staticmethod
-  def calculate_centroids_mean_shift(data_set):
-    """
-    Clusters the provided dataset, using mean shift clustering.
-
-    Params:
-      :data_set: A set of vectors.
-    """
-    mean_shift = MeanShift(
-      bandwidth=DATA_FILTERING['mean_shift_bw'], n_jobs=10).fit(data_set)
-    centroids = mean_shift.cluster_centers_
-
-    return centroids, mean_shift
-
-  @staticmethod
-  def calculate_nearest_index(data, method):
-    """
-    Calculates the cluster centroid for the provided vector.
-    """
-    if _use_faiss:
-      _, index = method.index.search(data, 1)
-
-    else:
-      index = method.predict(data)[0]
-
-    return index
-
-  @staticmethod
-  def read_sentences(file):
-    """
-    Convenience method for reading the sentences of a file.
-    """
-    sentences = []
-    with open(file, 'r', encoding='utf-8') as f:
-      for line in f:
-        sentences.append(' '.join(
-          [word for word in line.strip().split() if word.strip() != ''
-           and word.strip() != '<unk>']))
-    return sentences
-
   @property
   def DataPointClass(self):
     return DataPoint
@@ -148,12 +58,12 @@ class SemanticClustering(filter_problem.FilterProblem):
     meaning_vectors = np.load(self.paths[data_tag]['npy'])
 
     if DATA_FILTERING["semantic_clustering_method"] == "mean_shift":
-      centroids, method, = self.calculate_centroids_mean_shift(
+      centroids, method, = calculate_centroids_mean_shift(
         meaning_vectors)
 
     else:
       n_clusters = DATA_FILTERING['{}_clusters'.format(data_tag.lower())]
-      centroids, method, = self.calculate_centroids_kmeans(
+      centroids, method, = calculate_centroids_kmeans(
         meaning_vectors, niter=20, n_clusters=n_clusters)
 
     data_point_vectors = np.array(
