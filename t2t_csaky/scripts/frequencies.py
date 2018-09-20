@@ -8,7 +8,7 @@ def main():
   parser.add_argument('-o', '--output', type=str,
                       help='name of the output file', default='top_tokens.txt')
   parser.add_argument('-i', '--input', type=str, help='name of the input file')
- 
+
   args = parser.parse_args()
   tokens = {}
   with open(args.input, 'r') as fin:
@@ -16,7 +16,8 @@ def main():
       for token in line.strip().split():
         tokens[token] = tokens.get(token, 0) + 1
 
-  freqs = sorted(tokens.items(), key=lambda x: x[1], reverse=True)[:args.ntokens]
+  freqs = sorted(
+      tokens.items(), key=lambda x: x[1], reverse=True)[:args.ntokens]
   with open(args.output, 'w') as fou:
     for freq in freqs:
       fou.write(freq[0] + '\n')
@@ -26,4 +27,3 @@ def main():
 
 if __name__ == '__main__':
   main()
-

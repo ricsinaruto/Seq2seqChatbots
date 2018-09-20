@@ -1,20 +1,16 @@
-
 import os
 import numpy as np
-
 import sys
+from sklearn.neighbors import BallTree
+
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__))))
 
+# My imports.
 import filter_problem
 from config import DATA_FILTERING, FLAGS
-
-
 from utils.utils import calculate_centroids_mean_shift
 from utils.utils import calculate_centroids_kmeans
-
-
-from sklearn.neighbors import BallTree
 
 
 class DataPoint(filter_problem.DataPoint):
@@ -24,10 +20,10 @@ class DataPoint(filter_problem.DataPoint):
   def __init__(self, string, index, only_string=True, meaning_vector=None):
     """
     Params:
-      :string:  String to be stored
-      :index: Number of the line in the file from which this sentence was read
-      :only_string: Whether to only store string
-      :meaning_vector: Numpy embedding vector for the sentence
+      :string:  String to be stored.
+      :index: Number of the line in the file from which this sentence was read.
+      :only_string: Whether to only store string.
+      :meaning_vector: Numpy embedding vector for the sentence.
     """
     super().__init__(string, index, only_string)
     self.meaning_vector = meaning_vector
@@ -41,7 +37,6 @@ class SemanticClustering(filter_problem.FilterProblem):
   the semantic vector representation of the sentence, which will be used
   by the clustering logic.
   """
-
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.paths = {}
@@ -53,23 +48,22 @@ class SemanticClustering(filter_problem.FilterProblem):
   def clustering(self, data_tag):
     """
     Params:
-      :data_tag: Whether it's source or target data
+      :data_tag: Whether it's source or target data.
     """
     meaning_vectors = np.load(self.paths[data_tag]['npy'])
 
     if DATA_FILTERING["semantic_clustering_method"] == "mean_shift":
-      centroids, method, = calculate_centroids_mean_shift(
-        meaning_vectors)
+      centroids, method, = calculate_centroids_mean_shift(meaning_vectors)
 
     else:
       n_clusters = DATA_FILTERING['{}_clusters'.format(data_tag.lower())]
-      centroids, method, = calculate_centroids_kmeans(
-        meaning_vectors, niter=20, n_clusters=n_clusters)
-
+      centroids, method, = calculate_centroids_kmeans(meaning_vectors,
+                                                      niter=20,
+                                                      n_clusters=n_clusters)
     data_point_vectors = np.array(
-      [data_point.meaning_vector for data_point
-       in self.data_points[data_tag]]).reshape(
-      -1, self.data_points[data_tag][0].meaning_vector.shape[-1])
+        [data_point.meaning_vector for data_point in
+         self.data_points[data_tag]]).reshape(
+        -1, self.data_points[data_tag][0].meaning_vector.shape[-1])
 
     tree = BallTree(data_point_vectors)
     _, centroids = tree.query(centroids, k=1)
@@ -78,9 +72,8 @@ class SemanticClustering(filter_problem.FilterProblem):
 
     labels = labels.reshape(-1)
 
-    clusters = {index: self.ClusterClass(
-      self.data_points[data_tag][index])
-     for index in {labels[_index] for _index in range(len(labels))}}
+    clusters = {index: self.ClusterClass(self.data_points[data_tag][index]) for
+                index in {labels[_index] for _index in range(len(labels))}}
 
     clusters = [(clusters[cluster_index], cluster_index) for cluster_index in
                 sorted(list(clusters))]
@@ -95,9 +88,8 @@ class SemanticClustering(filter_problem.FilterProblem):
       clusters[cluster_index].add_element(data_point)
 
       data_point.cluster_index = cluster_index
-
       clusters[cluster_index].targets.append(
-        self.data_points[rev_tag][data_point.index])
+          self.data_points[rev_tag][data_point.index])
 
     self.clusters[data_tag] = clusters
 
@@ -125,15 +117,13 @@ class SemanticClustering(filter_problem.FilterProblem):
     Convenience method for creating paths to the input data directory.
 
     Params:
-      name: Name of the file
-      :ext: Extension of the file
+      :name: Name of the file.
+      :ext: Extension of the file.
     """
-    return os.path.join(
-      self.input_data_dir, self.tag + "{}{}".format(name, ext))
+    return os.path.join(self.input_data_dir, "{}{}".format(name, ext))
 
   def _input_data_path(self, name, ext=''):
     """
     Convenience method for reaching the path of the input data.
     """
-    return os.path.join(
-      self.input_data_dir, '{}{}'.format(name, ext))
+    return os.path.join(self.input_data_dir, '{}{}'.format(name, ext))

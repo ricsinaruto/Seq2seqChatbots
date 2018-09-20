@@ -1,49 +1,53 @@
 import os
 import matplotlib.pyplot as plt
 import numpy as np
-import random
 import operator
-import math
-from collections import Counter
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+
+# My imports.
+from config import DATA_FILTERING
+
 """
 This file contains functions for the same name jupyter notebook.
 """
 
 
-# visualization function for the clustering data
+# Visualization function for the clustering data.
 def _visualize(file, tag, fig_list):
   """
   Params:
-    :file: clustering file, from which to read data
-    :tag: can be "Source" or "Target"
-    :fig_list: a list containing the plots, which we will draw
+    :file: Clustering file, from which to read data.
+    :tag: Can be "Source" or "Target".
+    :fig_list: A list containing the plots, which we will draw.
   """
-  sentence_entropy=[]
-  entropies_all=[]
-  entropies=[]
-  sentence_cl_size=[]
-  cl_sizes_all=[]
-  cl_sizes=[]
-  lengths=[]
-  
+  sentence_entropy = []
+  entropies_all = []
+  entropies = []
+  sentence_cl_size = []
+  cl_sizes_all = []
+  cl_sizes = []
+  lengths = []
+
   for line in file:
-    [sentence, entropy, cl_size]=line.split(";")
-    entropy=float(entropy)
-    cl_size=int(cl_size)
-    # use relative entropy
+    [sentence, entropy, cl_size] = line.split(";")
+    entropy = float(entropy)
+    cl_size = int(cl_size)
+    # Use relative entropy-
     #if entropy>0:
     #  entropy=entropy/math.log(cl_size, 2)
 
-    # populate the lists
+    # Populate the lists.
     sentence_entropy.append([sentence, entropy])
-    entropies_all.extend([entropy]*cl_size)
+    entropies_all.extend([entropy] * cl_size)
     entropies.append(entropy)
     sentence_cl_size.append([sentence, cl_size])
-    cl_sizes_all.extend([cl_size]*cl_size)
+    cl_sizes_all.extend([cl_size] * cl_size)
     cl_sizes.append(cl_size)
     lengths.append(len(sentence.split()))
-  
-  # draw the plots, and set properties
+
+  # Draw the plots, and set properties.
   fig_list[0].plot(sorted(entropies_all))
   fig_list[0].set_xlabel("Sentence no.")
   fig_list[0].set_ylabel("Entropy")
@@ -62,54 +66,58 @@ def _visualize(file, tag, fig_list):
   fig_list[3].scatter(np.array(lengths), np.array(entropies))
   fig_list[3].set_xlabel("No. of words in utterance")
   fig_list[3].set_ylabel("Entropy")
-  fig_list[3].axis([0, 50, 1.1, 8])
-  
-  # sort the sentence lists
-  sent_ent=sorted(sentence_entropy, key=operator.itemgetter(1), reverse=True)
-  sent_cl=sorted(sentence_cl_size, key=operator.itemgetter(1), reverse=True)
+  fig_list[3].axis([0, 20, 1.1, 7])
+
+  # Sort the sentence lists.
+  sent_ent = sorted(sentence_entropy, key=operator.itemgetter(1), reverse=True)
+  sent_cl = sorted(sentence_cl_size, key=operator.itemgetter(1), reverse=True)
   return sent_ent, sent_cl
 
-# main function to visualize clustering/filtering results
+
+# Main function to visualize clustering/filtering results.
 def data_visualization(source_cl,
                        target_cl,
                        dataset="DailyDialog",
                        cl_type="identity_clustering"):
   """
   Params:
-    :source_cl: number of source clusters
-    :target_cl: number of target clusters
-    :dataset: name of the dataset
-    :cl_type: type of the clustering method
+    :source_cl: Number of source clusters.
+    :target_cl: Number of target clusters.
+    :dataset: Name of the dataset.
+    :cl_type: Type of the clustering method.
   """
-  # open the clustering files
-  folder_name=cl_type+"/"+str(source_cl)+"-"+str(target_cl)+"_filtering/"
-  source_cl_entropies=open(
-    os.path.join("../../data_dir/"+dataset+"/base_with_numbers/filtered_data/"
-                  +folder_name+"fullSource_cluster_entropies.txt"))
-  target_cl_entropies=open(
-    os.path.join("../../data_dir/"+dataset+"/base_with_numbers/filtered_data/"
-                  +folder_name+"fullTarget_cluster_entropies.txt"))
-
-  # set up matplotlib
+  # Open the clustering files.
+  folder_name = (cl_type + "/" + str(source_cl) +
+                 "-" + str(target_cl) + "_filtering/")
+  source_cl_entropies = open(os.path.join("../../data_dir/" + dataset +
+                                          "/base_with_numbers/filtered_data/" +
+                                          folder_name +
+                                          "fullSource_cluster_entropies.txt"))
+  target_cl_entropies = open(os.path.join("../../data_dir/" + dataset +
+                                          "/base_with_numbers/filtered_data/" +
+                                          folder_name +
+                                          "fullTarget_cluster_entropies.txt"))
+  # Set up matplotlib.
   plt.close('all')
-  fig, ((ax1,ax2), (ax3,ax4), (ax5,ax6), (ax7,ax8))=plt.subplots(nrows=4,
-                                                                 ncols=2)
+  fig, ((ax1, ax2), (ax3, ax4), (ax5, ax6), (ax7, ax8)) = plt.subplots(nrows=4,
+                                                                       ncols=2)
   fig.set_size_inches(13, 20)
 
-  # call the actual visualization function for source and target data
-  source_entropies, source_cl_sizes=_visualize(source_cl_entropies,
-                                               "Source",
-                                               [ax1, ax3, ax5, ax7])
-  target_entropies, target_cl_sizes=_visualize(target_cl_entropies,
-                                               "Target",
-                                               [ax2, ax4, ax6, ax8])
+  # Call the actual visualization function for source and target data.
+  source_entropies, source_cl_sizes = _visualize(source_cl_entropies,
+                                                 "Source",
+                                                 [ax1, ax3, ax5, ax7])
+  target_entropies, target_cl_sizes = _visualize(target_cl_entropies,
+                                                 "Target",
+                                                 [ax2, ax4, ax6, ax8])
   plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
-  
+
   source_cl_entropies.close()
   target_cl_entropies.close()
   return source_entropies, target_entropies, source_cl_sizes, target_cl_sizes
 
-# reads the medoid and the corresponding sentences in the cluster
+
+# Reads the medoid and the corresponding sentences in the cluster.
 # TODO: refactor
 def read_clusters():
   medoid_dict={}
@@ -126,20 +134,22 @@ def read_clusters():
       medoid_dict[medoid]=[source]
 
 
-def print_clusters(source_cl, target_cl,
+def print_clusters(source_cl,
+                   target_cl,
                    cl_type,
-                   dataset='DailyDialog', tag='Source', top_k=12800):
+                   dataset='DailyDialog',
+                   tag='Source',
+                   top_k=12800):
 
-  folder_name = cl_type + "/" + str(source_cl) + "-" + str(
-    target_cl) + "_filtering/"
+  folder_name = (cl_type + "/" + str(source_cl) + "-" +
+                 str(target_cl) + "_filtering/")
 
   clusters = {}
   cluster_element_lengths = {}
 
-  with open(
-    os.path.join(
-      "../../data_dir/" + dataset + "/base_with_numbers/filtered_data/"
-      + folder_name + "full{}_cluster_elements.txt".format(tag)), 'r') as file:
+  with open(os.path.join(
+      "../../data_dir/" + dataset + "/base_with_numbers/filtered_data/" +
+          folder_name + "full{}_cluster_elements.txt".format(tag))) as file:
 
     for line in file:
       [source, source_cl_target, target_cl] = line.split('<=====>')
@@ -148,21 +158,19 @@ def print_clusters(source_cl, target_cl,
         source_cl = source.split(';')[1]
         source = source_cl_target.split('=')[0]
         cluster_element_lengths[source_cl] = \
-          cluster_element_lengths.get(source_cl, 0) + len(source.split())
+            cluster_element_lengths.get(source_cl, 0) + len(source.split())
         clusters[source_cl] = [*clusters.get(source_cl, []), source]
 
       else:
         target_cl = source.split(';')[1]
         target = source_cl_target.split('=')[0]
         cluster_element_lengths[target_cl] = \
-          cluster_element_lengths.get(target_cl, 0) + len(target.split())
+            cluster_element_lengths.get(target_cl, 0) + len(target.split())
         clusters[target_cl] = [*clusters.get(target_cl, []), target]
 
-  with open(
-    os.path.join(
-      "../../data_dir/" + dataset + "/base_with_numbers/filtered_data/"
-      + folder_name +
-              "full{}_cluster_entropies.txt".format(tag)), 'r') as file:
+  with open(os.path.join(
+      "../../data_dir/" + dataset + "/base_with_numbers/filtered_data/" +
+          folder_name + "full{}_cluster_entropies.txt".format(tag))) as file:
 
     entropies = {}
     for line in file:
@@ -173,9 +181,10 @@ def print_clusters(source_cl, target_cl,
   num_all = 0
   for medoid in cluster_element_lengths:
     num_all += len(clusters[medoid])
-    if ((cluster_element_lengths[medoid] /
-      len(clusters[medoid]) if len(clusters[medoid]) > 0 else 1) > 20 or
-            len(medoid.split()) > 15 or entropies[medoid] < 2.8):
+    if ((cluster_element_lengths[medoid] / len(clusters[medoid]) if
+        len(clusters[medoid]) > 0 else 1) > DATA_FILTERING["max_avg_length"] or
+            len(medoid.split()) > DATA_FILTERING["max_medoid_length"] or
+            entropies[medoid] < DATA_FILTERING["treshold"]):
       num_removed += len(clusters[medoid])
       del clusters[medoid]
 
@@ -187,4 +196,3 @@ def print_clusters(source_cl, target_cl,
     print('Medoid: {} Entropy: {}'.format(medoid, entropies[medoid]))
     print('Size: {}'.format(len(clusters[medoid])))
     print('Elements: \n{}\n\n'.format('\n'.join(clusters[medoid])))
-

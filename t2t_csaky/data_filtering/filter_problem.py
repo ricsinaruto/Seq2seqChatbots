@@ -1,11 +1,9 @@
-
 import os
 import math
-import numpy as np
 from collections import Counter
 
-# my imports
-from config import *
+# My imports.
+from config import FLAGS, DATA_FILTERING, PROBLEM_HPARAMS
 
 
 class DataPoint:
@@ -15,13 +13,13 @@ class DataPoint:
   def __init__(self, string, index, only_string=True):
     """
     Params:
-      :string:  String to be stored
-      :index: Number of the line in the file from which this sentence was read
-      :only_string: Whether to only store string
-    """ 
-    self.index=index
-    self.string=string.strip("\n")
-    self.cluster_index=0
+      :string: String to be stored.
+      :index: Number of the line in the file from which this sentence was read.
+      :only_string: Whether to only store string.
+    """
+    self.index = index
+    self.string = string.strip("\n")
+    self.cluster_index = 0
 
 
 class Cluster:
@@ -31,22 +29,26 @@ class Cluster:
   def __init__(self, medoid):
     """
     Params:
-      :medoid:  Center of the cluster, data point object.
+      :medoid: Center of the cluster: a data point object.
     """
-    self.medoid=medoid
-    self.elements=[]
-    self.targets=[]
-    self.entropy=0
-    self.index=0
+    self.medoid = medoid
+    self.elements = []
+    self.targets = []
+    self.entropy = 0
+    self.index = 0
 
-  # append an element to the list of elements in the cluster
+  # Append an element to the list of elements in the cluster.
   def add_element(self, element):
     self.elements.append(element)
+
+  # append an element to the list of targets in the cluster.
+  def add_target(self, target):
+    self.targets.append(target)
 
 
 class FilterProblem:
   """
-  An abstract class to handle filtering of different types.
+  An abstract class to handle different types of filtering.
   """
 
   @property
@@ -60,303 +62,174 @@ class FilterProblem:
   def __init__(self, tag="full"):
     """
     Params:
-      :tag: Can be either train, dev or test
+      :tag: Can be either full, train, dev, or test.
     """
-    self.tag=tag
-    self.dist_matrix=np.ndarray(shape=(PROBLEM_HPARAMS["vocabulary_size"],
-                                       PROBLEM_HPARAMS["vocabulary_size"]))
-    self.treshold=DATA_FILTERING["treshold"]
-    self.max_avg_length=DATA_FILTERING["max_avg_length"]
-    self.max_medoid_length=DATA_FILTERING["max_medoid_length"]
-    self.min_cluster_size=DATA_FILTERING["min_cluster_size"]
-    self.clusters= {
-      "Source" : [],
-      "Target" : []
-    }
-    self.data_points= {
-      "Source" : [],
-      "Target" : []
-    }
+    self.tag = tag
+    self.treshold = DATA_FILTERING["treshold"]
+    self.max_avg_length = DATA_FILTERING["max_avg_length"]
+    self.max_medoid_length = DATA_FILTERING["max_medoid_length"]
+    self.min_cluster_size = DATA_FILTERING["min_cluster_size"]
 
-    # calculate number of clusters
-    self.num_clusters = {
-      "Source": 0,
-      "Target": 0,
-    }
-    if self.tag=="train" or self.tag=="full":
-      self.num_clusters["Source"]=DATA_FILTERING["source_clusters"]
-      self.num_clusters["Target"]=DATA_FILTERING["target_clusters"]
-    elif self.tag=="dev":
-      self.num_clusters["Source"]=int(DATA_FILTERING["source_clusters"]
-                                   * PROBLEM_HPARAMS["dataset_split"]["val"]
-                                   / PROBLEM_HPARAMS["dataset_split"]["train"])
-      self.num_clusters["Target"]=int(DATA_FILTERING["target_clusters"]
-                                   * PROBLEM_HPARAMS["dataset_split"]["val"]
-                                   / PROBLEM_HPARAMS["dataset_split"]["train"])
-    else:
-      self.num_clusters["Source"]=int(DATA_FILTERING["source_clusters"]
-                                   * PROBLEM_HPARAMS["dataset_split"]["test"]
-                                   / PROBLEM_HPARAMS["dataset_split"]["train"])
-      self.num_clusters["Target"]=int(DATA_FILTERING["target_clusters"]
-                                   * PROBLEM_HPARAMS["dataset_split"]["test"]
-                                   / PROBLEM_HPARAMS["dataset_split"]["train"])
-
-    self.output_data_dir=DATA_FILTERING["data_dir"]
-    self.input_data_dir=FLAGS["data_dir"]
-    self.type=DATA_FILTERING["filter_type"]
     self.project_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), '..', '..')
+    self.output_data_dir = DATA_FILTERING["data_dir"]
+    self.input_data_dir = FLAGS["data_dir"]
+    self.type = DATA_FILTERING["filter_type"]
 
-    # extra step to figure out in which split to put the results
-    train_lines=self.count_lines("train")
-    dev_lines=self.count_lines("dev")
-    test_lines=self.count_lines("test")
+    self.clusters = {"Source": [], "Target": []}
+    self.data_points = {"Source": [], "Target": []}
+    self.num_clusters = {"Source": 0, "Target": 0}
+
+    # Extra step to figure out in which split to put the results.
+    train_lines = self.count_lines("train")
+    dev_lines = self.count_lines("dev")
+    test_lines = self.count_lines("test")
+
     self.split_line_counts = {
-      "train":  train_lines,
-      "dev":    dev_lines,
-      "test":   test_lines
+        "train": train_lines,
+        "dev": dev_lines,
+        "test": test_lines
     }
 
-  # count the number of line in the given file
+    # Calculate number of clusters.
+    if self.tag == "train" or self.tag == "full":
+      self.num_clusters["Source"] = DATA_FILTERING["source_clusters"]
+      self.num_clusters["Target"] = DATA_FILTERING["target_clusters"]
+    else:
+      self.num_clusters["Source"] = \
+          int(DATA_FILTERING["source_clusters"] *
+              PROBLEM_HPARAMS["dataset_split"][self.tag] /
+              PROBLEM_HPARAMS["dataset_split"]["train"])
+      self.num_clusters["Target"] = \
+          int(DATA_FILTERING["target_clusters"] *
+              PROBLEM_HPARAMS["dataset_split"][self.tag] /
+              PROBLEM_HPARAMS["dataset_split"]["train"])
+
+  # Count the number of lines in the given file.
   def count_lines(self, file_tag="train"):
-    file=open(os.path.join(
-      self.project_path, self.input_data_dir, file_tag+"Source.txt"))
-    num_lines=sum(1 for line in file)
+    file = open(os.path.join(self.project_path,
+                             self.input_data_dir,
+                             file_tag + "Source.txt"))
+    num_lines = sum(1 for line in file)
     file.close()
     return num_lines
 
-  def count_lines_in_file(self, path):
-    with open(path, 'r', encoding='utf-8') as file:
-      return sum(1 for line in file)
-
-  # recursive function to create probability matrix
-  def _create_tree(self, tr_word_matrix_tuple, tr_word_matrix, prob_matrix):
-    # copy the lists because of recursion
-    first_column=Counter(tr_word_matrix[0])
-
-    # calculate probabilities for the current column
-    for (row, index) in tr_word_matrix_tuple[0]:
-      prob_matrix[index].append(first_column[row]/len(tr_word_matrix[0]))
-
-    # check stopping criterion
-    if len(tr_word_matrix)==1:
-      return [[1]]
-    else:
-      for distinct_word in first_column:
-        indices=[]
-        # get the rows which we want to continue the tree
-        for (word, index) in tr_word_matrix_tuple[0]:
-          if word==distinct_word:
-            indices.append(index)
-
-        # transponate to be able to delete rows
-        word_matrix=list(map(list, zip(*tr_word_matrix)))
-        word_matrix_tuple=list(map(list, zip(*tr_word_matrix_tuple)))
-        temp_mat=[]
-        temp_mat_tuple=[]
-
-        for row1, row2 in zip(word_matrix, word_matrix_tuple):
-          if row2[0][1] in indices:
-            temp_mat.append(row1)
-            temp_mat_tuple.append(row2)
-
-        # transponate back
-        next_tr_matrix=list(map(list, zip(*temp_mat)))
-        next_tr_matrix_tuple=list(map(list, zip(*temp_mat_tuple)))
-        
-        k=self._create_tree(next_tr_matrix_tuple[1:],
-                            next_tr_matrix[1:],
-                            prob_matrix)
-      return prob_matrix
-
-  # create input - target matrix pairs for distribution loss
-  def create_bigram_matrix(self):
-    self.read_inputs()
-    self.clustering("Source")
-    self.clustering("Target")
-
-    # open data files
-    fSource=open(os.path.join(self.output_data_dir, "DLOSS_source.txt"), "w")
-    fTarget=open(os.path.join(self.output_data_dir, "DLOSS_target.txt"), "w")
-
-    # loop through distinct inputs
-    for cl in self.clusters["Source"]:
-      max_len=0
-      # loop through the targets to get the longest
-      for target in cl.targets:
-        sen_len=len(target.string.split())
-        if DATA_FILTERING["max_length"]<sen_len:
-          target.string=""
-        elif max_len<sen_len:
-          max_len=sen_len
-
-      word_matrix=[]
-      # loop through targets to pad them and create a word matrix
-      for target in cl.targets:
-        if target.string!="":
-          words=target.string.split()
-          word_matrix.append(words+["<pad>"]*(max_len-len(words)))
-
-      tr_word_matrix=list(map(list, zip(*word_matrix)))
-      prob_matrix=[[] for row in word_matrix]
-
-      # add row indices to word matrix
-      for i, target in enumerate(word_matrix):
-        for j, word in enumerate(target):
-          word_matrix[i][j]=(word, i)
-      tr_word_matrix_tuple=list(map(list, zip(*word_matrix)))
-
-      # recurse to create tree
-      if word_matrix!=[]:
-        fSource.write(cl.medoid.string+"\n")
-        prob_matrix=self._create_tree(tr_word_matrix_tuple,
-                                      tr_word_matrix,
-                                      prob_matrix)
-
-      # save target matrix to file
-      for target_words, target_probs in zip(word_matrix, prob_matrix):
-        for (word, index), prob in zip(target_words, target_probs):
-          fTarget.write(word+":"+str(prob)+" ")
-        fTarget.write("\n")
-      fTarget.write("\n")
-
-    fSource.close()
-    fTarget.close()
-
-  # main method that will run all the functions to do the filtering
+  # Main method that will run all the functions to do the filtering.
   def run(self):
-    if DATA_FILTERING["max_length"]>0:
-      self.create_bigram_matrix()
+    # If we have already done the clustering, don't redo it.
+    source_data = os.path.join(self.project_path, self.output_data_dir,
+                               str(self.num_clusters["Source"]) + '-' +
+                               str(self.num_clusters["Target"]) + '_filtering',
+                               self.tag + "Source_cluster_elements.txt")
+
+    target_data = os.path.join(self.project_path, self.output_data_dir,
+                               str(self.num_clusters["Source"]) + '-' +
+                               str(self.num_clusters["Target"]) + '_filtering',
+                               self.tag + "Target_cluster_elements.txt")
+    if os.path.isfile(source_data) and os.path.isfile(target_data):
+      print("Cluster files are in " + self.output_data_dir +
+            ", filtering now.")
+      self.load_clusters_merged()
+      self.filtering()
+
     else:
-      # if we have already done the clustering, don't redo it
+      print("No cluster files in " + self.output_data_dir +
+            ", clustering now.")
+      self.read_inputs()
+      self.clustering("Source")
+      self.clustering("Target")
+      self.save_clusters("Source")
+      self.save_clusters("Target")
+      self.filtering()
 
-      source_data=os.path.join(self.project_path, self.output_data_dir,
-                               str(self.num_clusters["Source"]) + '-' +
-                               str(self.num_clusters["Target"]) + '_filtering',
-                               self.tag+"Source_cluster_elements.txt")
-
-      target_data=os.path.join(self.project_path, self.output_data_dir,
-                               str(self.num_clusters["Source"]) + '-' +
-                               str(self.num_clusters["Target"]) + '_filtering',
-                               self.tag+"Target_cluster_elements.txt")
-
-      if os.path.isfile(source_data) and os.path.isfile(target_data):
-        print("Cluster files are in "+self.output_data_dir+", filtering now.")
-        self.load_clusters_merged()
-        self.filtering()
-
-      else:
-        print("No cluster files in "+source_data+", or "+target_data
-              +"clustering now.")
-        self.read_inputs()
-        self.clustering("Source")
-        self.clustering("Target")
-        self.save_clusters("Source")
-        self.save_clusters("Target")
-        self.filtering()
-
-  # this function will read the data and make it ready for clustering
+  # This function will read the data and make it ready for clustering.
   def read_inputs(self):
-    sources=open(os.path.join(self.input_data_dir, self.tag+"Source.txt"))
-    targets=open(os.path.join(self.input_data_dir, self.tag+"Target.txt"))
+    # Read either a Source or target file.
+    def read_file(tag):
+      file = open(os.path.join(self.input_data_dir, self.tag + tag))
+      for i, line in enumerate(file):
+        self.data_points[tag].append(self.DataPointClass(line, i, False))
+      file.close()
 
-    i=0
-    for line in sources:
-      self.data_points["Source"].append(self.DataPointClass(line, i, False))
-      i+=1
+    read_file("Source")
+    read_file("Target")
+    print("Finished reading " + self.tag + " data.")
 
-    i=0
-    for line in targets:
-      self.data_points["Target"].append(self.DataPointClass(line, i, False))
-      i+=1
-
-    sources.close()
-    targets.close()
-    print("Finished reading "+self.tag+" data.")
-
-  # load clusters from files
+  # Load clusters from files.
   def load_clusters(self):
-    # open the data files
+    # Open the data files.
+    source_clusters = os.path.join(
+        self.project_path, self.output_data_dir,
+        str(self.num_clusters["Source"]) + '-' +
+        str(self.num_clusters["Target"]) + '_filtering',
+        self.tag + "Source_cluster_elements.txt")
 
-    source_path = os.path.join(
-      self.project_path, self.output_data_dir,
-      str(self.num_clusters["Source"]) + '-' +
-      str(self.num_clusters["Target"]) + '_filtering',
-      self.tag + "Source_cluster_elements.txt")
+    target_clusters = os.path.join(
+        self.project_path, self.output_data_dir,
+        str(self.num_clusters["Source"]) + '-' +
+        str(self.num_clusters["Target"]) + '_filtering',
+        self.tag + "Target_cluster_elements.txt")
 
-    target_path = os.path.join(
-      self.project_path, self.output_data_dir,
-      str(self.num_clusters["Source"]) + '-' +
-      str(self.num_clusters["Target"]) + '_filtering',
-      self.tag + "Target_cluster_elements.txt")
+    # Make a preloaded target cluster list.
+    self.clusters["Target"] = ["" for i in range(self.num_clusters["Target"])]
+    target_cluster_list = ["" for i in range(self.split_line_counts["train"] +
+                                             self.split_line_counts["dev"] +
+                                             self.split_line_counts["test"])]
+    # Read the target clusters first.
+    for line in target_clusters:
+      [index, line] = line.split(";")
+      [source_medoid, pair, target_cluster] = line.strip("\n").split("<=====>")
+      # List containing target medoid and target cluster index.
+      [target_medoid, target_cl_index] = target_cluster.split(":")
+      target_cluster_list[int(index)] = [target_medoid, int(target_cl_index)]
 
-    with open(source_path, 'r') as source_clusters:
+    # Load the source clusters.
+    last_medoid = "<-->"
+    for line in source_clusters:
+      [index, line] = line.split(";")
+      [source_medoid, pair, target_cluster] = line.strip("\n").split("<=====>")
+      [source, target] = pair.split("=")
+      [target_medoid, target_cl_index] = target_cluster_list[int(index)]
+      index = int(index)
 
-      with open(target_path,'r') as target_clusters:
+      source_data_point = self.DataPointClass(source, index, True)
+      target_data_point = self.DataPointClass(target, index, True)
+      source_data_point.cluster_index = len(self.clusters["Source"])
+      target_data_point.cluster_index = target_cl_index
 
-        # make a preloaded target cluster list
-        self.clusters["Target"]=["" for i in range(
-          self.num_clusters["Target"])]
-        target_cluster_list=["" for i in range(
-          self.split_line_counts["train"]
-          +self.split_line_counts["dev"]
-          +self.split_line_counts["test"])]
+      # Check if this is a new medoid (source side).
+      if last_medoid != source_medoid:
+        # Add medoid to cluster.
+        dp = self.DataPointClass(source_medoid, index=0, only_string=True)
+        self.clusters["Source"].append(self.ClusterClass(dp))
+      self.clusters["Source"][-1].add_element(source_data_point)
+      self.clusters["Source"][-1].add_target(target_data_point)
 
-        # read the target clusters first
-        for line in target_clusters:
-          [index, line]=line.split(";")
-          [source_medoid, pair, target_cluster]=line.strip("\n").split(
-            "<=====>")
-          # list containing target medoid and target cluster index
-          [target_medoid, target_cl_index]=target_cluster.split(":")
-          target_cluster_list[int(index)]=[target_medoid, int(target_cl_index)]
+      # Target side.
+      if self.clusters["Target"][target_cl_index] == "":
+        dp = self.DataPointClass(target_medoid, index=0, only_string=True)
+        self.clusters["Target"][target_cl_index] = self.ClusterClass(dp)
+      self.clusters["Target"][target_cl_index].add_element(target_data_point)
+      self.clusters["Target"][target_cl_index].add_target(source_data_point)
 
-        # load the clusters
-        last_medoid="<-->"
-        for line in source_clusters:
-          [index, line]=line.split(";")
-          [source_medoid, pair, target_cluster]=line.strip("\n").split(
-            "<=====>")
-          [source, target]=pair.split("=")
-          [target_medoid, target_cl_index]=target_cluster_list[int(index)]
-          index=int(index)
+      last_medoid = source_medoid
 
-          source_data_point=self.DataPointClass(source, index, True)
-          target_data_point=self.DataPointClass(target, index, True)
-          source_data_point.cluster_index=len(self.clusters["Source"])
-          target_data_point.cluster_index=target_cl_index
+    source_clusters.close()
+    target_clusters.close()
 
-          # check if this is a new medoid (source side)
-          if last_medoid!=source_medoid:
-            # add medoid to cluster
-            dp=self.DataPointClass(source_medoid, index=0, only_string=True)
-            self.clusters["Source"].append(self.ClusterClass(dp))
-          self.clusters["Source"][-1].add_element(source_data_point)
-          self.clusters["Source"][-1].targets.append(target_data_point)
-
-          # target side
-          if self.clusters["Target"][target_cl_index]=="":
-            dp=self.DataPointClass(target_medoid, index=0, only_string=True)
-            self.clusters["Target"][target_cl_index]=self.ClusterClass(dp)
-          self.clusters["Target"][target_cl_index].add_element(
-            target_data_point)
-          self.clusters["Target"][target_cl_index].targets.append(
-            source_data_point)
-
-          last_medoid=source_medoid
-
+  # Load clusters that were saved in a different way (semantic clustering).
   def load_clusters_merged(self):
     source_path = os.path.join(
-      self.project_path, self.output_data_dir,
-      str(self.num_clusters["Source"]) + '-' +
-      str(self.num_clusters["Target"]) + '_filtering',
-      self.tag + "Source_cluster_elements.txt")
+        self.project_path, self.output_data_dir,
+        str(self.num_clusters["Source"]) + '-' +
+        str(self.num_clusters["Target"]) + '_filtering',
+        self.tag + "Source_cluster_elements.txt")
 
     target_path = os.path.join(
-      self.project_path, self.output_data_dir,
-      str(self.num_clusters["Source"]) + '-' +
-      str(self.num_clusters["Target"]) + '_filtering',
-      self.tag + "Target_cluster_elements.txt")
+        self.project_path, self.output_data_dir,
+        str(self.num_clusters["Source"]) + '-' +
+        str(self.num_clusters["Target"]) + '_filtering',
+        self.tag + "Target_cluster_elements.txt")
 
     source_clusters = {}
     target_clusters = {}
@@ -365,32 +238,29 @@ class FilterProblem:
     target_data_points = {}
 
     with open(source_path, 'r') as source_file:
-
       for line in source_file:
         [source_index_center, source_target, _] = line.split('<=====>')
         [source_index, source_center] = source_index_center.split(';')
         [source, target] = source_target.split('=')
 
         source_data_points[int(source_index)] = self.DataPointClass(
-          source, int(source_index), False)
+            source, int(source_index), False)
         target_data_points[int(source_index)] = self.DataPointClass(
-          target, int(source_index), False)
+            target, int(source_index), False)
 
         if source_clusters.get(source_center) is None:
-          center = self.DataPointClass(
-            source_center, 0, False)
+          center = self.DataPointClass(source_center, 0, False)
           source_clusters[source_center] = self.ClusterClass(center)
           source_clusters[source_center].index = len(source_clusters) - 1
 
         source_data_points[int(source_index)].cluster_index = \
-          source_clusters[source_center].index
+            source_clusters[source_center].index
         source_clusters[source_center].add_element(
-          source_data_points[int(source_index)])
-        source_clusters[source_center].targets.append(
-          target_data_points[int(source_index)])
+            source_data_points[int(source_index)])
+        source_clusters[source_center].add_target(
+            target_data_points[int(source_index)])
 
     with open(target_path, 'r') as target_file:
-
       for line in target_file:
         [target_index_center, target_source, _] = line.split('<=====>')
         [target_index, target_center] = target_index_center.split(';')
@@ -400,332 +270,285 @@ class FilterProblem:
         source_data_point = source_data_points[int(target_index)]
 
         if target_clusters.get(target_center) is None:
-          center = self.DataPointClass(
-            target_center, 0, False)
+          center = self.DataPointClass(target_center, 0, False)
           target_clusters[target_center] = self.ClusterClass(center)
           target_clusters[target_center].index = len(target_clusters) - 1
 
         target_data_point.cluster_index = target_clusters[target_center].index
         target_clusters[target_center].add_element(target_data_point)
-        target_clusters[target_center].targets.append(source_data_point)
+        target_clusters[target_center].add_target(source_data_point)
 
     self.clusters['Source'] = list(source_clusters.values())
     self.clusters['Target'] = list(target_clusters.values())
 
-  # find the point that minimizes mean distance within a cluster
+  # Find the point that minimizes mean distance within a cluster.
   def find_medoid(self, data_tag):
     """
     Params:
-      :data_tag: Whether it's source or target data
+      :data_tag: Whether it's source or target data.
     """
     for cluster in self.clusters[data_tag]:
       print("Finding medoids.")
-      big_sum=0
+      big_sum = 0
       for element1 in cluster.elements:
-        small_sum=0
+        small_sum = 0
         for element2 in cluster.elements:
-          small_sum+=element1.similarity(element2, self.dist_matrix)
+          small_sum += element1.similarity(element2, self.dist_matrix)
 
-        if small_sum>big_sum:
-          big_sum=small_sum
+        if small_sum > big_sum:
+          big_sum = small_sum
           cluster.medoid = element1
 
-      # clear elements after we finished with one cluster
+      # Clear elements after we finished with one cluster.
       cluster.elements.clear()
       cluster.targets.clear()
 
-  # find nearest medoid for a data point
+  # Find nearest medoid for a data point.
   def find_nearest_medoid(self, data_point):
-    NotImplementedError
+    pass
 
-  # for each data_point find a cluster
+  # For each data_point find a cluster.
   def cluster_points(self, data_tag):
     """
     Params:
-      :data_tag: Whether it's source or target data
+      :data_tag: Whether it's source or target data.
     """
-    # reverse data tag
-    rev_tag="Target" if data_tag=="Source" else "Source"
-    
+    # Reverse data tag.
+    rev_tag = "Target" if data_tag == "Source" else "Source"
+
     for i, data_point in enumerate(self.data_points[data_tag]):
-      #if i%1000==0:
-      print(str(i))
-      nearest_medoid=self.find_nearest_medoid(data_point, data_tag)
+      nearest_medoid = self.find_nearest_medoid(data_point, data_tag)
       self.clusters[data_tag][nearest_medoid].add_element(data_point)
+      self.clusters[data_tag][nearest_medoid].add_target(
+          self.data_points[rev_tag][i])
 
-      self.clusters[data_tag][nearest_medoid].targets.append(
-        self.data_points[rev_tag][i])
+      data_point.cluster_index = nearest_medoid
 
-      data_point.cluster_index=nearest_medoid
-
-  def stop_clustering(self,
-                      data_tag,
-                      cluster_names,
-                      cluster_names_old,
-                      count,
-                      counts):
+  # A function that checks if clustering needs to stop.
+  def stop_clustering(self, data_tag, clusters, clusters_old, count, counts):
     """
     Params:
-      :data_tag: Whether it's source or target data
-      :cluster_names: String of medoids from previous iteration
-      :cluster_names_old: String of medoids from 2 iterations ago
-      :count: Number of clustering loops so far
-    """ 
-    count_difference=0
-    count_difference_old=0
-    for i in range(self.num_clusters[data_tag]):
-      # check strings from previous iteration to see if they are the same
-      if self.clusters[data_tag][i].medoid.string!=cluster_names[i]:
-        count_difference+=1
-        print(cluster_names[i]+"--->"+self.clusters[data_tag][i].medoid.string)
-        cluster_names[i]=self.clusters[data_tag][i].medoid.string
+      :data_tag: Whether it's source or target data.
+      :clusters: String of medoids from previous iteration.
+      :clusters_old: String of medoids from 2 iterations ago.
+      :count: Number of clustering loops so far.
+    """
+    count_difference = 0
+    count_difference_old = 0
+    for i, cluster in enumerate(self.clusters[data_tag]):
+      # Check strings from previous iteration to see if they are the same.
+      if cluster.medoid.string != clusters[i]:
+        count_difference += 1
+        print(clusters[i] + "--->" + cluster.medoid.string)
+        clusters[i] = cluster.medoid.string
 
-      # check strings from two loops ago, to see if they are the same
-      if self.clusters[data_tag][i].medoid.string!=cluster_names_old[i]:
-        count_difference_old+=1
-        if count %2==0:
-          cluster_names_old[i]=self.clusters[data_tag][i].medoid.string
+      # Check strings from two loops ago, to see if they are the same.
+      if cluster.medoid.string != clusters_old[i]:
+        count_difference_old += 1
+        if count % 2 == 0:
+          clusters_old[i] = cluster.medoid.string
     print("==================================================")
     print("==================================================")
 
-    # check if no. of medoids changed is the same for the last 6 iterations
-    same_counts=True
+    # Check if no. of medoids changed is the same for the last 6 iterations.
+    same_counts = True
     counts.append(count_difference)
-    if len(counts)>6:
-      counts=list(counts[1:])
+    if len(counts) > 6:
+      counts = list(counts[1:])
     for i, c in enumerate(counts[:-1]):
-      if c!=counts[i+1]:
-        same_counts=False
+      if c != counts[i + 1]:
+        same_counts = False
 
-    # exit if there is no change or we are stuck in a loop
-    exit=False
-    if count_difference==0 or count_difference_old==0 or same_counts:
-      exit=True
-    return exit, cluster_names, cluster_names_old, counts
+    # Exit if there is no change or we are stuck in a loop.
+    exit = False
+    if count_difference == 0 or count_difference_old == 0 or same_counts:
+      exit = True
+    return exit, clusters, clusters_old, counts
 
-  # do the clustering of sources and targets
+  # Do the clustering of sources and targets.
   def clustering(self, data_tag):
-    return NotImplementedError
+    pass
 
-  def get_filtered_indices_from_file(self, source):
-    with open(os.path.join(
-            self.project_path, self.output_data_dir,self.tag +
-            "{}_cluster_entropies.txt".format(source)), 'r') as file:
-      entropies = {}
-      for line in file:
-        entropies[line.split(';')[0]] = line.split(';')[1]
-
-      indices = []
-      for num_cl, cluster in enumerate(self.clusters[source]):
-        avg_element_length = \
-          sum(len(sentence.string.split())
-              for sentence in cluster.elements) / \
-          (len(cluster.elements) if len(cluster.elements) > 0 else 1)
-
-        # filter
-        if entropies[cluster.medoid.string] > \
-                self.treshold and avg_element_length < 8:
-          indices.append(num_cl)
-          print('Medoid: "' + cluster.medoid.string + '" got filtered.')
-
-      return indices
-
-  # return a list of indices, showing which clusters should be filtered out
+  # Return a list of indices, showing which clusters should be filtered out.
   def get_filtered_indices(self, source):
     """
     Params:
-      :source: the cluster that we want to filter (either Source or Target)
+      :source: The cluster that we want to filter (either Source or Target).
     """
-    indices=[]
+    indices = []
     for num_cl, cluster in enumerate(self.clusters[source]):
-      # error guarding for the case when loading clusters
-      if cluster!="":
-        # build a distribution for the current cluster, based on the targets
-        distribution=Counter()
-        for target in cluster.targets: 
+      # Error guarding for the case when loading clusters.
+      if cluster != "":
+        # Build a distribution for the current cluster, based on the targets.
+        distribution = Counter()
+        for target in cluster.targets:
           if target.cluster_index in distribution:
-            distribution[target.cluster_index]+=1
+            distribution[target.cluster_index] += 1
           else:
-            distribution[target.cluster_index]=1
+            distribution[target.cluster_index] = 1
 
-        # calculate entropy
-        entropy=0
+        num_elements = len(cluster.elements)
+        # Calculate entropy.
+        entropy = 0
         for cl_index in distribution:
-          if len(cluster.targets)>1:
-            probability=distribution[cl_index]/len(cluster.targets)
-            entropy+=probability*math.log(probability, 2)
-        cluster.entropy=-entropy
+          if num_elements > 1:
+            probability = distribution[cl_index] / num_elements
+            entropy += probability * math.log(probability, 2)
+        cluster.entropy = -entropy
 
-        avg_element_length = \
-          sum(len(sentence.string.split())
-              for sentence in cluster.elements) / \
-          (len(cluster.elements) if len(cluster.elements) > 0 else 1)
+        avg_length = (
+            sum(len(sent.string.split()) for sent in cluster.elements) /
+            (num_elements if num_elements > 0 else 1))
 
-        # filter
-        if (cluster.entropy>self.treshold and
-            avg_element_length < self.max_avg_length and
-            len(cluster.medoid.string.split()) < self.max_medoid_length):
+        # Filter.
+        if (cluster.entropy > self.treshold and
+            avg_length < self.max_avg_length and
+                len(cluster.medoid.string.split()) < self.max_medoid_length):
           indices.append(num_cl)
-          print('Medoid: "'+cluster.medoid.string+'" got filtered.')
+          print('Medoid: "' + cluster.medoid.string + '" got filtered.')
 
-    print("Finished filtering "+source+" data.")
+    print("Finished filtering " + source + " data.")
     return indices
-    
-  # do the filtering of the dataset
+
+  # Do the filtering of the dataset.
   def filtering(self):
-    # these are not needed anymore
+    # These are not needed anymore.
     self.data_points["Source"].clear()
     self.data_points["Target"].clear()
 
-    # if not os.path.exists(os.path.join(self.output_data_dir,
-    #                  self.tag+"Source_cluster_entropies.txt")):
-    source_indices=self.get_filtered_indices("Source")
-    # else:
-    #   source_indices=self.get_filtered_indices_from_file("Source")
+    # Get the filtered indices for both sides.
+    source_indices = self.get_filtered_indices("Source")
+    target_indices = self.get_filtered_indices("Target")
 
-    # if not os.path.exists(os.path.join(self.output_data_dir,
-    #                  self.tag + "Target_cluster_entropies.txt")):
-    target_indices=self.get_filtered_indices("Target")
-    # else:
-    #   target_indices=self.get_filtered_indices_from_file("Target")
-
-    # open files
-    file_dict={}
-    # we have to open 6 files in this case
-    if self.tag=="full":
+    # Open files, where data will be written.
+    file_dict = {}
+    # We have to open 6 files in this case.
+    if self.tag == "full":
       name_list = ["trainS", "trainT", "devS", "devT", "testS", "testT"]
       file_list = list(self.open_6_files())
       file_dict = dict(zip(name_list, file_list))
-    
-    # handle all cases and open files
-    if self.type=="target_based" or self.type=="both":
-      # if not os.path.exists(os.path.join(
-      #         self.output_data_dir, self.tag + "Source_cluster_entropies.txt")):
-        file_dict["source_entropy"]=open(
-          os.path.join(self.output_data_dir,
-                       self.tag+"Source_cluster_entropies.txt"), "w")
-    if self.type=="source_based" or self.type=="both":
-      # if not os.path.exists(os.path.join(
-      #         self.output_data_dir, self.tag + "Target_cluster_entropies.txt")):
-        file_dict["target_entropy"]=open(
-          os.path.join(self.output_data_dir,
-                       self.tag+"Target_cluster_entropies.txt"), "w")
-    file_dict[self.tag+"source_file"]=open(
-      os.path.join(self.output_data_dir, self.tag+"Source.txt"), "w")
-    file_dict[self.tag+"target_file"]=open(
-      os.path.join(self.output_data_dir, self.tag+"Target.txt"), "w")
 
-    # save data
+    # Handle all cases and open files.
+    if self.type == "target_based" or self.type == "both":
+      file_dict["source_entropy"] = open(
+          os.path.join(self.output_data_dir,
+                       self.tag + "Source_cluster_entropies.txt"), "w")
+    if self.type == "source_based" or self.type == "both":
+      file_dict["target_entropy"] = open(
+          os.path.join(self.output_data_dir,
+                       self.tag + "Target_cluster_entropies.txt"), "w")
+    file_dict[self.tag + "source_file"] = open(
+        os.path.join(self.output_data_dir, self.tag + "Source.txt"), "w")
+    file_dict[self.tag + "target_file"] = open(
+        os.path.join(self.output_data_dir, self.tag + "Target.txt"), "w")
+
+    # Save data and close files.
     self.save_filtered_data(source_indices, target_indices, file_dict)
     self.close_n_files(file_dict)
 
-  # save the new filtered datasets
-  def save_filtered_data(self,
-                         source_indices=[],
-                         target_indices=[],
-                         file_dict={}):
+  # Save the new filtered datasets.
+  def save_filtered_data(self, source_indices, target_indices, file_dict):
     """
     Params:
       :source_indices: Indices of source clusters that will be filtered.
       :target_indices: Indices of target clusters that will be filtered.
       :file_dict: Dictionary containing all the files that we want to write.
     """
-    # function for writing the dataset to file
+    # Function for writing the dataset to file.
     def save_dataset(source):
       for num_cl, cluster in enumerate(self.clusters[source]):
-        # filter errors due to cluster loading
-        if cluster!="":
-          # write cluster entropies
-          # if not os.path.exists(os.path.join(
-          #         self.output_data_dir,
-          #                 self.tag +
-          #                 "{}_cluster_entropies.txt".format(source))):
-          file_dict[source.lower()+"_entropy"].write(
-            cluster.medoid.string+";"
-            +str(cluster.entropy)+";"
-            +str(len(cluster.elements))+"\n")
+        # Filter errors due to cluster loading.
+        if cluster != "":
+          # Write cluster entropies.
+          file_dict[source.lower() + "_entropy"].write(
+              cluster.medoid.string + ";" +
+              str(cluster.entropy) + ";" +
+              str(len(cluster.elements)) + "\n")
 
-          indices=source_indices if source=="Source" else target_indices
-          clusters_too_small=len(cluster.elements)<self.min_cluster_size
-          # make sure that in "both" case only run this once
-          if (source=="Source" or self.type!="both") \
-              and (num_cl not in indices or clusters_too_small):
-            # filter one side
+          indices = source_indices if source == "Source" else target_indices
+          cluster_too_small = len(cluster.elements) < self.min_cluster_size
+          # Make sure that in "both" case this is only run once.
+          if ((source == "Source" or self.type != "both") and
+                  (num_cl not in indices or cluster_too_small)):
+            # Filter one side.
             for num_el, element in enumerate(cluster.elements):
-              target_cl=cluster.targets[num_el].cluster_index
-              clusters_too_small=len(
-                self.clusters["Target"][target_cl].elements) \
-                < self.min_cluster_size
-              # check both sides in "both" case
-              if ((target_cl not in target_indices or clusters_too_small)
-                  or self.type!="both"):
-                source_string=element.string+"\n"
-                target_string=cluster.targets[num_el].string+"\n"
+              target_cl = cluster.targets[num_el].cluster_index
+              if self.type == "both":
+                cluster_too_small = (len(
+                    self.clusters["Target"][target_cl].elements) <
+                    self.min_cluster_size)
+              # Check both sides in "both" case.
+              if ((target_cl not in target_indices or cluster_too_small) or
+                      self.type != "both"):
+                source_string = element.string + "\n"
+                target_string = cluster.targets[num_el].string + "\n"
 
-                # reverse if Target
-                if source=="Target":
-                  tmp=source_string
-                  source_string=target_string
-                  target_string=tmp
-                file_dict[self.tag+"source_file"].write(source_string)
-                file_dict[self.tag+"target_file"].write(target_string)
+                # Reverse if Target.
+                if source == "Target":
+                  tmp = source_string
+                  source_string = target_string
+                  target_string = tmp
+                file_dict[self.tag + "source_file"].write(source_string)
+                file_dict[self.tag + "target_file"].write(target_string)
 
-                # write to separate files if we do split after clustering
-                if self.tag=="full":
-                  if element.index<self.split_line_counts["train"]:
+                # Write to separate files if we do split after clustering.
+                if self.tag == "full":
+                  if element.index < self.split_line_counts["train"]:
                     file_dict["trainS"].write(source_string)
                     file_dict["trainT"].write(target_string)
-                  elif element.index<(self.split_line_counts["train"]
-                                      +self.split_line_counts["dev"]):
+                  elif element.index < (self.split_line_counts["train"] +
+                                        self.split_line_counts["dev"]):
                     file_dict["devS"].write(source_string)
                     file_dict["devT"].write(target_string)
                   else:
                     file_dict["testS"].write(source_string)
                     file_dict["testT"].write(target_string)
 
-    # write source entropies to file
-    if self.type=="target_based" or self.type=="both":
+    # Write source entropies and data to file.
+    if self.type == "target_based" or self.type == "both":
       save_dataset("Source")
-    # write target entropies to file
-    if self.type=="source_based" or self.type=="both":
+    # Write target entropies and data to file.
+    if self.type == "source_based" or self.type == "both":
       save_dataset("Target")
 
-  # save clusters and their elements to files
+  # Save clusters and their elements to files.
   def save_clusters(self, data_tag):
     """
     Params:
-      :data_tag: Whether it's source or target data
+      :data_tag: Whether it's source or target data.
     """
-    output=open(os.path.join(self.output_data_dir, 
-                             self.tag+data_tag+"_cluster_elements.txt"), "w")
-    medoid_counts=[]
-    rev_tag="Target" if data_tag=="Source" else "Source"
+    output = open(
+        os.path.join(self.output_data_dir,
+                     self.tag + data_tag + "_cluster_elements.txt"), "w")
+    medoid_counts = []
+    rev_tag = "Target" if data_tag == "Source" else "Source"
+
     for cluster in self.clusters[data_tag]:
       medoid_counts.append((cluster.medoid.string, len(cluster.elements)))
 
-      # save together the source and target medoids and elements
-      for data_point, target in zip(cluster.elements, cluster.targets):
+      # Save together the source and target medoids and elements.
+      for source, target in zip(cluster.elements, cluster.targets):
         output.write(
-          str(data_point.index)+";"
-          +cluster.medoid.string+"<=====>"
-          +data_point.string+"="
-          +target.string+"<=====>"
-          +self.clusters[rev_tag][target.cluster_index].medoid.string+":"
-          +str(target.cluster_index)+"\n")
+            str(source.index) + ";" +
+            cluster.medoid.string + "<=====>" +
+            source.string + "=" +
+            target.string + "<=====>" +
+            self.clusters[rev_tag][target.cluster_index].medoid.string + ":" +
+            str(target.cluster_index) + "\n")
     output.close()
 
-    # save the medoids and the count of their elements, in decreasing order
-    output=open(os.path.join(self.output_data_dir, 
-                             self.tag+data_tag+"_clusters.txt"), "w")
-    medoids=sorted(medoid_counts, key=lambda count: count[1], reverse=True)
+    # Save the medoids and the count of their elements, in decreasing order.
+    output = open(os.path.join(self.output_data_dir,
+                               self.tag + data_tag + "_clusters.txt"), "w")
+    medoids = sorted(medoid_counts, key=lambda count: count[1], reverse=True)
 
     for medoid in medoids:
-      output.write(medoid[0]+":"+str(medoid[1])+"\n")
+      output.write(medoid[0] + ":" + str(medoid[1]) + "\n")
     output.close()
 
     print("Finished clustering, proceeding with filtering.")
 
-  # open the 6 files
+  # Open the 6 files.
   def open_6_files(self):
     trainS = open(os.path.join(self.output_data_dir, 'trainSource.txt'), 'w')
     trainT = open(os.path.join(self.output_data_dir, 'trainTarget.txt'), 'w')
@@ -736,7 +559,7 @@ class FilterProblem:
 
     return trainS, trainT, devS, devT, testS, testT
 
-  # close the 6 files to write the processed data into
+  # Close n files to write the processed data into.
   def close_n_files(self, files):
     for file_name in files:
       files[file_name].close()

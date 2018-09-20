@@ -51,8 +51,7 @@ def main():
   split_input_fst, split_input_snd = split_sts_data(
       args.input, file, args.output)
 
-  # Collecting the existing words in the data, and records their frequency
-
+  # Collecting the existing words in the data, and records their frequency.
   word_count = 0
   vocab = {}
   with open(split_input_fst, 'r') as f:
@@ -71,15 +70,14 @@ def main():
     vocab[word] /= word_count
 
   # Iterating through the provided word vector vocabulary, and
-  # pairing each word of the data with their frequency and embedding vector
-
+  # pairing each word of the data with their frequency and embedding vector.
   dictionary = {}
   with open(args.vocab, 'r') as v:
     for line in v:
       line_as_list = line.strip().split()
       if line_as_list[0] in vocab:
         dictionary[line_as_list[0]] = (vocab[line_as_list[0]], numpy.array(
-          [float(num) for num in line_as_list[1:]]))
+            [float(num) for num in line_as_list[1:]]))
         del vocab[line_as_list[0]]
 
   del vocab
@@ -94,10 +92,8 @@ def create_benchmark(sts_file_path, vocab):
   word embeddings in that sentence vectors.
   """
 
+  # Inverse frequency weight.
   def w_avg(freq):
-    """
-    Inverse frequency weight
-    """
     return 0.001 / (0.001 + freq)
 
   target_correlation = []
@@ -111,23 +107,19 @@ def create_benchmark(sts_file_path, vocab):
 
       # STS data is a .csv, where the 5. and 6. columns hold the sentences,
       # and the 4. column holds the correlations
-
       first_sentence = None
       for word in tokenize_sentence(line_as_list[5].strip().split()):
 
         # Each sentence is split into words, and the vector corresponding
-        # to each element will be weighted, and summed
-
+        # to each element will be weighted, and summed.
         vector = vocab.get(word)
         if vector is not None:
           vectors.append(vector[1] * w_avg(vector[0]))
           valid_words += 1
 
       if valid_words != 0:
-
         # If there were any words in the sentence, to find a vector for,
-        # represent the sentence by the average of these vectors
-
+        # represent the sentence by the average of these vectors.
         first_sentence = numpy.sum(numpy.array(vectors), axis=0) / valid_words
 
       vectors = []
@@ -143,18 +135,15 @@ def create_benchmark(sts_file_path, vocab):
         second_sentence = numpy.sum(numpy.array(vectors), axis=0) / valid_words
 
       if first_sentence is not None and second_sentence is not None:
-
         # If both vectors contain more than 0 words in the vocab,
-        # calculate their cosine similarity
-
+        # calculate their cosine similarity.
         predicted_correlation.append(calculate_correlation(
-          first_sentence,
-          second_sentence))
+            first_sentence,
+            second_sentence))
         target_correlation.append(float(line_as_list[4].strip()))
 
   # The predicted similarity and the target similarity is compared
-  # with pearson rang correlation
-
+  # with pearson rang correlation.
   target_correlation = numpy.array(target_correlation)
   predicted_correlation = numpy.array(predicted_correlation).reshape(-1)
   predicted_correlation = process_correlations(predicted_correlation)
@@ -162,14 +151,12 @@ def create_benchmark(sts_file_path, vocab):
   corr, pvalue = scipy.stats.spearmanr(target_correlation,
                                        predicted_correlation)
 
-  error = numpy.sqrt(numpy.sum(
-    (target_correlation - predicted_correlation) ** 2)) / \
-        len(predicted_correlation)
+  error = (numpy.sqrt(
+           numpy.sum((target_correlation - predicted_correlation) ** 2)) /
+           len(predicted_correlation))
 
-  logger.info(
-    'Average embedding Correlation error (MSE): {}, '
-    'Pearson correlation {}, pvalue {}'.format(
-        error, corr, pvalue))
+  logger.info('Average embedding Correlation error (MSE): {}, '
+              'Pearson correlation {}, pvalue {}'.format(error, corr, pvalue))
 
 
 if __name__ == '__main__':

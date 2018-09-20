@@ -1,4 +1,3 @@
-import os
 import argparse
 
 
@@ -10,12 +9,11 @@ def main():
   parser.add_argument('-o', '--output', type=str,
                       help='name of the output file', default=None)
   parser.add_argument('-i', '--input', type=str, help='name of the input file')
- 
   args = parser.parse_args()
-  
+
   out_file = args.output
   if not out_file:
-    out_file = 'filtered.txt'  
+    out_file = 'filtered.txt'
 
   tokens = set()
   with open(args.tokens, 'r') as ftok:
@@ -30,4 +28,3 @@ def main():
 
 if __name__ == '__main__':
   main()
-

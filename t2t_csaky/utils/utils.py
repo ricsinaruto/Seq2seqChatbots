@@ -1,19 +1,20 @@
-
 import os
 import sys
 import tensorflow as tf
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__))))
-
 import numpy
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.cluster import MeanShift
 
-from config import DATA_FILTERING, FLAGS
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__))))
+
+
+# My imports.
+from config import DATA_FILTERING, FLAGS, PROBLEM_HPARAMS
 
 _use_faiss = False
 
 if DATA_FILTERING['use_faiss']:
   try:
-
     import faiss
     _use_faiss = True
 
@@ -23,7 +24,20 @@ if DATA_FILTERING['use_faiss']:
 if not _use_faiss:
   from sklearn.cluster import KMeans
 
-from sklearn.cluster import MeanShift
+
+# Temporary helper function to load a vocabulary.
+def load_vocab():
+  vocab = open(os.path.join(FLAGS["data_dir"],
+               "vocab.chatbot." + str(PROBLEM_HPARAMS["vocabulary_size"])))
+  vocab_dict = {}
+  # Read the vocab file.
+  i = 0
+  for word in vocab:
+    vocab_dict[word.strip("\n")] = i
+    i += 1
+
+  vocab.close()
+  return vocab_dict
 
 
 def split_sts_data(input_file_path, file, output_dir):
@@ -79,8 +93,7 @@ def process_correlations(correlations):
   """
   Rescales the vectors into a 0-5 interval.
   """
-  return (correlations - numpy.min(correlations)) / numpy.max(
-    correlations) * 5
+  return (correlations - numpy.min(correlations)) / numpy.max(correlations) * 5
 
 
 def simple_knn(data_point, data_set):
@@ -130,12 +143,10 @@ def calculate_centroids_mean_shift(data_set):
   Params:
     :data_set: A set of vectors.
   """
-  mean_shift = MeanShift(
-    bandwidth=DATA_FILTERING['mean_shift_bw'], n_jobs=10)
+  mean_shift = MeanShift(bandwidth=DATA_FILTERING['mean_shift_bw'], n_jobs=10)
   mean_shift.fit(data_set)
-  centroids = mean_shift.cluster_centers_
 
-  return centroids, mean_shift
+  return mean_shift.cluster_centers_, mean_shift
 
 
 def calculate_nearest_index(data, method):
@@ -144,7 +155,6 @@ def calculate_nearest_index(data, method):
   """
   if _use_faiss:
     _, index = method.index.search(data, 1)
-
   else:
     index = method.predict(data)[0]
 
@@ -159,6 +169,6 @@ def read_sentences(file):
   with open(file, 'r', encoding='utf-8') as f:
     for line in f:
       sentences.append(' '.join(
-        [word for word in line.strip().split() if word.strip() != ''
-         and word.strip() != '<unk>']))
+          [word for word in line.strip().split() if
+           word.strip() != '' and word.strip() != '<unk>']))
   return sentences

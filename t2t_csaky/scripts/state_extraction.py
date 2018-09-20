@@ -1,27 +1,19 @@
-
 import os
+import sys
+import tensorflow as tf
 
 from tensor2tensor.bin import t2t_trainer
 from tensor2tensor.bin import t2t_decoder
-
-from tensor2tensor.data_generators import problem  # pylint: disable=unused-import
-from tensor2tensor.data_generators import text_encoder
-
 from tensor2tensor.utils import trainer_lib
 from tensor2tensor.utils import usr_dir
 
-import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 from utils import decoding
 
-import tensorflow as tf
+FLAGS = tf.flags.FLAGS
 
-
-flags = tf.flags
-FLAGS = flags.FLAGS
-
-# Other setup
+# Other setup.
 Modes = tf.estimator.ModeKeys
 
 
