@@ -35,6 +35,7 @@ class Cluster:
     self.elements = []
     self.targets = []
     self.entropy = 0
+    self.index = 0
 
   # Append an element to the list of elements in the cluster.
   def add_element(self, element):
@@ -65,8 +66,12 @@ class FilterProblem:
     """
     self.tag = tag
     self.treshold = DATA_FILTERING["treshold"]
+    self.max_avg_length = DATA_FILTERING["max_avg_length"]
+    self.max_medoid_length = DATA_FILTERING["max_medoid_length"]
     self.min_cluster_size = DATA_FILTERING["min_cluster_size"]
 
+    self.project_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), '..', '..')
     self.output_data_dir = DATA_FILTERING["data_dir"]
     self.input_data_dir = FLAGS["data_dir"]
     self.type = DATA_FILTERING["filter_type"]
@@ -79,6 +84,7 @@ class FilterProblem:
     train_lines = self.count_lines("train")
     dev_lines = self.count_lines("dev")
     test_lines = self.count_lines("test")
+
     self.split_line_counts = {
         "train": train_lines,
         "dev": dev_lines,
@@ -101,7 +107,9 @@ class FilterProblem:
 
   # Count the number of lines in the given file.
   def count_lines(self, file_tag="train"):
-    file = open(os.path.join(self.input_data_dir, file_tag + "Source.txt"))
+    file = open(os.path.join(self.project_path,
+                             self.input_data_dir,
+                             file_tag + "Source.txt"))
     num_lines = sum(1 for line in file)
     file.close()
     return num_lines
@@ -109,20 +117,19 @@ class FilterProblem:
   # Main method that will run all the functions to do the filtering.
   def run(self):
     # If we have already done the clustering, don't redo it.
-    source_data = os.path.join(
-        self.output_data_dir,
-        "..",
-        str(self.num_clusters["Source"]) + "_clusters",
-        self.tag + "Source_cluster_elements.txt")
-    target_data = os.path.join(
-        self.output_data_dir,
-        "..",
-        str(self.num_clusters["Target"]) + "_clusters",
-        self.tag + "Target_cluster_elements.txt")
+    source_data = os.path.join(self.project_path, self.output_data_dir,
+                               str(self.num_clusters["Source"]) + '-' +
+                               str(self.num_clusters["Target"]) + '_filtering',
+                               self.tag + "Source_cluster_elements.txt")
+
+    target_data = os.path.join(self.project_path, self.output_data_dir,
+                               str(self.num_clusters["Source"]) + '-' +
+                               str(self.num_clusters["Target"]) + '_filtering',
+                               self.tag + "Target_cluster_elements.txt")
     if os.path.isfile(source_data) and os.path.isfile(target_data):
       print("Cluster files are in " + self.output_data_dir +
             ", filtering now.")
-      self.load_clusters()
+      self.load_clusters_merged()
       self.filtering()
 
     else:
@@ -151,16 +158,17 @@ class FilterProblem:
   # Load clusters from files.
   def load_clusters(self):
     # Open the data files.
-    source_clusters = open(
-        os.path.join(self.output_data_dir,
-                     "..",
-                     str(self.num_clusters["Source"]) + "_clusters",
-                     self.tag + "Source_cluster_elements.txt"))
-    target_clusters = open(
-        os.path.join(self.output_data_dir,
-                     "..",
-                     str(self.num_clusters["Target"]) + "_clusters",
-                     self.tag + "Source_cluster_elements.txt"))
+    source_clusters = os.path.join(
+        self.project_path, self.output_data_dir,
+        str(self.num_clusters["Source"]) + '-' +
+        str(self.num_clusters["Target"]) + '_filtering',
+        self.tag + "Source_cluster_elements.txt")
+
+    target_clusters = os.path.join(
+        self.project_path, self.output_data_dir,
+        str(self.num_clusters["Source"]) + '-' +
+        str(self.num_clusters["Target"]) + '_filtering',
+        self.tag + "Target_cluster_elements.txt")
 
     # Make a preloaded target cluster list.
     self.clusters["Target"] = ["" for i in range(self.num_clusters["Target"])]
@@ -208,6 +216,70 @@ class FilterProblem:
 
     source_clusters.close()
     target_clusters.close()
+
+  # Load clusters that were saved in a different way (semantic clustering).
+  def load_clusters_merged(self):
+    source_path = os.path.join(
+        self.project_path, self.output_data_dir,
+        str(self.num_clusters["Source"]) + '-' +
+        str(self.num_clusters["Target"]) + '_filtering',
+        self.tag + "Source_cluster_elements.txt")
+
+    target_path = os.path.join(
+        self.project_path, self.output_data_dir,
+        str(self.num_clusters["Source"]) + '-' +
+        str(self.num_clusters["Target"]) + '_filtering',
+        self.tag + "Target_cluster_elements.txt")
+
+    source_clusters = {}
+    target_clusters = {}
+
+    source_data_points = {}
+    target_data_points = {}
+
+    with open(source_path, 'r') as source_file:
+      for line in source_file:
+        [source_index_center, source_target, _] = line.split('<=====>')
+        [source_index, source_center] = source_index_center.split(';')
+        [source, target] = source_target.split('=')
+
+        source_data_points[int(source_index)] = self.DataPointClass(
+            source, int(source_index), False)
+        target_data_points[int(source_index)] = self.DataPointClass(
+            target, int(source_index), False)
+
+        if source_clusters.get(source_center) is None:
+          center = self.DataPointClass(source_center, 0, False)
+          source_clusters[source_center] = self.ClusterClass(center)
+          source_clusters[source_center].index = len(source_clusters) - 1
+
+        source_data_points[int(source_index)].cluster_index = \
+            source_clusters[source_center].index
+        source_clusters[source_center].add_element(
+            source_data_points[int(source_index)])
+        source_clusters[source_center].add_target(
+            target_data_points[int(source_index)])
+
+    with open(target_path, 'r') as target_file:
+      for line in target_file:
+        [target_index_center, target_source, _] = line.split('<=====>')
+        [target_index, target_center] = target_index_center.split(';')
+        [target, source] = target_source.split('=')
+
+        target_data_point = target_data_points[int(target_index)]
+        source_data_point = source_data_points[int(target_index)]
+
+        if target_clusters.get(target_center) is None:
+          center = self.DataPointClass(target_center, 0, False)
+          target_clusters[target_center] = self.ClusterClass(center)
+          target_clusters[target_center].index = len(target_clusters) - 1
+
+        target_data_point.cluster_index = target_clusters[target_center].index
+        target_clusters[target_center].add_element(target_data_point)
+        target_clusters[target_center].add_target(source_data_point)
+
+    self.clusters['Source'] = list(source_clusters.values())
+    self.clusters['Target'] = list(target_clusters.values())
 
   # Find the point that minimizes mean distance within a cluster.
   def find_medoid(self, data_tag):
@@ -315,16 +387,23 @@ class FilterProblem:
           else:
             distribution[target.cluster_index] = 1
 
+        num_elements = len(cluster.elements)
         # Calculate entropy.
         entropy = 0
         for cl_index in distribution:
-          if len(cluster.targets) > 1:
-            probability = distribution[cl_index] / len(cluster.targets)
+          if num_elements > 1:
+            probability = distribution[cl_index] / num_elements
             entropy += probability * math.log(probability, 2)
         cluster.entropy = -entropy
 
-        # Get a list of indices that we want to filter.
-        if cluster.entropy > self.treshold:
+        avg_length = (
+            sum(len(sent.string.split()) for sent in cluster.elements) /
+            (num_elements if num_elements > 0 else 1))
+
+        # Filter.
+        if (cluster.entropy > self.treshold and
+            avg_length < self.max_avg_length and
+                len(cluster.medoid.string.split()) < self.max_medoid_length):
           indices.append(num_cl)
           print('Medoid: "' + cluster.medoid.string + '" got filtered.')
 
@@ -394,9 +473,10 @@ class FilterProblem:
             # Filter one side.
             for num_el, element in enumerate(cluster.elements):
               target_cl = cluster.targets[num_el].cluster_index
-              cluster_too_small = (len(
-                  self.clusters["Target"][target_cl].elements) <
-                  self.min_cluster_size)
+              if self.type == "both":
+                cluster_too_small = (len(
+                    self.clusters["Target"][target_cl].elements) <
+                    self.min_cluster_size)
               # Check both sides in "both" case.
               if ((target_cl not in target_indices or cluster_too_small) or
                       self.type != "both"):

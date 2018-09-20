@@ -21,7 +21,6 @@ class ExtractedTransformer(transformer.Transformer):
   """
   def __init__(self, *args, **kwargs):
     super(ExtractedTransformer, self).__init__(*args, **kwargs)
-    self._name = "transformer"
 
   def estimator_spec_predict(self, features, use_tpu=False):
     """Construct EstimatorSpec for PREDICT mode."""

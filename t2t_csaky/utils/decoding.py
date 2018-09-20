@@ -20,11 +20,14 @@ from __future__ import print_function
 
 import os
 import time
-
+import six
 import numpy as np
+import tensorflow as tf
+from queue import Empty
 
 from tensor2tensor.utils import decoding
-import tensorflow as tf
+from tensor2tensor.data_generators import problem as problem_lib
+from tensor2tensor.data_generators import text_encoder
 
 FLAGS = tf.flags.FLAGS
 
@@ -226,3 +229,135 @@ def decode_from_file(estimator,
 
   if decode_to_file:
     outfile.close()
+
+
+def make_input_fn_from_generator(gen):
+  """Use py_func to yield elements from the given generator."""
+  first_ex = six.next(gen)
+  flattened = tf.contrib.framework.nest.flatten(first_ex)
+  types = [t.dtype for t in flattened]
+  shapes = [[None] * len(t.shape) for t in flattened]
+  first_ex_list = [first_ex]
+
+  def py_func():
+    if first_ex_list:
+      example = first_ex_list.pop()
+    else:
+      example = six.next(gen)
+    return tf.contrib.framework.nest.flatten(example)
+
+  def input_fn():
+    flat_example = tf.py_func(py_func, [], types)
+    _ = [t.set_shape(shape) for t, shape in zip(flat_example, shapes)]
+    return tf.contrib.framework.nest.pack_sequence_as(first_ex, flat_example)
+
+  return input_fn
+
+
+def decode_interactively(estimator, hparams, decode_hp,
+                         message, response, checkpoint_path=None):
+  """Interactive decoding."""
+
+  def input_fn():
+    gen_fn = make_input_fn_from_generator(
+        _interactive_input_fn(hparams, decode_hp, message))
+    example = gen_fn()
+    return decoding._interactive_input_tensor_to_features_dict(example,
+                                                               hparams)
+
+  result_iter = estimator.predict(input_fn, checkpoint_path=checkpoint_path)
+  for result in result_iter:
+    is_image = False  # TODO(lukaszkaiser): find out from problem id / class.
+    targets_vocab = hparams.problem_hparams.vocabulary["targets"]
+
+    if decode_hp.return_beams:
+      beams = np.split(result["outputs"], decode_hp.beam_size, axis=0)
+      beam_string = targets_vocab.decode(
+          decoding._save_until_eos(beams[0], is_image))
+      response.put(beam_string, block=False)
+    else:
+      if decode_hp.identity_output:
+        response.put(" ".join(map(str, result["outputs"].flatten())),
+                     block=False)
+      else:
+        response.put(targets_vocab.decode(decoding._save_until_eos(
+            result["outputs"], is_image)), block=False)
+
+
+def _interactive_input_fn(hparams, decode_hp, message):
+  """Generator that reads from the terminal and yields "interactive inputs".
+
+  Due to temporary limitations in tf.learn, if we don't want to reload the
+  whole graph, then we are stuck encoding all of the input as one fixed-size
+  numpy array.
+
+  We yield int32 arrays with shape [const_array_size].  The format is:
+  [num_samples, decode_length, len(input ids), <input ids>, <padding>]
+
+  Args:
+    hparams: model hparams
+    decode_hp: decode hparams
+  Yields:
+    numpy arrays
+
+  Raises:
+    Exception: when `input_type` is invalid.
+  """
+  num_samples = decode_hp.num_samples if decode_hp.num_samples > 0 else 1
+  decode_length = decode_hp.extra_length
+  input_type = "text"
+  p_hparams = hparams.problem_hparams
+  has_input = "inputs" in p_hparams.input_modality
+  vocabulary = p_hparams.vocabulary["inputs" if has_input else "targets"]
+  # This should be longer than the longest input.
+  const_array_size = 10000
+  # Import readline if available for command line editing and recall.
+  try:
+    import readline  # pylint: disable=g-import-not-at-top,unused-variable
+  except ImportError:
+    pass
+  while True:
+    while True:
+      try:
+        input_string = message.get(block=False)
+        break
+      except Empty:
+        time.sleep(1)
+
+    if input_string == "q":
+      return
+    elif input_string[:3] == "ns=":
+      num_samples = int(input_string[3:])
+    elif input_string[:3] == "dl=":
+      decode_length = int(input_string[3:])
+    elif input_string[:3] == "it=":
+      input_type = input_string[3:]
+    else:
+      if input_type == "text":
+        input_ids = vocabulary.encode(input_string)
+        if has_input:
+          input_ids.append(text_encoder.EOS_ID)
+        x = [num_samples, decode_length, len(input_ids)] + input_ids
+        assert len(x) < const_array_size
+        x += [0] * (const_array_size - len(x))
+        features = {
+            "inputs": np.array(x).astype(np.int32),
+        }
+      elif input_type == "image":
+        input_path = input_string
+        img = vocabulary.encode(input_path)
+        features = {
+            "inputs": img.astype(np.int32),
+        }
+      elif input_type == "label":
+        input_ids = [int(input_string)]
+        x = [num_samples, decode_length, len(input_ids)] + input_ids
+        features = {
+            "inputs": np.array(x).astype(np.int32),
+        }
+      else:
+        raise Exception("Unsupported input type.")
+      for k, v in six.iteritems(
+              problem_lib.problem_hparams_to_features(p_hparams)):
+        features[k] = np.array(v).astype(np.int32)
+      yield features

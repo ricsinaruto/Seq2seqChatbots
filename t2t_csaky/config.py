@@ -3,6 +3,7 @@ In this file you can set all tensor2tensor flags, hparams and other settings
 for the current run. This file will also be copied to the provided directory.
 """
 
+
 FLAGS = {
     "t2t_usr_dir": "t2t_csaky",  # Tensor2tensor imports from this dir.
     "data_dir": "data_dir/DailyDialog/base_both_rnn_state_clustering",
@@ -46,7 +47,10 @@ DATA_FILTERING = {
     "ckpt_number": 22001,  # Only for sentence embedding clustering.
     "semantic_clustering_method": "kmeans",  # Kmeans or mean_shift.
     "mean_shift_bw": 12,  # Mean shift bandwidth.
-    "use_faiss": False  # Whether to use the library for GPU based clustering.
+    "use_faiss": False,  # Whether to use the library for GPU based clustering.
+    "max_avg_length": 15,  # Clusters with longer sentences won't get filtered.
+    "max_medoid_length": 10  # Clusters with longer medoids won't get filtered.
+
 }
 
 PROBLEM_HPARAMS = {

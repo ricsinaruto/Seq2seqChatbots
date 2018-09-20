@@ -1,10 +1,12 @@
 import os
 import sys
+import tensorflow as tf
 import numpy
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.cluster import MeanShift
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__))))
+
 
 # My imports.
 from config import DATA_FILTERING, FLAGS, PROBLEM_HPARAMS
@@ -141,11 +143,10 @@ def calculate_centroids_mean_shift(data_set):
   Params:
     :data_set: A set of vectors.
   """
-  mean_shift = MeanShift(
-      bandwidth=DATA_FILTERING['mean_shift_bw']).fit(data_set)
-  centroids = mean_shift.cluster_centers_
+  mean_shift = MeanShift(bandwidth=DATA_FILTERING['mean_shift_bw'], n_jobs=10)
+  mean_shift.fit(data_set)
 
-  return centroids, mean_shift
+  return mean_shift.cluster_centers_, mean_shift
 
 
 def calculate_nearest_index(data, method):

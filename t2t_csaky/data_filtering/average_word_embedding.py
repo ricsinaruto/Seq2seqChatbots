@@ -28,14 +28,11 @@ class AverageWordEmbedding(SemanticClustering):
 
     meaning_vectors = np.load(self.paths[data_tag]['npy'])
 
-    file = open(
-        self._data_path(self.tag + data_tag, '.txt'), 'r', encoding='utf-8')
-
-    for index, line in enumerate(file):
-      self.data_points[data_tag].append(self.DataPointClass(
-          line.strip(), index, False, meaning_vectors[index]))
-
-    file.close()
+    with open(self._data_path(
+            self.tag + data_tag, '.txt'), 'r', encoding='utf-8') as file:
+      for index, line in enumerate(file):
+        self.data_points[data_tag].append(self.DataPointClass(
+            line.strip(), index, False, meaning_vectors[index]))
 
   def generate_average_word_embeddings(self,
                                        vocab_path,
