@@ -22,7 +22,7 @@ class AverageWordEmbedding(SemanticClustering):
     if not os.path.exists(self.paths[data_tag]['npy']):
       self.generate_average_word_embeddings(
           os.path.join(project_path,
-                       self._data_path('vocab')),
+                       self._data_path('vocab.chatbot.16384')),
           self._data_path(self.tag + data_tag, '.txt'),
           self.paths[data_tag])
 

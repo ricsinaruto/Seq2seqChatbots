@@ -13,7 +13,7 @@ from data_filtering.encoder_state import EncoderState
 from data_filtering.average_word_embedding import AverageWordEmbedding
 from data_filtering.sentence_embedding import SentenceEmbedding
 from data_filtering.identity_clustering import IdentityClustering
-from data_filtering.identity_clustering import DistributionLoss
+from data_filtering.distribution_loss import DistributionLoss
 
 
 # Save the config.py file for a specific run.

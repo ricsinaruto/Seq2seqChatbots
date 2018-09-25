@@ -129,7 +129,7 @@ class FilterProblem:
     if os.path.isfile(source_data) and os.path.isfile(target_data):
       print("Cluster files are in " + self.output_data_dir +
             ", filtering now.")
-      self.load_clusters_merged()
+      self.load_clusters_merged(source_data, target_data)
       self.filtering()
 
     else:
@@ -146,7 +146,7 @@ class FilterProblem:
   def read_inputs(self):
     # Read either a Source or target file.
     def read_file(tag):
-      file = open(os.path.join(self.input_data_dir, self.tag + tag))
+      file = open(os.path.join(self.input_data_dir, self.tag + tag + ".txt"))
       for i, line in enumerate(file):
         self.data_points[tag].append(self.DataPointClass(line, i, False))
       file.close()
@@ -218,22 +218,9 @@ class FilterProblem:
     target_clusters.close()
 
   # Load clusters that were saved in a different way (semantic clustering).
-  def load_clusters_merged(self):
-    source_path = os.path.join(
-        self.project_path, self.output_data_dir,
-        str(self.num_clusters["Source"]) + '-' +
-        str(self.num_clusters["Target"]) + '_filtering',
-        self.tag + "Source_cluster_elements.txt")
-
-    target_path = os.path.join(
-        self.project_path, self.output_data_dir,
-        str(self.num_clusters["Source"]) + '-' +
-        str(self.num_clusters["Target"]) + '_filtering',
-        self.tag + "Target_cluster_elements.txt")
-
+  def load_clusters_merged(self, source_path, target_path):
     source_clusters = {}
     target_clusters = {}
-
     source_data_points = {}
     target_data_points = {}
 
@@ -278,8 +265,12 @@ class FilterProblem:
         target_clusters[target_center].add_element(target_data_point)
         target_clusters[target_center].add_target(source_data_point)
 
-    self.clusters['Source'] = list(source_clusters.values())
-    self.clusters['Target'] = list(target_clusters.values())
+    source_indices = sorted(
+        list(source_clusters), key=lambda x: source_clusters[x].index)
+    self.clusters['Source'] = [source_clusters[i] for i in source_indices]
+    target_indices = sorted(
+        list(target_clusters), key=lambda x: target_clusters[x].index)
+    self.clusters['Target'] = [target_clusters[i] for i in target_indices]
 
   # Find the point that minimizes mean distance within a cluster.
   def find_medoid(self, data_tag):
@@ -377,35 +368,33 @@ class FilterProblem:
     """
     indices = []
     for num_cl, cluster in enumerate(self.clusters[source]):
-      # Error guarding for the case when loading clusters.
-      if cluster != "":
-        # Build a distribution for the current cluster, based on the targets.
-        distribution = Counter()
-        for target in cluster.targets:
-          if target.cluster_index in distribution:
-            distribution[target.cluster_index] += 1
-          else:
-            distribution[target.cluster_index] = 1
+      # Build a distribution for the current cluster, based on the targets.
+      distribution = Counter()
+      for target in cluster.targets:
+        if target.cluster_index in distribution:
+          distribution[target.cluster_index] += 1
+        else:
+          distribution[target.cluster_index] = 1
 
-        num_elements = len(cluster.elements)
-        # Calculate entropy.
-        entropy = 0
-        for cl_index in distribution:
-          if num_elements > 1:
-            probability = distribution[cl_index] / num_elements
-            entropy += probability * math.log(probability, 2)
-        cluster.entropy = -entropy
+      num_elements = len(cluster.elements)
+      # Calculate entropy.
+      entropy = 0
+      for cl_index in distribution:
+        if num_elements > 1:
+          probability = distribution[cl_index] / num_elements
+          entropy += probability * math.log(probability, 2)
+      cluster.entropy = -entropy
 
-        avg_length = (
-            sum(len(sent.string.split()) for sent in cluster.elements) /
-            (num_elements if num_elements > 0 else 1))
+      avg_length = (
+          sum(len(sent.string.split()) for sent in cluster.elements) /
+          (num_elements if num_elements > 0 else 1))
 
-        # Filter.
-        if (cluster.entropy > self.treshold and
-            avg_length < self.max_avg_length and
-                len(cluster.medoid.string.split()) < self.max_medoid_length):
-          indices.append(num_cl)
-          print('Medoid: "' + cluster.medoid.string + '" got filtered.')
+      # Filter.
+      if (cluster.entropy > self.treshold and
+          avg_length < self.max_avg_length and
+              len(cluster.medoid.string.split()) < self.max_medoid_length):
+        indices.append(num_cl)
+        #print('Medoid: "' + cluster.medoid.string + '" got filtered.')
 
     print("Finished filtering " + source + " data.")
     return indices
@@ -457,52 +446,50 @@ class FilterProblem:
     # Function for writing the dataset to file.
     def save_dataset(source):
       for num_cl, cluster in enumerate(self.clusters[source]):
-        # Filter errors due to cluster loading.
-        if cluster != "":
-          # Write cluster entropies.
-          file_dict[source.lower() + "_entropy"].write(
-              cluster.medoid.string + ";" +
-              str(cluster.entropy) + ";" +
-              str(len(cluster.elements)) + "\n")
+        # Write cluster entropies.
+        file_dict[source.lower() + "_entropy"].write(
+            cluster.medoid.string + ";" +
+            str(cluster.entropy) + ";" +
+            str(len(cluster.elements)) + "\n")
 
-          indices = source_indices if source == "Source" else target_indices
-          cluster_too_small = len(cluster.elements) < self.min_cluster_size
-          # Make sure that in "both" case this is only run once.
-          if ((source == "Source" or self.type != "both") and
-                  (num_cl not in indices or cluster_too_small)):
-            # Filter one side.
-            for num_el, element in enumerate(cluster.elements):
-              target_cl = cluster.targets[num_el].cluster_index
-              if self.type == "both":
-                cluster_too_small = (len(
-                    self.clusters["Target"][target_cl].elements) <
-                    self.min_cluster_size)
-              # Check both sides in "both" case.
-              if ((target_cl not in target_indices or cluster_too_small) or
-                      self.type != "both"):
-                source_string = element.string + "\n"
-                target_string = cluster.targets[num_el].string + "\n"
+        indices = source_indices if source == "Source" else target_indices
+        cluster_too_small = len(cluster.elements) < self.min_cluster_size
+        # Make sure that in "both" case this is only run once.
+        if ((source == "Source" or self.type != "both") and
+                (num_cl not in indices or cluster_too_small)):
+          # Filter one side.
+          for num_el, element in enumerate(cluster.elements):
+            target_cl = cluster.targets[num_el].cluster_index
+            if self.type == "both":
+              cluster_too_small = (len(
+                  self.clusters["Target"][target_cl].elements) <
+                  self.min_cluster_size)
+            # Check both sides in "both" case.
+            if ((target_cl not in target_indices or cluster_too_small) or
+                    self.type != "both"):
+              source_string = element.string + "\n"
+              target_string = cluster.targets[num_el].string + "\n"
 
-                # Reverse if Target.
-                if source == "Target":
-                  tmp = source_string
-                  source_string = target_string
-                  target_string = tmp
-                file_dict[self.tag + "source_file"].write(source_string)
-                file_dict[self.tag + "target_file"].write(target_string)
+              # Reverse if Target.
+              if source == "Target":
+                tmp = source_string
+                source_string = target_string
+                target_string = tmp
+              file_dict[self.tag + "source_file"].write(source_string)
+              file_dict[self.tag + "target_file"].write(target_string)
 
-                # Write to separate files if we do split after clustering.
-                if self.tag == "full":
-                  if element.index < self.split_line_counts["train"]:
-                    file_dict["trainS"].write(source_string)
-                    file_dict["trainT"].write(target_string)
-                  elif element.index < (self.split_line_counts["train"] +
-                                        self.split_line_counts["dev"]):
-                    file_dict["devS"].write(source_string)
-                    file_dict["devT"].write(target_string)
-                  else:
-                    file_dict["testS"].write(source_string)
-                    file_dict["testT"].write(target_string)
+              # Write to separate files if we do split after clustering.
+              if self.tag == "full":
+                if element.index < self.split_line_counts["train"]:
+                  file_dict["trainS"].write(source_string)
+                  file_dict["trainT"].write(target_string)
+                elif element.index < (self.split_line_counts["train"] +
+                                      self.split_line_counts["dev"]):
+                  file_dict["devS"].write(source_string)
+                  file_dict["devT"].write(target_string)
+                else:
+                  file_dict["testS"].write(source_string)
+                  file_dict["testT"].write(target_string)
 
     # Write source entropies and data to file.
     if self.type == "target_based" or self.type == "both":
