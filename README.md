@@ -1,8 +1,8 @@
 # Seq2seqChatbots
  
-This repository contains the code that was written for experiments described in [this](https://tdk.bme.hu/VIK/DownloadPaper/asdad) paper. Own problem, hparams and model registrations to the [tensor2tensor](https://github.com/tensorflow/tensor2tensor) library in order to try out different datasets with the [Transformer](https://arxiv.org/abs/1706.03762) modell for training dialog agents. The folders in the repository contain the following content:
-* **docs**: Latex files and pictures required to generate the [paper](https://tdk.bme.hu/VIK/DownloadPaper/asdad).
-* **t2t_csaky**: This folder contains all the code, more detailed description can be found lower.
+This repository contains the code that was written for experiments described in [this](https://tdk.bme.hu/VIK/DownloadPaper/asdad) paper, and also [data filtering](https://github.com/ricsinaruto/Seq2seqChatbots/tree/master#filter-data) methods and experiments for [this](https://www.researchgate.net/publication/327594109_Making_Chatbots_Better_by_Training_on_Less_Data) paper. Own problem, hparams and model registrations are written to the [tensor2tensor](https://github.com/tensorflow/tensor2tensor) library in order to try out different datasets with the [Transformer](https://arxiv.org/abs/1706.03762) modell for training dialog agents. The folders in the repository contain the following content:
+* **docs**: Latex files and pictures required to generate [this](https://tdk.bme.hu/VIK/DownloadPaper/asdad) and [this](https://www.researchgate.net/publication/327594109_Making_Chatbots_Better_by_Training_on_Less_Data).
+* **t2t_csaky**: This folder contains all the source code, more detailed description can be found lower.
 * **decode_dir**: Here you can find inference outputs from the various trainings that were run.
 * **wiki_images**: Contains images used for the [wiki](https://github.com/ricsinaruto/Seq2seqChatbots/wiki/Chatbot-and-Related-Research-Paper-Notes-with-Images), where I write about more than 100 publications related to chatbots.
 
@@ -43,21 +43,23 @@ The *PROBLEM_HPARAMS* dictionary in the config file contains problem specific pa
 * *name_vocab_size*: This is only relevant to the cornell problem with separate names. You can set the size of the vocabulary containing only the personas.
  
 ### Filter Data
-Run this mode if you want to filter a dataset based on entropy. Currently there are two working clustering methods:
+Run this mode if you want to filter a dataset based on entropy as described [here](https://www.researchgate.net/publication/327594109_Making_Chatbots_Better_by_Training_on_Less_Data). You can choose from several working clustering methods:
 * *[hash_jaccard](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/data_filtering/hash_jaccard.py)*: Cluster sentences based on the jaccard similarity between them, using the [datasketch](https://github.com/ekzhu/datasketch) library.
 * *[identity_clustering](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/data_filtering/identity_clustering.py)*: This is a very simple clustering method, where only sentences that are exactly the same (syntactically) fall into one cluster.
+* *[average_word_embedding](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/data_filtering/average_word_embedding.py)*: More sophisticated method where sentences are clustered based on their average word embedding representation.
+* *[encoder_state](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/data_filtering/identity_clustering.py)*: Cluster sentences based on their representation from a trained seq2seq model's encoder RNN final hidden state.
 
 The *DATA_FILTERING* dictionary in the config file contains the parameters for this mode, which you will have to set. Short explanation:
 * *data_dir*: Specify the directory where the new dataset will be saved.
 * *filter_problem*: Specify the name of the clustering method, can be one of the above.
 * *filter_type*: Whether to filter source, target, or both sides.
 * *treshold*: The entropy treshold above which source-target pairs will get filtered.
+* *semantic_clustering_method*: Whether to use Kmeans or Mean shift for the semantic clustering types. Mean shift looks like the superior method, where only a radius has to be given.
 
 You can see some results of the clustering/filtering methods in the *[filtering_visualization](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/scripts/filtering_visualization.ipynb)* jupyter notebook.
 
 ### Train
-This mode allows you to train a model with the specified problem and hyperparameters. Currently there are two subclassed models with small modifications:
-* *[roulette_transformer](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/models/roulette_transformer.py)*: Original transformer modell, now with modified beam search, where roulette-wheel selection can be used to select among the top beams, instead of argmax.
+This mode allows you to train a model with the specified problem and hyperparameters. Currently there are is one subclassed model with small modifications:
 * *[gradient_checkpointed_seq2seq](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/models/gradient_checkpointed_seq2seq.py)*: Small modification of the lstm based seq2seq model, so that own hparams can be used entirely. Moreover, before calculating the softmax the LSTM hidden units are projected to 2048 linear units as [here](https://arxiv.org/pdf/1506.05869.pdf). Finally, I tried to implement [gradient checkpointing](https://github.com/openai/gradient-checkpointing) to this model, but currently it is taken out since it didn't give good results.
 
 There are several additional flags that you can specify for a training run in the *FLAGS* dictionary in the config file, some of which are:
@@ -74,9 +76,10 @@ With this mode you can decode from the trained models. The following parameters 
 * *beam_size*: Size of the beam, when using beam search.
 * *return_beams*: If False return only the top beam, otherwise return *beam_size* number of beams.
 
-Also, for all 4 training examples given below, checkpoint files are uploaded [here](https://mega.nz/#!bckTiS6Z!3CJxsl4AyR1W6eUnJ6Viq_cKMhhMh82cFlmA9xbotpo) so you can try them out without needing to train. However, these only work with tensor2tensor version 1.2.1, and version v0.9 of this repository.
 
-### Sample conversations from the various trainings
+### See [this](https://anonfile.com/54YeAbf6b6/tables.pdf) for more sample response from [this](https://www.researchgate.net/publication/327594109_Making_Chatbots_Better_by_Training_on_Less_Data) paper.
+
+### Sample responses from various trainings
 S2S is a baseline seq2seq model from [this](https://arxiv.org/pdf/1506.05869.pdf) paper, Cornell is the Transformer model trained on Cornell data, Cornell S is similar, but trained with speaker-addressee annotations. OpenSubtitles is the Transformer trained with OpenSubtitles data, and OpenSubtitles F, is the previous training finetuned (further trained) on Cornell speaker annotated data.
 <a><img src="https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/docs/deep_learning_based_chatbot_models/pics/general_questions.png" align="top" height="550" ></a>
 
