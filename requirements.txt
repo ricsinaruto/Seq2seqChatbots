@@ -1,8 +1,5 @@
 tensorflow-gpu
 tensor2tensor
-requests
-clint
-toposort
-networkx
-pytest
 datasketch
+sklearn
+clint
