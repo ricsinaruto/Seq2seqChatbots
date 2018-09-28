@@ -2,11 +2,13 @@ from collections import Counter
 from datasketch import MinHash
 import math
 
-train_corpus_path = "data_dir/DailyDialog/base/trainSource.txt"
-vocab_file_path = "data_dir/DailyDialog/base/vocab.chatbot.16384"
-test_responses_path = "decode_dir/DailyDialog/trf_20_dropout-base/both_source_11k.txt"
-test_source_path = "decode_dir/DailyDialog/both_source.txt"
+train_corpus_path = "data_dir/DailyDialog/base_with_numbers/trainSource.txt"
+vocab_file_path = "data_dir/DailyDialog/base_with_numbers/vocab.chatbot.16384"
+test_responses_path = "decode_dir/DailyDialog/trf_20_dropout-base_target_based_identity_clustering/test_set_13k.txt"
+test_source_path = "data_dir/DailyDialog/base_with_numbers/testSource.txt"
 word_counts = Counter()
+
+output = open(test_responses_path.strip(".txt") + "_metrics.txt", "w")
 
 
 def count_words():
@@ -36,11 +38,11 @@ def count_words():
 def average_entropy(num_words):
   test_responses = open(test_responses_path)
   entropies = []
-  response_word_counts = []
+  response_len = []
 
   for line in test_responses:
     words = line.strip("\n").split()
-    response_word_counts.append(len(words))
+    response_len.append(len(words))
 
     entropy = 0
     for word in words:
@@ -50,11 +52,22 @@ def average_entropy(num_words):
 
     entropies.append(-entropy)
 
-  avg_length = sum(response_word_counts) / len(response_word_counts)
+  avg_length = sum(response_len) / len(response_len)
   avg_entropy = sum(entropies) / len(entropies)
 
-  print("averge length: " + str(avg_length))
-  print("average entropy: " + str(avg_entropy))
+  # Compute the standard deviation.
+  length_std = math.sqrt(
+      sum([(x - avg_length) ** 2 for x in response_len]) /
+      (len(response_len) - 1))
+  entropy_std = math.sqrt(
+      sum([(x - avg_entropy) ** 2 for x in entropies]) / (len(entropies) - 1))
+
+  length = "average length: " + str(avg_length) + " (" + str(length_std) + ")"
+  entropy = "average entropy: " + str(avg_entropy) + " (%f)" % (entropy_std)
+  print(length)
+  print(entropy)
+  output.write(length + "\n")
+  output.write(entropy + "\n")
   test_responses.close()
 
 
@@ -77,7 +90,14 @@ def similarity():
     similarities.append(source_hash.jaccard(target_hash))
 
   avg_similarity = sum(similarities) / len(similarities)
-  print("average similarity: " + str(avg_similarity))
+  sim_std = math.sqrt(
+      sum([(x - avg_similarity) ** 2 for x in similarities]) /
+      (len(similarities) - 1))
+
+  sim = "average similarity: " + str(avg_similarity) + " (%f)" % (sim_std)
+  print(sim)
+  output.write(sim + "\n")
+
   source_file.close()
   target_file.close()
 
@@ -86,6 +106,7 @@ def main():
   num_words = count_words()
   average_entropy(num_words)
   similarity()
+  output.close()
 
 
 if __name__ == "__main__":

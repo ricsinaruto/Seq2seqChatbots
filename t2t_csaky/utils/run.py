@@ -107,7 +107,8 @@ def decoding():
             " --decode_to_file=" +
             FLAGS["decode_dir"] + "/" + FLAGS["output_file_name"] +
             ' --decode_hparams="beam_size=' + str(FLAGS["beam_size"]) +
-            ",return_beams=" + FLAGS["return_beams"] + '"' +
+            ",return_beams=" + FLAGS["return_beams"] +
+            ",batch_size=" + str(FLAGS["batch_size"]) + '"' +
             decode_mode_string)
 
 

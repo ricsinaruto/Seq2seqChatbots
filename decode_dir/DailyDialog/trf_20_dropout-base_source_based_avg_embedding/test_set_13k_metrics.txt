@@ -1,0 +1,3 @@
+average length: 5.761 (2.824)
+average entropy: 0.5367 (0.2220)
+average similarity: 0.09229 (0.09144)
