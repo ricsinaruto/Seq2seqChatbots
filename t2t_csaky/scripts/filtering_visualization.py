@@ -56,7 +56,7 @@ def _visualize(file, tag, fig_list):
   fig_list[1].plot(sorted(cl_sizes_all))
   fig_list[1].set_xlabel("Sentence no.")
   fig_list[1].set_ylabel("Cluster size")
-  # fig_list[1].axis([0, 90000, -0.2, 500])
+  #fig_list[1].axis([0, 90000, -0.2, 500])
 
   fig_list[2].scatter(np.array(cl_sizes), np.array(entropies))
   #fig_list[2].axis([0, 250, 7, 8])
@@ -195,4 +195,4 @@ def print_clusters(source_cl,
     print('=====================================================')
     print('Medoid: {} Entropy: {}'.format(medoid, entropies[medoid]))
     print('Size: {}'.format(len(clusters[medoid])))
-    print('Elements: \n{}\n\n'.format('\n'.join(clusters[medoid])))
+    print('Elements: \n{}\n\n'.format('\n'.join(set(clusters[medoid]))))
