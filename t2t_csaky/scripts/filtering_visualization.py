@@ -59,14 +59,14 @@ def _visualize(file, tag, fig_list):
   #fig_list[1].axis([0, 90000, -0.2, 500])
 
   fig_list[2].scatter(np.array(cl_sizes), np.array(entropies))
-  #fig_list[2].axis([0, 250, 7, 8])
+  fig_list[2].axis([0, 300, 0, 8])
   fig_list[2].set_xlabel("Cluster size")
   fig_list[2].set_ylabel("Entropy")
 
   fig_list[3].scatter(np.array(lengths), np.array(entropies))
   fig_list[3].set_xlabel("No. of words in utterance")
   fig_list[3].set_ylabel("Entropy")
-  fig_list[3].axis([0, 20, 1.1, 7])
+  fig_list[3].axis([0, 64, 0, 8])
 
   # Sort the sentence lists.
   sent_ent = sorted(sentence_entropy, key=operator.itemgetter(1), reverse=True)
@@ -195,4 +195,5 @@ def print_clusters(source_cl,
     print('=====================================================')
     print('Medoid: {} Entropy: {}'.format(medoid, entropies[medoid]))
     print('Size: {}'.format(len(clusters[medoid])))
-    print('Elements: \n{}\n\n'.format('\n'.join(set(clusters[medoid]))))
+    if len(clusters[medoid]) < 5000:
+    	print('Elements: \n{}\n\n'.format('\n'.join(set(clusters[medoid]))))
