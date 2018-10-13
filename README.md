@@ -1,5 +1,7 @@
 # Seq2seqChatbots
- 
+### Papers
+#### [Deep Learning Based Chatbot Models](https://tdk.bme.hu/VIK/DownloadPaper/asdad)
+#### [Making Chatbots Better by Training on Less Data](https://www.researchgate.net/publication/327594109_Making_Chatbots_Better_by_Training_on_Less_Data)
 This repository contains the code that was written for experiments described in [this](https://tdk.bme.hu/VIK/DownloadPaper/asdad) paper, and also [data filtering](https://github.com/ricsinaruto/Seq2seqChatbots/tree/master#filter-data) methods and experiments for [this](https://www.researchgate.net/publication/327594109_Making_Chatbots_Better_by_Training_on_Less_Data) paper. Own problem, hparams and model registrations are written to the [tensor2tensor](https://github.com/tensorflow/tensor2tensor) library in order to try out different datasets with the [Transformer](https://arxiv.org/abs/1706.03762) modell for training dialog agents. The folders in the repository contain the following content:
 * **docs**: Latex files and pictures required to generate [this](https://tdk.bme.hu/VIK/DownloadPaper/asdad) and [this](https://www.researchgate.net/publication/327594109_Making_Chatbots_Better_by_Training_on_Less_Data).
 * **t2t_csaky**: This folder contains all the source code, more detailed description can be found lower.
