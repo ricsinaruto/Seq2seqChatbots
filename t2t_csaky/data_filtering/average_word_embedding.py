@@ -24,7 +24,7 @@ class AverageWordEmbedding(SemanticClustering):
           os.path.join(project_path,
                        self._data_path('vocab.chatbot.16384')),
           self._data_path(self.tag + data_tag, '.txt'),
-          self.paths[data_tag])
+          self.paths[data_tag]['npy'])
 
     meaning_vectors = np.load(self.paths[data_tag]['npy'])
 
