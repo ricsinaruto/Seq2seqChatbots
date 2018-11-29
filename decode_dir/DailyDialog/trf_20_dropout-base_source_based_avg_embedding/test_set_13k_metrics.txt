@@ -1,3 +1,4 @@
-average length: 5.761 (2.824)
-average entropy: 0.5367 (0.2220)
-average similarity: 0.09229 (0.09144)
+average length: 5.7607855763039275 (2.823637767203096)
+average entropy: 0.5367231480701093 (0.221966)
+average utterance entropy: 3.589870346486393 (3.737863)
+average similarity: 0.09228526105387422 (0.091439)

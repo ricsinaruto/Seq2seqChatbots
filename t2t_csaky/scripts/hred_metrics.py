@@ -4,7 +4,7 @@ import math
 
 train_corpus_path = "data_dir/DailyDialog/base_with_numbers/trainSource.txt"
 vocab_file_path = "data_dir/DailyDialog/base_with_numbers/vocab.chatbot.16384"
-test_responses_path = "decode_dir/DailyDialog/trf_20_dropout-base_target_based_identity_clustering/test_set_13k.txt"
+test_responses_path = "decode_dir/DailyDialog/trf_20_dropout-base_target_based_avg_embedding/test_set_11k.txt"
 test_source_path = "data_dir/DailyDialog/base_with_numbers/testSource.txt"
 word_counts = Counter()
 
@@ -39,6 +39,7 @@ def average_entropy(num_words):
   test_responses = open(test_responses_path)
   entropies = []
   response_len = []
+  utt_entropy = []
 
   for line in test_responses:
     words = line.strip("\n").split()
@@ -51,9 +52,11 @@ def average_entropy(num_words):
         entropy += probability * math.log(probability, 2)
 
     entropies.append(-entropy)
+    utt_entropy.append(response_len[-1] * entropies[-1])
 
   avg_length = sum(response_len) / len(response_len)
   avg_entropy = sum(entropies) / len(entropies)
+  avg_utt_entropy = sum(utt_entropy) / len(utt_entropy)
 
   # Compute the standard deviation.
   length_std = math.sqrt(
@@ -61,13 +64,20 @@ def average_entropy(num_words):
       (len(response_len) - 1))
   entropy_std = math.sqrt(
       sum([(x - avg_entropy) ** 2 for x in entropies]) / (len(entropies) - 1))
+  utt_entropy_std = math.sqrt(
+      sum([(x - avg_utt_entropy) ** 2 for x in utt_entropy]) /
+      (len(utt_entropy) - 1))
 
   length = "average length: " + str(avg_length) + " (" + str(length_std) + ")"
   entropy = "average entropy: " + str(avg_entropy) + " (%f)" % (entropy_std)
+  utt_entropy = ("average utterance entropy: " +
+            str(avg_utt_entropy) + " (%f)" % (utt_entropy_std))
   print(length)
   print(entropy)
+  print(utt_entropy)
   output.write(length + "\n")
   output.write(entropy + "\n")
+  output.write(utt_entropy + "\n")
   test_responses.close()
 
 
