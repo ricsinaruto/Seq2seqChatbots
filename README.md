@@ -85,4 +85,7 @@ With this mode you can decode from the trained models. The following parameters 
 S2S is a baseline seq2seq model from [this](https://arxiv.org/pdf/1506.05869.pdf) paper, Cornell is the Transformer model trained on Cornell data, Cornell S is similar, but trained with speaker-addressee annotations. OpenSubtitles is the Transformer trained with OpenSubtitles data, and OpenSubtitles F, is the previous training finetuned (further trained) on Cornell speaker annotated data.
 <a><img src="https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/docs/deep_learning_based_chatbot_models/pics/general_questions.png" align="top" height="550" ></a>
 
+### Class Diagram
+<a><img src="https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/docs/class_diagram.png" align="top" height="550" ></a>
+
 ##### If you require any help with running the code or if you want the files of the trained models, write to this e-mail address. (ricsinaruto@hotmail.com)
