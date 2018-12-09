@@ -43,6 +43,8 @@ The *PROBLEM_HPARAMS* dictionary in the config file contains problem specific pa
 * *dataset_split*: Specify a train-val-test split for the problem.
 * *dataset_version*: This is only relevant to the opensubtitles dataset, since there are several versions of this dataset, you can specify the year of the dataset that you want to download.
 * *name_vocab_size*: This is only relevant to the cornell problem with separate names. You can set the size of the vocabulary containing only the personas.
+    
+New problems can be registered by subclassing the cornell or the opensubtitles chatbot problem. Usually it's enough to override the preprocess_data and the create_data functions. The former downloads and sets up the dataset, while the latter actually processes it and creates the train-valid-test files for training. See the [daily_dialog_chatbot](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/problems/daily_dialog_chatbot.py) for an example.
  
 ### Filter Data
 Run this mode if you want to filter a dataset based on entropy as described [here](https://www.researchgate.net/publication/327594109_Making_Chatbots_Better_by_Training_on_Less_Data). You can choose from several working clustering methods:
@@ -58,16 +60,19 @@ The *DATA_FILTERING* dictionary in the config file contains the parameters for t
 * *treshold*: The entropy treshold above which source-target pairs will get filtered.
 * *semantic_clustering_method*: Whether to use Kmeans or Mean shift for the semantic clustering types. Mean shift looks like the superior method, where only a radius has to be given.
 
-You can see some results of the clustering/filtering methods in the *[filtering_visualization](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/scripts/filtering_visualization.ipynb)* jupyter notebook.
+Some results of the clustering/filtering methods can be seen in the *[filtering_visualization](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/scripts/filtering_visualization.ipynb)* jupyter notebook.
+New clustering methods can also be added, by subclassing the [FilterProblem](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/data_filtering/filter_problem.py) class. This class contains a lot of functionality for clustering and filtering. If your clustering method is similar to others, you will only have to override the clustering function, which does the clustering of the data. Loading and saving data is taken care of, and the clustering should run on the *clusters* and *data_points* lists, which store the data in special [Cluster](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/data_filtering/filter_problem.py) and [DataPoint](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/data_filtering/filter_problem.py) objects. The latter represents one utterance from the dataset, but these can also be subclassed if additional functionality is needed. Finally the new class has to be added to the dictionary in the *data_filtering* function in [run](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/utils/run.py).
 
 ### Train
-This mode allows you to train a model with the specified problem and hyperparameters. Currently there are is one subclassed model with small modifications:
+This mode allows you to train a model with the specified problem and hyperparameters. The code just calls the tensor2tensor training script, so any model that is in tensor2tensor can be used. Besides these, there are is also a subclassed model with small modifications:
 * *[gradient_checkpointed_seq2seq](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/models/gradient_checkpointed_seq2seq.py)*: Small modification of the lstm based seq2seq model, so that own hparams can be used entirely. Moreover, before calculating the softmax the LSTM hidden units are projected to 2048 linear units as [here](https://arxiv.org/pdf/1506.05869.pdf). Finally, I tried to implement [gradient checkpointing](https://github.com/openai/gradient-checkpointing) to this model, but currently it is taken out since it didn't give good results.
 
 There are several additional flags that you can specify for a training run in the *FLAGS* dictionary in the config file, some of which are:
 * *train_dir*: Name of the directory where the training checkpoint files will be saved.
 * *model*: Name of the model: either one of the above or a tensor2tensor defined model.
 * *hparams*: Specify a registered hparams_set, or leave empty if you want to define hparams in the config file. In order to specify hparams for a *seq2seq* or *transformer* model, you can use the *SEQ2SEQ_HPARAMS* and *TRANSFORMER_HPARAMS* dictionaries in the config file (check it for more details).
+
+To create your own model you will need to follow the tensor2tensor tutorial on registering new models.
 
 ### Decode
 With this mode you can decode from the trained models. The following parameters affect the decoding (in the *FLAGS* dictionary in the config file):
