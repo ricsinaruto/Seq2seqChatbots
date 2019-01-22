@@ -14,6 +14,7 @@ from data_filtering.average_word_embedding import AverageWordEmbedding
 from data_filtering.sentence_embedding import SentenceEmbedding
 from data_filtering.identity_clustering import IdentityClustering
 from data_filtering.distribution_loss import DistributionLoss
+from data_filtering.unique_clustering import UniqueClustering
 
 
 # Save the config.py file for a specific run.
@@ -123,6 +124,7 @@ def data_filtering():
       "rnn_state": EncoderState,
       "identity_clustering": IdentityClustering,
       "avg_embedding": AverageWordEmbedding,
+      "unique_avg_embedding": UniqueClustering,
       "distribution_loss": DistributionLoss
   }
 
