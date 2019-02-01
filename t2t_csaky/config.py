@@ -44,13 +44,13 @@ DATA_FILTERING = {
     "min_cluster_size": 2,  # Clusters with fewer elements won't get filtered.
     "num_permutations": 128,  # Only for hash based clustering.
     "character_level": False,  # Only for hash based clustering.
-    "treshold": 4,  # Entropy threshold for filtering.
+    "treshold": 3,  # Entropy threshold for filtering.
     "ckpt_number": 22001,  # Only for sentence embedding clustering.
     "semantic_clustering_method": "mean_shift",  # Kmeans or mean_shift.
     "mean_shift_bw": 0.7,  # Mean shift bandwidth.
     "use_faiss": False,  # Whether to use the library for GPU based clustering.
     "max_avg_length": 15,  # Clusters with longer sentences won't get filtered.
-    "max_medoid_length": 10  # Clusters with longer medoids won't get filtered.
+    "max_medoid_length": 50  # Clusters with longer medoids won't get filtered.
 
 }
 

@@ -195,5 +195,5 @@ def print_clusters(source_cl,
     print('=====================================================')
     print('Medoid: {} Entropy: {}'.format(medoid, entropies[medoid]))
     print('Size: {}'.format(len(clusters[medoid])))
-    if len(clusters[medoid]) < 5000:
-    	print('Elements: \n{}\n\n'.format('\n'.join(set(clusters[medoid]))))
+    if len(clusters[medoid]) < 500:
+      print('Elements: \n{}\n\n'.format('\n'.join(set(clusters[medoid]))))

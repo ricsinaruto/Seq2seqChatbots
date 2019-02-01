@@ -26,6 +26,12 @@ class UniqueClustering(AverageWordEmbedding):
     Params:
       :data_tag: Whether it's source or target data.
     """
+    data_point_vectors = np.array(
+        [data_point.meaning_vector for data_point in
+         self.unique_data[data_tag]])
+    data_point_vectors = data_point_vectors.reshape(
+        -1, self.unique_data[data_tag][0].meaning_vector.shape[-1])
+
     if DATA_FILTERING["semantic_clustering_method"] == "mean_shift":
       centroids, method, = calculate_centroids_mean_shift(
           self.meaning_vectors[data_tag])
@@ -34,12 +40,6 @@ class UniqueClustering(AverageWordEmbedding):
       n_clusters = DATA_FILTERING['{}_clusters'.format(data_tag.lower())]
       centroids, method, = calculate_centroids_kmeans(
         self.meaning_vectors[data_tag], niter=20, n_clusters=n_clusters)
-
-    data_point_vectors = np.array(
-        [data_point.meaning_vector for data_point in
-         self.unique_data[data_tag]])
-    data_point_vectors = data_point_vectors.reshape(
-        -1, self.unique_data[data_tag][0].meaning_vector.shape[-1])
 
     tree = BallTree(data_point_vectors)
     _, centroids = tree.query(centroids, k=1)
@@ -143,7 +143,7 @@ class UniqueClustering(AverageWordEmbedding):
 
     meaning_vectors = []
     for sent in unique_sentences:
-      line_as_list = line.split()
+      line_as_list = sent.split()
 
       vectors = []
       for word in line_as_list:
