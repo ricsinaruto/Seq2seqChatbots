@@ -6,7 +6,7 @@ from scipy.spatial import distance
 
 # Paths to the different data files.
 train_source_path = "data_dir/DailyDialog/base_with_numbers/trainSource.txt"
-test_responses_path = "decode_dir/DailyDialog/trf_20_dropout-base_both_avg_embedding/test_set_13k.txt"
+test_responses_path = "decode_dir/DailyDialog/trf_20_dropout-base_both_identity_clustering/test_set_7k.txt"
 gt_responses_path = "data_dir/DailyDialog/base_with_numbers/testTarget.txt"
 test_source_path = "data_dir/DailyDialog/base_with_numbers/testSource.txt"
 text_vocab_path = "data_dir/DailyDialog/base_with_numbers/vocab.chatbot.16384"
@@ -15,6 +15,8 @@ vector_vocab_path = "data_dir/DailyDialog/base_with_numbers/vocab.chatbot.16384_
 # Some globals.
 output = open(test_responses_path.strip(".txt") + "_metrics.txt", "w")
 vocab = {}
+test_distro = {"num_words": 0, "<unk>": 0}
+true_distro = {"num_words": 0, "<unk>": 0}
 
 
 # Count words and load the vocab files.
@@ -46,6 +48,25 @@ def count_words():
         vocab[word][0] += 1
       else:
         vocab["<unk>"][0] += 1
+
+  # Get the probabilities of words based on model test and ground truth data.
+  with open(test_responses_path) as f:
+    for line in f:
+      for word in line.strip("\n").split():
+        test_distro["num_words"] += 1
+        if vocab.get(word) is not None:
+          test_distro[word] = test_distro[word] + 1 if word in test_distro else 1
+        else:
+          test_distro["<unk>"] += 1
+
+  with open(gt_responses_path) as f:
+    for line in f:
+      for word in line.strip("\n").split():
+        true_distro["num_words"] += 1
+        if vocab.get(word) is not None:
+          true_distro[word] = true_distro[word] + 1 if word in true_distro else 1
+        else:
+          true_distro["<unk>"] += 1
 
   train_corpus.close()
   embeddings.close()
@@ -145,11 +166,38 @@ def calculate_greedy_embedding(gt_words, test_words, num_words, emb_dim):
         x_count += 1
 
     if x_count > 0 and y_count > 0:
+      #if cos_sim / x_count != 1:
+      #  print(one)
+      #  print(two)
       return cos_sim / x_count
     else:
-      return 0
+      return None
 
-  return (score(gt_words, test_words) + score(test_words, gt_words)) / 2
+  one_side = score(gt_words, test_words)
+  other_side = score(test_words, gt_words)
+
+  if one_side is not None and other_side is not None:
+    return (one_side + other_side) / 2
+  else:
+    return None
+
+
+# Calculate kl divergence between two lines.
+def calc_kl_divergence(gt_words):
+  divergence = 0
+  for word in gt_words:
+    if test_distro.get(word) is not None:
+      prob_test = test_distro[word] / test_distro["num_words"]
+    else:
+      prob_test = test_distro["<unk>"] / test_distro["num_words"]
+
+    if true_distro.get(word) is not None:
+      prob_true = true_distro[word] / true_distro["num_words"]
+    else:
+      prob_true = true_distro["<unk>"] / true_distro["num_words"]
+
+    divergence += prob_true * math.log(prob_true / prob_test, 2)
+  return divergence
 
 
 # Compute all metrics based on test responses.
@@ -164,6 +212,7 @@ def metrics(num_words, emb_dim):
   entropies = []
   response_len = []
   utt_entropy = []
+  kl_divergence = []
   embedding = {"avg": [], "extrem": [], "greedy": []}
   word_set = set()
   bigrams = set()
@@ -203,15 +252,15 @@ def metrics(num_words, emb_dim):
       if probability != 0:
         entropy += probability * math.log(probability, 2)
 
+    kl_divergence.append(calc_kl_divergence(gt_words))
     entropies.append(-entropy)
     utt_entropy.append(response_len[-1] * entropies[-1])
-
-  # Distinct unigrams and bigrams.
 
   # Write to file all metrics.
   write_metric(response_len, "length")
   write_metric(entropies, "word entropy")
   write_metric(utt_entropy, "utterance entropy")
+  write_metric(kl_divergence, "kl divergence")
   write_metric(embedding["avg"], "embedding average")
   write_metric(embedding["extrem"], "embedding extrema")
   write_metric(embedding["greedy"], "embedding greedy")
