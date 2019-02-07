@@ -157,9 +157,10 @@ def print_clusters(source_cl,
       if tag == 'Source':
         source_cl = source.split(';')[1]
         source = source_cl_target.split('=')[0]
+        target = source_cl_target.split('=')[1]
         cluster_element_lengths[source_cl] = \
             cluster_element_lengths.get(source_cl, 0) + len(source.split())
-        clusters[source_cl] = [*clusters.get(source_cl, []), source]
+        clusters[source_cl] = [*clusters.get(source_cl, []), source]# + " -----> " + target]
 
       else:
         target_cl = source.split(';')[1]
@@ -195,5 +196,4 @@ def print_clusters(source_cl,
     print('=====================================================')
     print('Medoid: {} Entropy: {}'.format(medoid, entropies[medoid]))
     print('Size: {}'.format(len(clusters[medoid])))
-    if len(clusters[medoid]) < 500:
-      print('Elements: \n{}\n\n'.format('\n'.join(set(clusters[medoid]))))
+    print('Elements: \n{}\n\n'.format('\n'.join(set(clusters[medoid]))))

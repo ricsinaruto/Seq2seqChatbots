@@ -6,7 +6,7 @@ from scipy.spatial import distance
 
 # Paths to the different data files.
 train_source_path = "data_dir/DailyDialog/base_with_numbers/trainSource.txt"
-test_responses_path = "decode_dir/DailyDialog/trf_20_dropout-base_both_identity_clustering/test_set_7k.txt"
+test_responses_path = "decode_dir/DailyDialog/testTarget.txt"
 gt_responses_path = "data_dir/DailyDialog/base_with_numbers/testTarget.txt"
 test_source_path = "data_dir/DailyDialog/base_with_numbers/testSource.txt"
 text_vocab_path = "data_dir/DailyDialog/base_with_numbers/vocab.chatbot.16384"
@@ -15,8 +15,10 @@ vector_vocab_path = "data_dir/DailyDialog/base_with_numbers/vocab.chatbot.16384_
 # Some globals.
 output = open(test_responses_path.strip(".txt") + "_metrics.txt", "w")
 vocab = {}
-test_distro = {"num_words": 0, "<unk>": 0}
-true_distro = {"num_words": 0, "<unk>": 0}
+test_distro = {}
+true_distro = {}
+test_bigram_distro = {}
+true_bigram_distro = {}
 
 
 # Count words and load the vocab files.
@@ -49,24 +51,43 @@ def count_words():
       else:
         vocab["<unk>"][0] += 1
 
-  # Get the probabilities of words based on model test and ground truth data.
-  with open(test_responses_path) as f:
-    for line in f:
-      for word in line.strip("\n").split():
-        test_distro["num_words"] += 1
-        if vocab.get(word) is not None:
-          test_distro[word] = test_distro[word] + 1 if word in test_distro else 1
-        else:
-          test_distro["<unk>"] += 1
+  # Get the probabilities of words and bigrams based on data.
+  def build_distro(distro, bigram_distro, path):
+    with open(path) as f:
+      for line in f:
+        words = line.strip('\n').split()
+        word_count = len(words)
+        for i, word in enumerate(words):
+          distro[word] = distro[word] + 1 if word in distro else 1
 
-  with open(gt_responses_path) as f:
-    for line in f:
-      for word in line.strip("\n").split():
-        true_distro["num_words"] += 1
-        if vocab.get(word) is not None:
-          true_distro[word] = true_distro[word] + 1 if word in true_distro else 1
-        else:
-          true_distro["<unk>"] += 1
+          # Bigrams.
+          if i < word_count - 1:
+            bigram = (word, words[i + 1])
+            bigram_distro[bigram] = \
+              bigram_distro[bigram] + 1 if bigram in bigram_distro else 1
+
+  build_distro(test_distro, test_bigram_distro, test_responses_path)
+  build_distro(true_distro, true_bigram_distro, gt_responses_path)
+
+  def filter_distro(test, true):
+    intersection = set.intersection(set(test.keys()), set(true.keys()))
+
+    def probability_distro(distro):
+      for key in list(distro.keys()):
+        if key not in intersection:
+          del distro[key]
+
+      # Get probabilities.
+      num_elements = sum(list(distro.values()))
+      for key, value in distro.items():
+        distro[key] = value / num_elements
+
+    probability_distro(test)
+    probability_distro(true)
+
+  # Only keep intersection.
+  filter_distro(test_distro, true_distro)
+  filter_distro(test_bigram_distro, true_bigram_distro)
 
   train_corpus.close()
   embeddings.close()
@@ -161,14 +182,12 @@ def calculate_greedy_embedding(gt_words, test_words, num_words, emb_dim):
       vec = vocab.get(word)
       if vec is not None:
         norm = np.linalg.norm(vec[1])
-        vec = vec[1] / norm if norm else vec[1]
-        cos_sim += np.max(vec.reshape((1, emb_dim)).dot(y_vec))
-        x_count += 1
+        if norm:
+          vec = vec[1] / norm
+          cos_sim += np.max(vec.reshape((1, emb_dim)).dot(y_vec))
+          x_count += 1
 
     if x_count > 0 and y_count > 0:
-      #if cos_sim / x_count != 1:
-      #  print(one)
-      #  print(two)
       return cos_sim / x_count
     else:
       return None
@@ -184,20 +203,30 @@ def calculate_greedy_embedding(gt_words, test_words, num_words, emb_dim):
 
 # Calculate kl divergence between two lines.
 def calc_kl_divergence(gt_words):
-  divergence = 0
-  for word in gt_words:
-    if test_distro.get(word) is not None:
-      prob_test = test_distro[word] / test_distro["num_words"]
-    else:
-      prob_test = test_distro["<unk>"] / test_distro["num_words"]
+  divergence_uni = 0
+  divergence_bi = 0
+  num_words = 0
+  num_bigrams = 0
+  word_count = len(gt_words)
 
-    if true_distro.get(word) is not None:
-      prob_true = true_distro[word] / true_distro["num_words"]
-    else:
-      prob_true = true_distro["<unk>"] / true_distro["num_words"]
+  for i, word in enumerate(gt_words):
+    if test_distro.get(word):
+      #prob_test = 1 / len(true_distro)
+      divergence_uni += math.log(true_distro[word] / test_distro[word], 2)
+      num_words += 1
 
-    divergence += prob_true * math.log(prob_true / prob_test, 2)
-  return divergence
+    if i < word_count - 1:
+      bigram = (word, gt_words[i + 1])
+      if test_bigram_distro.get(bigram):
+        #prob_test = 1 / len(true_bigram_distro)
+        divergence_bi += (math.log(true_bigram_distro[bigram] /
+                          test_bigram_distro[bigram], 2))
+        num_bigrams += 1
+
+  # Exclude divide by zero errors.
+  num_words = num_words if num_words else 1
+  num_bigrams = num_bigrams if num_bigrams else 1
+  return divergence_uni / num_words, divergence_bi / num_bigrams
 
 
 # Compute all metrics based on test responses.
@@ -212,7 +241,8 @@ def metrics(num_words, emb_dim):
   entropies = []
   response_len = []
   utt_entropy = []
-  kl_divergence = []
+  kl_divergence_uni = []
+  kl_divergence_bi = []
   embedding = {"avg": [], "extrem": [], "greedy": []}
   word_set = set()
   bigrams = set()
@@ -239,6 +269,7 @@ def metrics(num_words, emb_dim):
 
     # Calculate entropy metrics.
     entropy = 0
+    entropy_word_count = 0
     for i, word in enumerate(words):
       word_set.add(word)
       if i < word_count - 1:
@@ -250,17 +281,21 @@ def metrics(num_words, emb_dim):
       else:
         probability = vocab["<unk>"][0] / num_words
       if probability != 0:
-        entropy += probability * math.log(probability, 2)
+        entropy_word_count += 1
+        entropy += math.log(probability, 2)
 
-    kl_divergence.append(calc_kl_divergence(gt_words))
-    entropies.append(-entropy)
-    utt_entropy.append(response_len[-1] * entropies[-1])
+    unigram_div, bigram_div = calc_kl_divergence(gt_words)
+    kl_divergence_uni.append(unigram_div)
+    kl_divergence_bi.append(bigram_div)
+    entropies.append(-entropy / entropy_word_count)
+    utt_entropy.append(-entropy)
 
   # Write to file all metrics.
   write_metric(response_len, "length")
   write_metric(entropies, "word entropy")
   write_metric(utt_entropy, "utterance entropy")
-  write_metric(kl_divergence, "kl divergence")
+  write_metric(kl_divergence_uni, "unigram kl divergence")
+  write_metric(kl_divergence_bi, "bigram kl divergence")
   write_metric(embedding["avg"], "embedding average")
   write_metric(embedding["extrem"], "embedding extrema")
   write_metric(embedding["greedy"], "embedding greedy")
