@@ -1,5 +1,6 @@
 # https://github.com/julianser/hed-dlg-truncated
 import math
+import sys
 import numpy as np
 from scipy.spatial import distance
 
@@ -206,14 +207,14 @@ class Metrics:
     # Paths to the different data files.
     self.paths = {
       "train_source": "data_dir/DailyDialog/base_with_numbers/trainSource.txt",
-      "gt_responses": "data_dir/DailyDialog/base_with_numbers/testTarget.txt",
-      "test_source": "data_dir/DailyDialog/base_with_numbers/testSource.txt",
+      "gt_responses": "decode_dir/DailyDialog/testTarget.txt",
+      "test_source": "decode_dir/DailyDialog/testSource.txt",
       "text_vocab":
         "data_dir/DailyDialog/base_with_numbers/vocab.chatbot.16384",
       "vector_vocab":
         "data_dir/DailyDialog/base_with_numbers/vocab.chatbot.16384_vector",
       "test_responses": test_responses_path,
-      "output": test_responses_path.strip(".txt") + "_metrics.txt"
+      "output": test_responses_path.split(".txt")[0] + "_metrics.txt"
     }
     self.vocab = {}
     # Unigram and bigram probabilities based on train, model and test data.
@@ -348,7 +349,7 @@ class Metrics:
 
 
 def main():
-  m = Metrics()
+  m = Metrics(sys.argv[1]) if len(sys.argv) > 1 else Metrics()
   m.metrics()
   m.write_metrics()
 

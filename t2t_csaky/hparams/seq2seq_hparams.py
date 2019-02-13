@@ -34,6 +34,11 @@ def general_extracted_seq2seq_hparams():
   return general_gradient_checkpointed_seq2seq_hparams()
 
 
+@registry.register_hparams
+def general_lstm_seq2seq_hparams():
+  return general_gradient_checkpointed_seq2seq_hparams()
+
+
 # From this only the hidden_size is used for the lstm_seq2seq model.
 def chatbot_lstm_hparams():
   hparams = chatbot_lstm_batch_256()

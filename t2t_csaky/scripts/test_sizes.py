@@ -1,6 +1,6 @@
 
 
-for size in [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000]:
+for size in [15000, 20000, 25000, 35000, 50000, 70000]:
   unique = set()
   unique_bi = set()
   total_bi = 0
@@ -15,7 +15,7 @@ for size in [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000]:
     for line in f:
       vocab.add(line.strip('\n'))
 
-  with open("data_dir/DailyDialog/base_with_numbers/testTarget.txt") as f:
+  with open("data_dir/DailyDialog/base_with_numbers/fullTarget.txt") as f:
     for i, line in enumerate(f):
       if i < size:
         words = line.strip('\n').split()
@@ -28,7 +28,7 @@ for size in [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000]:
             words[j + 1] = words[j + 1] if words[j + 1] in vocab else "<unk>"
             unique_bi.add((word, words[j + 1]))
             total_bi += 1
-
+  """
   with open("decode_dir/DailyDialog/trf_20_dropout-base_both_identity_clustering/test_set_7k.txt") as f:
     for i, line in enumerate(f):
       if i < size:
@@ -40,5 +40,5 @@ for size in [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000]:
           if j < len(words) - 1:
             unique_test_bi.add((word, words[j + 1]))
             total_test_bi += 1
-
+  """
   print((len(unique_bi) / total_bi))
