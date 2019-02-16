@@ -207,8 +207,8 @@ class Metrics:
     # Paths to the different data files.
     self.paths = {
       "train_source": "data_dir/DailyDialog/base_with_numbers/trainSource.txt",
-      "gt_responses": "decode_dir/DailyDialog/testTarget.txt",
-      "test_source": "decode_dir/DailyDialog/testSource.txt",
+      "gt_responses": "decode_dir/DailyDialog/devTarget.txt",
+      "test_source": "decode_dir/DailyDialog/devSource.txt",
       "text_vocab":
         "data_dir/DailyDialog/base_with_numbers/vocab.chatbot.16384",
       "vector_vocab":
@@ -349,9 +349,13 @@ class Metrics:
 
 
 def main():
-  m = Metrics(sys.argv[1]) if len(sys.argv) > 1 else Metrics()
-  m.metrics()
-  m.write_metrics()
+  #m = Metrics(sys.argv[1]) if len(sys.argv) > 1 else Metrics()
+  #m.metrics()
+  #m.write_metrics()
+  for i in [22001, 33001, 44001, 66001, 88001, 109001, 142001, 175001, 218001, 225001]:
+    m = Metrics("decode_dir/DailyDialog/trf_20_dropout-base/dev_set_" + str(i) + ".txt")
+    m.metrics()
+    m.write_metrics()
 
 
 if __name__ == "__main__":

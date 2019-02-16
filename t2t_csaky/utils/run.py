@@ -134,20 +134,13 @@ def data_filtering():
 
 # Run a longer experiment, with many calls to the above functions.
 def experiment():
-  clusters = [100, 200, 400, 800, 1600, 3200, 6400, 12800, 25600]
-  for dataset in ["DailyDialog", "Persona_Chat"]:
-    for source_cluster in clusters:
-      for target_cluster in clusters:
-          # modify config files
-          DATA_FILTERING["source_clusters"] = source_cluster
-          DATA_FILTERING["target_clusters"] = target_cluster
-          DATA_FILTERING["data_dir"] = (
-              "data_dir/" + dataset +
-              "/base_with_numbers/filtered_data/hash_jaccard/" +
-              str(source_cluster) + "-" + str(target_cluster) + "_filtering")
-
-          FLAGS["data_dir"] = "data_dir/" + dataset + "/base_with_numbers"
-          data_filtering()
+  # overwrite the checkpoint file
+  ckpt_list = [22001, 33001, 44001, 66001, 88001, 109001, 142001, 175001, 218001, 225001]
+  for ckpt in ckpt_list:
+    with open(FLAGS["train_dir"] + "/checkpoint", "w") as ckpt_file:
+      ckpt_file.write('model_checkpoint_path: "model.ckpt-' + str(ckpt) + '"')
+    FLAGS["output_file_name"] = "dev_set_" + str(ckpt) + ".txt"
+    decoding()
 
 
 # Run some command line stuff, and get the output in real-time.
