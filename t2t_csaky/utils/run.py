@@ -135,11 +135,17 @@ def data_filtering():
 # Run a longer experiment, with many calls to the above functions.
 def experiment():
   # overwrite the checkpoint file
-  ckpt_list = [22001, 33001, 44001, 66001, 88001, 109001, 142001, 175001, 218001, 225001]
-  for ckpt in ckpt_list:
+  ckpt_list = [71275, 41302, 49000, 69676, 64000, 68000, 66865, 63500, 68764, 65500]
+  dir_list = ["base_with_numbers", "base_both_identity_clustering", "base_source_based_identity_clustering_CORRECT", "base_target_based_identity_clustering",
+              "base_both_avg_embedding", "base_target_based_avg_embedding", "base_source_based_avg_embedding",
+              "base_both_sent_eval", "base_target_based_sent_eval", "base_source_based_sent_eval"]
+  for ckpt, folder in zip(ckpt_list, dir_list):
+    FLAGS["data_dir"] = "data_dir/DailyDialog/" + folder
+    FLAGS["train_dir"] = "train_dir/DailyDialog/trf_20_dropout-" + folder
+    FLAGS["decode_dir"] = "decode_dir/DailyDialog/trf_20_dropout-" + folder
     with open(FLAGS["train_dir"] + "/checkpoint", "w") as ckpt_file:
       ckpt_file.write('model_checkpoint_path: "model.ckpt-' + str(ckpt) + '"')
-    FLAGS["output_file_name"] = "dev_set_" + str(ckpt) + ".txt"
+    FLAGS["output_file_name"] = "test_set_" + str(ckpt) + ".txt"
     decoding()
 
 

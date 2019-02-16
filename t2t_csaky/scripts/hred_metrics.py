@@ -1,6 +1,7 @@
 # https://github.com/julianser/hed-dlg-truncated
 import math
 import sys
+import os
 import numpy as np
 from scipy.spatial import distance
 
@@ -207,8 +208,8 @@ class Metrics:
     # Paths to the different data files.
     self.paths = {
       "train_source": "data_dir/DailyDialog/base_with_numbers/trainSource.txt",
-      "gt_responses": "decode_dir/DailyDialog/devTarget.txt",
-      "test_source": "decode_dir/DailyDialog/devSource.txt",
+      "gt_responses": "decode_dir/DailyDialog/testTarget.txt",
+      "test_source": "decode_dir/DailyDialog/testSource.txt",
       "text_vocab":
         "data_dir/DailyDialog/base_with_numbers/vocab.chatbot.16384",
       "vector_vocab":
@@ -349,13 +350,16 @@ class Metrics:
 
 
 def main():
-  #m = Metrics(sys.argv[1]) if len(sys.argv) > 1 else Metrics()
-  #m.metrics()
-  #m.write_metrics()
-  for i in [22001, 33001, 44001, 66001, 88001, 109001, 142001, 175001, 218001, 225001]:
-    m = Metrics("decode_dir/DailyDialog/trf_20_dropout-base/dev_set_" + str(i) + ".txt")
+  m = Metrics(sys.argv[1]) if len(sys.argv) > 1 else Metrics()
+  m.metrics()
+  m.write_metrics()
+  """
+  folder = "decode_dir/DailyDialog/temp_overfit/"
+  for file_name in os.listdir(folder):
+    m = Metrics(folder + file_name)
     m.metrics()
     m.write_metrics()
+  """
 
 
 if __name__ == "__main__":

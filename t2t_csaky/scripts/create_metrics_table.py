@@ -1,6 +1,6 @@
 import os
 
-folder = "decode_dir/DailyDialog/trf_20_dropout-base/dev_metrics/"
+folder = "decode_dir/DailyDialog/trf_20_dropout-base_with_numbers/dev_metrics/"
 output = open(folder+"all_metrics.txt", "w")
 
 for file_name in os.listdir(folder):
@@ -12,4 +12,5 @@ for file_name in os.listdir(folder):
       # Loop through metrics.
       for line in file:
         output.write(line.split(":")[1].split()[0] + " ")
+        output.write(line.split(":")[1].split()[2] + " ")
       output.write("\n")
