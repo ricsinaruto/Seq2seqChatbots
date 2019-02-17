@@ -1,6 +1,6 @@
 import os
 
-folder = "decode_dir/DailyDialog/temp/"
+folder = "decode_dir/DailyDialog/temp_overfit/"
 output = open(folder + "latex.txt", "w")
 
 
