@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import operator
 import sys
+from collections import Counter
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
@@ -51,7 +52,7 @@ def _visualize(file, tag, fig_list):
   fig_list[0].plot(sorted(entropies_all))
   fig_list[0].set_xlabel("Sentence no.")
   fig_list[0].set_ylabel("Entropy")
-  fig_list[0].axis([0, 90000, -0.2, 10])
+  fig_list[0].axis([0, 90000, -0.2, 9])
 
   fig_list[1].plot(sorted(cl_sizes_all))
   fig_list[1].set_xlabel("Sentence no.")
@@ -59,14 +60,14 @@ def _visualize(file, tag, fig_list):
   #fig_list[1].axis([0, 90000, -0.2, 500])
 
   fig_list[2].scatter(np.array(cl_sizes), np.array(entropies))
-  fig_list[2].axis([0, 300, 0, 8])
+  fig_list[2].axis([0, 320, -0.2, 9])
   fig_list[2].set_xlabel("Cluster size")
   fig_list[2].set_ylabel("Entropy")
 
   fig_list[3].scatter(np.array(lengths), np.array(entropies))
   fig_list[3].set_xlabel("No. of words in utterance")
   fig_list[3].set_ylabel("Entropy")
-  fig_list[3].axis([0, 64, 0, 8])
+  fig_list[3].axis([0, 20, -0.2, 9])
 
   # Sort the sentence lists.
   sent_ent = sorted(sentence_entropy, key=operator.itemgetter(1), reverse=True)
@@ -156,11 +157,12 @@ def print_clusters(source_cl,
 
       if tag == 'Source':
         source_cl = source.split(';')[1]
+        target_cl_ind = target_cl.split(':')[1].strip('\n')
         source = source_cl_target.split('=')[0]
         target = source_cl_target.split('=')[1]
         cluster_element_lengths[source_cl] = \
             cluster_element_lengths.get(source_cl, 0) + len(source.split())
-        clusters[source_cl] = [*clusters.get(source_cl, []), source]# + " -----> " + target]
+        clusters[source_cl] = [*clusters.get(source_cl, []), source]
 
       else:
         target_cl = source.split(';')[1]
@@ -183,8 +185,8 @@ def print_clusters(source_cl,
   for medoid in cluster_element_lengths:
     num_all += len(clusters[medoid])
     if ((cluster_element_lengths[medoid] / len(clusters[medoid]) if
-        len(clusters[medoid]) > 0 else 1) > DATA_FILTERING["max_avg_length"] or
-            len(medoid.split()) > DATA_FILTERING["max_medoid_length"] or
+        len(clusters[medoid]) > 0 else 1) > 1000 or
+            len(medoid.split()) > 1000 or
             entropies[medoid] < DATA_FILTERING["treshold"]):
       num_removed += len(clusters[medoid])
       del clusters[medoid]
@@ -193,7 +195,9 @@ def print_clusters(source_cl,
   for _, medoid in zip(range(top_k),
                        sorted(list(clusters), key=lambda x: entropies[x],
                               reverse=True)):
-    print('=====================================================')
-    print('Medoid: {} Entropy: {}'.format(medoid, entropies[medoid]))
-    print('Size: {}'.format(len(clusters[medoid])))
-    print('Elements: \n{}\n\n'.format('\n'.join(set(clusters[medoid]))))
+    if len(clusters[medoid]) < 10000:
+      print('=====================================================')
+      print('Medoid: {} Entropy: {}'.format(medoid, entropies[medoid]))
+      print('Size: {}'.format(len(clusters[medoid])))
+      #test = Counter(clusters[medoid])
+      print('Elements: \n{}\n\n'.format('\n'.join(set(clusters[medoid]))))
