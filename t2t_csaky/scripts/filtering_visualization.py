@@ -13,7 +13,6 @@ from config import DATA_FILTERING
 This file contains functions for the same name jupyter notebook.
 """
 
-
 # Visualization function for the clustering data.
 def _visualize(file, tag, fig_list):
   """
@@ -59,14 +58,14 @@ def _visualize(file, tag, fig_list):
   #fig_list[1].axis([0, 90000, -0.2, 500])
 
   fig_list[2].scatter(np.array(cl_sizes), np.array(entropies))
-  fig_list[2].axis([0, 300, 0, 8])
-  fig_list[2].set_xlabel("Cluster size")
+  fig_list[2].axis([-0.2, 180, -0.2, 8])
+  fig_list[2].set_xlabel("Utterance frequency")
   fig_list[2].set_ylabel("Entropy")
 
   fig_list[3].scatter(np.array(lengths), np.array(entropies))
   fig_list[3].set_xlabel("No. of words in utterance")
   fig_list[3].set_ylabel("Entropy")
-  fig_list[3].axis([0, 64, 0, 8])
+  fig_list[3].axis([-0.2, 30, -0.2, 8])
 
   # Sort the sentence lists.
   sent_ent = sorted(sentence_entropy, key=operator.itemgetter(1), reverse=True)
@@ -183,8 +182,8 @@ def print_clusters(source_cl,
   for medoid in cluster_element_lengths:
     num_all += len(clusters[medoid])
     if ((cluster_element_lengths[medoid] / len(clusters[medoid]) if
-        len(clusters[medoid]) > 0 else 1) > DATA_FILTERING["max_avg_length"] or
-            len(medoid.split()) > DATA_FILTERING["max_medoid_length"] or
+        len(clusters[medoid]) > 0 else 1) > 1000 or
+            len(medoid.split()) > 1000 or
             entropies[medoid] < DATA_FILTERING["treshold"]):
       num_removed += len(clusters[medoid])
       del clusters[medoid]
@@ -194,6 +193,9 @@ def print_clusters(source_cl,
                        sorted(list(clusters), key=lambda x: entropies[x],
                               reverse=True)):
     print('=====================================================')
-    print('Medoid: {} Entropy: {}'.format(medoid, entropies[medoid]))
+    print('{}& {} & {} \\\\'.format(list(set(clusters[medoid]))[0], len(clusters[medoid]), str(entropies[medoid])[:4]))
+    print('Center: {}'.format(medoid))
+    print('Entropy: {}'.format(entropies[medoid]))
     print('Size: {}'.format(len(clusters[medoid])))
-    print('Elements: \n{}\n\n'.format('\n'.join(set(clusters[medoid]))))
+    if len(clusters[medoid]) < 1000:
+      print('Elements: \n{}\n\n'.format('\n'.join(set(clusters[medoid]))))

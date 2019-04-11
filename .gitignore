@@ -143,6 +143,8 @@ data_dir/
 docs/tdk/*
 private/
 train_dir/
+decode_dir/DailyDialog/trf_20_dropout-stopword_filtered_extended/*
+decode_dir/DailyDialog/trf_20_dropout-stopword_filtered_patrik/*
 
 # Don't ignore these
 !docs/tdk/chatbots.bib
