@@ -60,7 +60,6 @@ class EntropyMetrics():
 
     for i, word in enumerate(gt_words):
       if self.uni_distros["model"].get(word):
-        #prob_test = 1 / len(true_distro)
         word = word if self.vocab.get(word) else "<unk>"
         uni_div.append(math.log(self.uni_distros["gt"][word] /
                                 self.uni_distros["model"][word], 2))
@@ -69,7 +68,6 @@ class EntropyMetrics():
         word2 = gt_words[i + 1] if self.vocab.get(gt_words[i + 1]) else "<unk>"
         bigram = (word, word2)
         if self.bi_distros["model"].get(bigram):
-          #prob_test = 1 / len(true_bigram_distro)
           bi_div.append(math.log(self.bi_distros["gt"][bigram] /
                                  self.bi_distros["model"][bigram], 2))
 

@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import operator
 import sys
+from collections import Counter
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
@@ -50,7 +51,7 @@ def _visualize(file, tag, fig_list):
   fig_list[0].plot(sorted(entropies_all))
   fig_list[0].set_xlabel("Sentence no.")
   fig_list[0].set_ylabel("Entropy")
-  fig_list[0].axis([0, 90000, -0.2, 10])
+  fig_list[0].axis([0, 90000, -0.2, 9])
 
   fig_list[1].plot(sorted(cl_sizes_all))
   fig_list[1].set_xlabel("Sentence no.")
@@ -58,8 +59,8 @@ def _visualize(file, tag, fig_list):
   #fig_list[1].axis([0, 90000, -0.2, 500])
 
   fig_list[2].scatter(np.array(cl_sizes), np.array(entropies))
-  fig_list[2].axis([-0.2, 180, -0.2, 8])
-  fig_list[2].set_xlabel("Utterance frequency")
+  fig_list[2].axis([0, 320, -0.2, 9])
+  fig_list[2].set_xlabel("Cluster size")
   fig_list[2].set_ylabel("Entropy")
 
   fig_list[3].scatter(np.array(lengths), np.array(entropies))
@@ -155,11 +156,12 @@ def print_clusters(source_cl,
 
       if tag == 'Source':
         source_cl = source.split(';')[1]
+        target_cl_ind = target_cl.split(':')[1].strip('\n')
         source = source_cl_target.split('=')[0]
         target = source_cl_target.split('=')[1]
         cluster_element_lengths[source_cl] = \
             cluster_element_lengths.get(source_cl, 0) + len(source.split())
-        clusters[source_cl] = [*clusters.get(source_cl, []), source]# + " -----> " + target]
+        clusters[source_cl] = [*clusters.get(source_cl, []), source]
 
       else:
         target_cl = source.split(';')[1]
