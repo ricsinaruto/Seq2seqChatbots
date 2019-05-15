@@ -1,7 +1,10 @@
 ## Links
 Google Colab: https://colab.research.google.com/
+
 ParlAI: https://github.com/facebookresearch/ParlAI
+
 GPT-2 Chatbot: https://convai.huggingface.co/
+
 My notes on 150 chatbot papers: https://github.com/ricsinaruto/Seq2seqChatbots/wiki
 
 
