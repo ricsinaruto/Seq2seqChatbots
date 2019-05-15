@@ -9,6 +9,7 @@ My notes on 150 chatbot papers: https://github.com/ricsinaruto/Seq2seqChatbots/w
 
 
 ### Download ParlAI and install it inside Colaboratory
+#### First change runtime to GPU
 ```
 !git clone https://github.com/facebookresearch/ParlAI
 %cd ParlAI
