@@ -5,6 +5,10 @@ ParlAI: https://github.com/facebookresearch/ParlAI
 
 GPT-2 Chatbot: https://convai.huggingface.co/
 
+OTDK paper: https://tdk.bme.hu/VIK/DownloadPaper/asdad
+
+ACL paper: https://arxiv.org/abs/1905.05471
+
 My notes on 150 chatbot papers: https://github.com/ricsinaruto/Seq2seqChatbots/wiki
 
 
