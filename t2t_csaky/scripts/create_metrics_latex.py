@@ -1,6 +1,6 @@
 import os
 
-folder = "decode_dir/DailyDialog/temp_overfit/"
+folder = "decode_dir/Cornell/twitter_all/"
 output = open(folder + "latex.txt", "w")
 
 
@@ -25,7 +25,7 @@ for file_name in os.listdir(folder):
 
       # Loop through metrics.
       for i, line in enumerate(file):
-        if i < 11:
+        if i < 11 or i > 14:
           output.write(round_(line.split(":")[1].split()[0]) + " (" + round_(line.split(":")[1].split()[1]) + ")&")
         elif i < 13:
           output.write(round_(line.split(":")[1].split()[0]) + "&")

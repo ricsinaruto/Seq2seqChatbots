@@ -51,7 +51,7 @@ def _visualize(file, tag, fig_list):
   fig_list[0].plot(sorted(entropies_all))
   fig_list[0].set_xlabel("Sentence no.")
   fig_list[0].set_ylabel("Entropy")
-  fig_list[0].axis([0, 90000, -0.2, 9])
+  #fig_list[0].axis([0, 90000, -0.2, 9])
 
   fig_list[1].plot(sorted(cl_sizes_all))
   fig_list[1].set_xlabel("Sentence no.")
@@ -59,14 +59,14 @@ def _visualize(file, tag, fig_list):
   #fig_list[1].axis([0, 90000, -0.2, 500])
 
   fig_list[2].scatter(np.array(cl_sizes), np.array(entropies))
-  fig_list[2].axis([0, 320, -0.2, 9])
+  #fig_list[2].axis([0, 320, -0.2, 9])
   fig_list[2].set_xlabel("Cluster size")
   fig_list[2].set_ylabel("Entropy")
 
   fig_list[3].scatter(np.array(lengths), np.array(entropies))
   fig_list[3].set_xlabel("No. of words in utterance")
   fig_list[3].set_ylabel("Entropy")
-  fig_list[3].axis([-0.2, 30, -0.2, 8])
+  fig_list[3].axis([-0.2, 30, -0.2, 10])
 
   # Sort the sentence lists.
   sent_ent = sorted(sentence_entropy, key=operator.itemgetter(1), reverse=True)

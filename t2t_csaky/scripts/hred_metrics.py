@@ -3,6 +3,7 @@ import math
 import sys
 import os
 import numpy as np
+from nltk.translate import bleu_score
 from scipy.spatial import distance
 
 
@@ -195,6 +196,28 @@ class DistinctMetrics():
       self.metrics["distinct-2"][-1] / self.distinct(self.gt_distro["bi"]))
 
 
+class BleuMetrics():
+  def __init__(self):
+    self.metrics = {"bleu-1": [], "bleu-2": [], "bleu-3": [], "bleu-4": []}
+    self.smoothing = bleu_score.SmoothingFunction().method4
+
+  def update_metrics(self, resp, gt):
+    try:
+      self.metrics["bleu-1"].append(
+        bleu_score.sentence_bleu(gt, resp, weights=(1, 0, 0, 0), smoothing_function=self.smoothing))
+      self.metrics["bleu-2"].append(
+        bleu_score.sentence_bleu(gt, resp, weights=(0.5, 0.5, 0, 0), smoothing_function=self.smoothing))
+      self.metrics["bleu-3"].append(
+        bleu_score.sentence_bleu(gt, resp, weights=(0.33, 0.33, 0.33, 0), smoothing_function=self.smoothing))
+      self.metrics["bleu-4"].append(
+        bleu_score.sentence_bleu(gt, resp, weights=(0.25, 0.25, 0.25, 0), smoothing_function=self.smoothing))
+    except KeyError:
+      self.metrics["bleu-1"].append(0)
+      self.metrics["bleu-2"].append(0)
+      self.metrics["bleu-3"].append(0)
+      self.metrics["bleu-4"].append(0)
+
+
 # A class to computer several metrics.
 class Metrics:
   def __init__(self,
@@ -205,13 +228,13 @@ class Metrics:
     """
     # Paths to the different data files.
     self.paths = {
-      "train_source": "data_dir/DailyDialog/base_with_numbers/trainSource.txt",
-      "gt_responses": "decode_dir/DailyDialog/testTarget.txt",
-      "test_source": "decode_dir/DailyDialog/testSource.txt",
+      "train_source": "data_dir/Cornell/twitter/trainSource.txt",
+      "gt_responses": "data_dir/Cornell/twitter/testTarget.txt",
+      "test_source": "data_dir/Cornell/twitter/testSource.txt",
       "text_vocab":
-        "data_dir/DailyDialog/base_with_numbers/vocab.chatbot.16384",
+        "data_dir/Cornell/twitter/vocab.chatbot.32768",
       "vector_vocab":
-        "data_dir/DailyDialog/base_with_numbers/vocab.chatbot.16384_vector",
+        "data_dir/Cornell/twitter/twitter_vocab",
       "test_responses": test_responses_path,
       "output": test_responses_path.split(".txt")[0] + "_metrics.txt"
     }
@@ -231,6 +254,7 @@ class Metrics:
     self.embedding = EmbeddingMetrics(
       self.vocab, self.train_distro["uni"], self.emb_dim)
     self.distinct = DistinctMetrics(self.test_distro, self.gt_distro)
+    self.bleu = BleuMetrics()
 
   # Count words, load vocab files and build distributions.
   def build_distributions(self):
@@ -319,6 +343,7 @@ class Metrics:
       # Calculate metrics.
       self.entropies.update_metrics(resp_words, gt_words)
       self.embedding.update_metrics(source_words, resp_words, gt_words)
+      self.bleu.update_metrics(resp_words, gt_words)
     self.distinct.calculate_metrics()
 
     sources.close()
@@ -330,7 +355,8 @@ class Metrics:
     metrics = {**self.response_len,
                **self.entropies.metrics,
                **self.embedding.metrics,
-               **self.distinct.metrics}
+               **self.distinct.metrics,
+               **self.bleu.metrics}
 
     with open(self.paths["output"], "w") as output:
       for name, metric in metrics.items():
@@ -348,16 +374,16 @@ class Metrics:
 
 
 def main():
-  m = Metrics(sys.argv[1]) if len(sys.argv) > 1 else Metrics()
-  m.metrics()
-  m.write_metrics()
-  """
-  folder = "decode_dir/DailyDialog/temp_overfit/"
+  #m = Metrics(sys.argv[1]) if len(sys.argv) > 1 else Metrics()
+  #m.metrics()
+  #m.write_metrics()
+  
+  folder = "decode_dir/Cornell/twitter_all/"
   for file_name in os.listdir(folder):
     m = Metrics(folder + file_name)
     m.metrics()
     m.write_metrics()
-  """
+  
 
 
 if __name__ == "__main__":
