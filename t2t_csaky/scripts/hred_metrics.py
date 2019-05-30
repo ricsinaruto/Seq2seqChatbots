@@ -204,14 +204,14 @@ class BleuMetrics():
   def update_metrics(self, resp, gt):
     try:
       self.metrics["bleu-1"].append(
-        bleu_score.sentence_bleu(gt, resp, weights=(1, 0, 0, 0), smoothing_function=self.smoothing))
+        bleu_score.sentence_bleu([gt], resp, weights=(1, 0, 0, 0), smoothing_function=self.smoothing))
       self.metrics["bleu-2"].append(
-        bleu_score.sentence_bleu(gt, resp, weights=(0.5, 0.5, 0, 0), smoothing_function=self.smoothing))
+        bleu_score.sentence_bleu([gt], resp, weights=(0.5, 0.5, 0, 0), smoothing_function=self.smoothing))
       self.metrics["bleu-3"].append(
-        bleu_score.sentence_bleu(gt, resp, weights=(0.33, 0.33, 0.33, 0), smoothing_function=self.smoothing))
+        bleu_score.sentence_bleu([gt], resp, weights=(0.33, 0.33, 0.33, 0), smoothing_function=self.smoothing))
       self.metrics["bleu-4"].append(
-        bleu_score.sentence_bleu(gt, resp, weights=(0.25, 0.25, 0.25, 0), smoothing_function=self.smoothing))
-    except KeyError:
+        bleu_score.sentence_bleu([gt], resp, weights=(0.25, 0.25, 0.25, 0.25), smoothing_function=self.smoothing))
+    except (KeyError, ZeroDivisionError):
       self.metrics["bleu-1"].append(0)
       self.metrics["bleu-2"].append(0)
       self.metrics["bleu-3"].append(0)
@@ -228,13 +228,13 @@ class Metrics:
     """
     # Paths to the different data files.
     self.paths = {
-      "train_source": "data_dir/Cornell/twitter/trainSource.txt",
-      "gt_responses": "data_dir/Cornell/twitter/testTarget.txt",
-      "test_source": "data_dir/Cornell/twitter/testSource.txt",
+      "train_source": "data_dir/DailyDialog/base_with_numbers/trainSource.txt",
+      "gt_responses": "data_dir/DailyDialog/base_with_numbers/testTarget.txt",
+      "test_source": "data_dir/DailyDialog/base_with_numbers/testSource.txt",
       "text_vocab":
-        "data_dir/Cornell/twitter/vocab.chatbot.32768",
+        "data_dir/DailyDialog/base_with_numbers/vocab.chatbot.16384",
       "vector_vocab":
-        "data_dir/Cornell/twitter/twitter_vocab",
+        "data_dir/DailyDialog/base_with_numbers/vocab.chatbot.16384_vector",
       "test_responses": test_responses_path,
       "output": test_responses_path.split(".txt")[0] + "_metrics.txt"
     }
@@ -378,7 +378,7 @@ def main():
   #m.metrics()
   #m.write_metrics()
   
-  folder = "decode_dir/Cornell/twitter_all/"
+  folder = "decode_dir/DailyDialog/temp/resp/"
   for file_name in os.listdir(folder):
     m = Metrics(folder + file_name)
     m.metrics()

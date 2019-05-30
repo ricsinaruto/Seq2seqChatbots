@@ -20,13 +20,17 @@ def round_(number):
 for file_name in os.listdir(folder):
   if "metrics" in file_name:
     with open(folder + file_name) as file:
-      ckpt = file_name.split("_")[2]
+      ckpt = file_name.split("_")[0]
       output.write(ckpt + "&")
 
       # Loop through metrics.
       for i, line in enumerate(file):
         if i < 11 or i > 14:
-          output.write(round_(line.split(":")[1].split()[0]) + " (" + round_(line.split(":")[1].split()[1]) + ")&")
+          #output.write(round_(line.split(":")[1].split()[0]) + " (" + round_(line.split(":")[1].split()[1]) + ")&")
+          try:
+            output.write(round_(line.split(":")[1].split()[0]) + "&")
+          except TypeError:
+            output.write("0.0" + "&")
         elif i < 13:
           output.write(round_(line.split(":")[1].split()[0]) + "&")
       output.write("\\\ \hline\n")
