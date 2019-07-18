@@ -5,7 +5,6 @@ from __future__ import print_function
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-# Tensor2tensor imports.
 from tensor2tensor.layers import common_attention
 from tensor2tensor.layers import common_layers
 from tensor2tensor.models import transformer
@@ -16,14 +15,14 @@ from tensor2tensor.utils import registry
 
 @registry.register_model
 class ExtractedTransformer(transformer.Transformer):
-  """
+  '''
   A child class of the Transformer, for extracting the encoder state.
-  """
+  '''
   def __init__(self, *args, **kwargs):
     super(ExtractedTransformer, self).__init__(*args, **kwargs)
 
   def estimator_spec_predict(self, features, use_tpu=False):
-    """Construct EstimatorSpec for PREDICT mode."""
+    '''Construct EstimatorSpec for PREDICT mode.'''
     decode_hparams = self._decode_hparams
     infer_out = self.infer(
         features,
@@ -35,38 +34,38 @@ class ExtractedTransformer(transformer.Transformer):
         use_tpu=use_tpu)
 
     if isinstance(infer_out, dict):
-      outputs = infer_out["outputs"]
-      scores = infer_out["scores"]
-      encoder_outputs = infer_out["encoder_outputs"]
+      outputs = infer_out['outputs']
+      scores = infer_out['scores']
+      encoder_outputs = infer_out['encoder_outputs']
 
     else:
       outputs = infer_out
       scores = None
       encoder_outputs = None
 
-    inputs = features.get("inputs")
+    inputs = features.get('inputs')
     if inputs is None:
-      inputs = features["targets"]
+      inputs = features['targets']
 
-    """ Modified """
+    ''' Modified '''
     # Added encoder outputs to predicion dictionary.
     predictions = {
-        "outputs": outputs,
-        "scores": scores,
-        "encoder_outputs": encoder_outputs,
-        "inputs": inputs,
-        "targets": features.get("infer_targets"),
-        "batch_prediction_key": features.get("batch_prediction_key"),
+        'outputs': outputs,
+        'scores': scores,
+        'encoder_outputs': encoder_outputs,
+        'inputs': inputs,
+        'targets': features.get('infer_targets'),
+        'batch_prediction_key': features.get('batch_prediction_key'),
     }
     t2t_model._del_dict_nones(predictions)
 
-    export_out = {"outputs": predictions["outputs"]}
-    if "scores" in predictions:
-      export_out["scores"] = predictions["scores"]
+    export_out = {'outputs': predictions['outputs']}
+    if 'scores' in predictions:
+      export_out['scores'] = predictions['scores']
 
-    if "batch_prediction_key" in predictions:
-      export_out["batch_prediction_key"] = \
-          predictions["batch_prediction_key"]
+    if 'batch_prediction_key' in predictions:
+      export_out['batch_prediction_key'] = \
+          predictions['batch_prediction_key']
 
     t2t_model._remove_summaries()
 
@@ -105,36 +104,36 @@ def fast_decode(encoder_output,
   value_channels = hparams.attention_value_channels or hparams.hidden_size
   num_layers = hparams.num_decoder_layers or hparams.num_hidden_layers
   vars_3d_num_heads = (
-      hparams.num_heads if hparams.get("attention_variables_3d") else 0)
+      hparams.num_heads if hparams.get('attention_variables_3d') else 0)
 
   cache = {
-      "layer_%d" % layer: {
-          "k": common_attention.split_heads(
+      'layer_%d' % layer: {
+          'k': common_attention.split_heads(
               tf.zeros([batch_size, 0, key_channels]), hparams.num_heads),
-          "v": common_attention.split_heads(
+          'v': common_attention.split_heads(
               tf.zeros([batch_size, 0, value_channels]), hparams.num_heads),
-          "f": tf.zeros([batch_size, 0, hparams.hidden_size]),
+          'f': tf.zeros([batch_size, 0, hparams.hidden_size]),
       } for layer in range(num_layers)
   }
 
   if encoder_output is not None:
     for layer in range(num_layers):
-      layer_name = "layer_%d" % layer
+      layer_name = 'layer_%d' % layer
       with tf.variable_scope(
-          "body/decoder/%s/encdec_attention/multihead_attention" % layer_name):
+          'body/decoder/%s/encdec_attention/multihead_attention' % layer_name):
         k_encdec = common_attention.compute_attention_component(
-            encoder_output, key_channels, name="k",
+            encoder_output, key_channels, name='k',
             vars_3d_num_heads=vars_3d_num_heads)
         k_encdec = common_attention.split_heads(k_encdec, hparams.num_heads)
         v_encdec = common_attention.compute_attention_component(
-            encoder_output, value_channels, name="v",
+            encoder_output, value_channels, name='v',
             vars_3d_num_heads=vars_3d_num_heads)
         v_encdec = common_attention.split_heads(v_encdec, hparams.num_heads)
-      cache[layer_name]["k_encdec"] = k_encdec
-      cache[layer_name]["v_encdec"] = v_encdec
+      cache[layer_name]['k_encdec'] = k_encdec
+      cache[layer_name]['v_encdec'] = v_encdec
 
-    cache["encoder_output"] = encoder_output
-    cache["encoder_decoder_attention_bias"] = encoder_decoder_attention_bias
+    cache['encoder_output'] = encoder_output
+    cache['encoder_decoder_attention_bias'] = encoder_decoder_attention_bias
 
   if beam_size > 1:  # Beam Search
     initial_ids = tf.zeros([batch_size], dtype=tf.int32)
@@ -158,10 +157,10 @@ def fast_decode(encoder_output,
   else:  # Greedy
 
     def inner_loop(i, hit_eos, next_id, decoded_ids, cache, log_prob):
-      """One step of greedy decoding."""
+      '''One step of greedy decoding.'''
       logits, cache = symbols_to_logits_fn(next_id, i, cache)
       log_probs = common_layers.log_prob_from_logits(logits)
-      temperature = (0.0 if hparams.sampling_method == "argmax" else
+      temperature = (0.0 if hparams.sampling_method == 'argmax' else
                      hparams.sampling_temp)
       next_id = common_layers.sample_with_temperature(logits, temperature)
       hit_eos |= tf.equal(next_id, eos_id)
@@ -200,10 +199,10 @@ def fast_decode(encoder_output,
         ])
     scores = log_prob
 
-  """ Modified """
+  ''' Modified '''
   # Added encoder outputs to predicion dictionary.
   return {
-      "outputs": decoded_ids,
-      "encoder_outputs": encoder_output,
-      "scores": scores
+      'outputs': decoded_ids,
+      'encoder_outputs': encoder_output,
+      'scores': scores
   }

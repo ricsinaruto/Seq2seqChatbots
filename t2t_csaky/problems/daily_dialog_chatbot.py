@@ -7,7 +7,6 @@ from collections import Counter
 from tensor2tensor.data_generators import text_encoder
 from tensor2tensor.utils import registry
 
-# My imports.
 from t2t_csaky.problems import cornell_chatbots
 
 
@@ -17,37 +16,37 @@ EOS = text_encoder.EOS_ID
 
 @registry.register_problem
 class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
-  """
+  '''
   A class implementing a simple chatbot problem for the DailyDialog dataset.
   This version doesn't use any auxiliary information.
-  """
+  '''
 
   # Main function where the preprocessing of the data starts.
   def preprocess_data(self, train_mode):
-    """
+    '''
     Params:
       :train_mode: Whether we are in train or dev mode.
-    """
+    '''
 
     # Set the raw data directory and data.
-    self.raw_data_dir = os.path.join("/".join(self._data_dir.split("/")[:-1]),
+    self.raw_data_dir = os.path.join('/'.join(self._data_dir.split('/')[:-1]),
                                      'raw_data')
-    self.raw_data = os.path.join(self._raw_data_dir, "ijcnlp_dailydialog")
+    self.raw_data = os.path.join(self._raw_data_dir, 'ijcnlp_dailydialog')
     self.zipped_data = os.path.join(self._raw_data_dir,
-                                    "ijcnlp_dailydialog.zip")
+                                    'ijcnlp_dailydialog.zip')
 
     # Create the download url.
-    self.url = "http://yanran.li/files/ijcnlp_dailydialog.zip"
+    self.url = 'http://yanran.li/files/ijcnlp_dailydialog.zip'
 
     # Check at which part of the pipeline are we at.
     self.data_pipeline_status(train_mode)
 
   # Create the source, target and vocab files.
   def create_data(self, train_mode):
-    """
+    '''
     Params:
       :train_mode: Whether we are in train or dev mode.
-    """
+    '''
 
     # Open the 6 files.
     trainSource, trainTarget, devSource, devTarget, testSource, testTarget = \
@@ -55,7 +54,7 @@ class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
 
     # Open the raw data.
     dialogs = open(
-        os.path.join(self._raw_data, 'dialogues_text.txt'), errors="ignore")
+        os.path.join(self._raw_data, 'dialogues_text.txt'), errors='ignore')
 
     vocabulary = Counter()
     number_of_dialogs = 0
@@ -65,17 +64,17 @@ class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
     for dialog in dialogs:
       dataset_split_counter += 1
       if number_of_dialogs % 1000 == 0:
-        print("t2t_csaky_log: Parsed " + str(number_of_dialogs) + " dialogs.")
+        print('t2t_csaky_log: Parsed ' + str(number_of_dialogs) + ' dialogs.')
 
       # Utterances are separated by the __eou__ token.
-      utterances = dialog.split("__eou__")[:-1]
+      utterances = dialog.split('__eou__')[:-1]
 
       # Check which file we should write to.
-      if dataset_split_counter <= self.dataset_split["train"]:
+      if dataset_split_counter <= self.dataset_split['train']:
         source_file = trainSource
         target_file = trainTarget
-      elif dataset_split_counter <= (self.dataset_split["train"] +
-                                     self.dataset_split["val"]):
+      elif dataset_split_counter <= (self.dataset_split['train'] +
+                                     self.dataset_split['val']):
         source_file = devSource
         target_file = devTarget
       else:
@@ -90,7 +89,7 @@ class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
         i += 1
 
         # Build vocabulary.
-        if dataset_split_counter <= self.dataset_split["train"]:
+        if dataset_split_counter <= self.dataset_split['train']:
           words = utterance.split()
           for word in words:
             if word in vocabulary:
@@ -100,9 +99,9 @@ class DailyDialogChatbot(cornell_chatbots.CornellChatbotBasic):
 
         # Write to files.
         if i != len(utterances):
-          source_file.write(utterance + "\n")
+          source_file.write(utterance + '\n')
         if i != 1:
-          target_file.write(utterance + "\n")
+          target_file.write(utterance + '\n')
 
       number_of_dialogs += 1
       # Reset the split counter if we reached 100%.

@@ -1,17 +1,14 @@
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import tensorflow as tf
 import six
 
-# Tensor2tensor imports.
 from tensor2tensor.layers import common_layers
 from tensor2tensor.utils import t2t_model
 from tensor2tensor.utils import registry
 from tensor2tensor.utils import optimize
 
-# my imports
 from t2t_csaky.hparams import seq2seq_hparams
 from t2t_csaky.models import gradient_checkpointed_seq2seq
 
@@ -19,11 +16,11 @@ from t2t_csaky.models import gradient_checkpointed_seq2seq
 @registry.register_model
 class GradientCheckpointedSeq2seq(
         gradient_checkpointed_seq2seq.GradientCheckpointedSeq2seq):
-  """
+  '''
   This class is the modified version of the original Seq2Seq, where
   the outputs of the model are the encoded hidden state representations
   of the sentences.
-  """
+  '''
   REGISTERED_NAME = 'gradient_checkpointed_seq2seq'
 
   def __init__(self, *args, **kwargs):
@@ -31,15 +28,15 @@ class GradientCheckpointedSeq2seq(
     self._name = 'gradient_checkpointed_seq2seq'
 
   def body(self, features):
-    if self._hparams.initializer == "orthogonal":
-      raise ValueError("LSTM models fail with orthogonal initializer.")
+    if self._hparams.initializer == 'orthogonal':
+      raise ValueError('LSTM models fail with orthogonal initializer.')
     train = self._hparams.mode == tf.estimator.ModeKeys.TRAIN
 
-    """ Modified """
+    ''' Modified '''
     # using the custom lstm_seq2seq_internal_dynamic
     return gradient_checkpointed_seq2seq.lstm_seq2seq_internal_dynamic(
-        features.get("inputs"),
-        features["targets"],
+        features.get('inputs'),
+        features['targets'],
         seq2seq_hparams.chatbot_lstm_hparams(),
         train)
 
@@ -52,7 +49,7 @@ class GradientCheckpointedSeq2seq(
     with self._eager_var_store.as_default():
       self._fill_problem_hparams_features(features)
 
-      """ Modified """
+      ''' Modified '''
       # Passing the encoder state reference in 'sharded_enc_ou' variable.
       sharded_features = self._shard_features(features)
       sharded_logits, losses, sharded_enc_ou = self.model_fn_sharded(
@@ -75,7 +72,7 @@ class GradientCheckpointedSeq2seq(
     t2t_model.summarize_features(sharded_features, num_shards=dp.n)
     datashard_to_features = self._to_features_per_datashard(sharded_features)
 
-    """ Modified """
+    ''' Modified '''
     # Passing the encoder state reference in 'enc_out' variable.
     sharded_logits, sharded_losses, enc_out = dp(self.model_fn,
                                                  datashard_to_features)
@@ -93,34 +90,34 @@ class GradientCheckpointedSeq2seq(
     with tf.variable_scope(tf.get_variable_scope(), use_resource=True):
       transformed_features = self.bottom(features)
 
-      if self.hparams.activation_dtype == "bfloat16":
+      if self.hparams.activation_dtype == 'bfloat16':
         for k, v in sorted(six.iteritems(transformed_features)):
           if v.dtype == tf.float32:
             transformed_features[k] = tf.cast(v, tf.bfloat16)
 
-      with tf.variable_scope("body"):
-        t2t_model.log_info("Building model body")
+      with tf.variable_scope('body'):
+        t2t_model.log_info('Building model body')
 
-        """ Modified """
+        ''' Modified '''
         # Passing the encoder state reference in 'enc_out' variable.
         body_out, enc_out = self.body(transformed_features)
       output, losses = self._normalize_body_output(body_out)
 
-      if "training" in losses:
-        t2t_model.log_info("Skipping T2TModel top and loss "
-                           "because training loss "
-                           "returned from body")
+      if 'training' in losses:
+        t2t_model.log_info('Skipping T2TModel top and loss '
+                           'because training loss '
+                           'returned from body')
         logits = output
       else:
         logits = self.top(output, features)
-        losses["training"] = 0.0
+        losses['training'] = 0.0
         if self._hparams.mode != tf.estimator.ModeKeys.PREDICT:
-          losses["training"] = self.loss(logits, features)
+          losses['training'] = self.loss(logits, features)
 
       return logits, losses, enc_out
 
   def estimator_spec_predict(self, features, use_tpu=False):
-    """Construct EstimatorSpec for PREDICT mode."""
+    '''Construct EstimatorSpec for PREDICT mode.'''
     decode_hparams = self._decode_hparams
     infer_out = self.infer(
         features,
@@ -131,44 +128,44 @@ class GradientCheckpointedSeq2seq(
         decode_length=decode_hparams.extra_length,
         use_tpu=use_tpu)
 
-    """ Modified """
+    ''' Modified '''
     # Retrieving encoder output reference from inference output, and
     # adding it to the output predictions dictionary.
 
     if isinstance(infer_out, dict):
-      outputs = infer_out["outputs"]
-      scores = infer_out["scores"]
-      encoder_outputs = infer_out["encoder_outputs"]
+      outputs = infer_out['outputs']
+      scores = infer_out['scores']
+      encoder_outputs = infer_out['encoder_outputs']
     else:
       outputs = infer_out
       scores = None
       encoder_outputs = None
 
-    inputs = features.get("inputs")
+    inputs = features.get('inputs')
     if inputs is None:
-      inputs = features["targets"]
+      inputs = features['targets']
 
     predictions = {
-        "outputs": outputs,
-        "scores": scores,
-        "encoder_outputs": encoder_outputs,
-        "inputs": inputs,
-        "targets": features.get("infer_targets"),
-        "batch_prediction_key": features.get("batch_prediction_key"),
+        'outputs': outputs,
+        'scores': scores,
+        'encoder_outputs': encoder_outputs,
+        'inputs': inputs,
+        'targets': features.get('infer_targets'),
+        'batch_prediction_key': features.get('batch_prediction_key'),
     }
     t2t_model._del_dict_nones(predictions)
 
-    """ Modified """
+    ''' Modified '''
     # Added encoder outputs to export outputs dictionary.
-    export_out = {"outputs": predictions["outputs"]}
-    if "scores" in predictions:
-      export_out["scores"] = predictions["scores"]
+    export_out = {'outputs': predictions['outputs']}
+    if 'scores' in predictions:
+      export_out['scores'] = predictions['scores']
 
-    if "encoder_outputs" in predictions:
-      export_out["encoder_outputs"] = predictions["encoder_outputs"]
+    if 'encoder_outputs' in predictions:
+      export_out['encoder_outputs'] = predictions['encoder_outputs']
 
-    if "batch_prediction_key" in predictions:
-      export_out["batch_prediction_key"] = predictions["batch_prediction_key"]
+    if 'batch_prediction_key' in predictions:
+      export_out['batch_prediction_key'] = predictions['batch_prediction_key']
 
       t2t_model._remove_summaries()
 
@@ -198,18 +195,18 @@ class GradientCheckpointedSeq2seq(
     with self._eager_var_store.as_default():
       self.prepare_features_for_infer(features)
       if not self.has_input and beam_size > 1:
-        t2t_model.log_warn("Beam searching for a model with no inputs.")
-      if not self.has_input and self.hparams.sampling_method != "random":
-        t2t_model.log_warn("Non-random sampling for a model with no inputs.")
+        t2t_model.log_warn('Beam searching for a model with no inputs.')
+      if not self.has_input and self.hparams.sampling_method != 'random':
+        t2t_model.log_warn('Non-random sampling for a model with no inputs.')
       self._fill_problem_hparams_features(features)
 
       if self._problem_hparams:
         target_modality = self._problem_hparams.target_modality
         if target_modality.is_class_modality:
           beam_size = 1  # No use to run beam-search for a single class.
-      t2t_model.log_info("Greedy Decoding")
+      t2t_model.log_info('Greedy Decoding')
 
-      """ Modified """
+      ''' Modified '''
       # Removed every other decoding option, but the greedy method.
       results = self._greedy_infer(features, decode_length, use_tpu)
       return results
@@ -218,20 +215,20 @@ class GradientCheckpointedSeq2seq(
     if not features:
       features = {}
     inputs_old = None
-    if "inputs" in features and len(features["inputs"].shape) < 4:
-      inputs_old = features["inputs"]
-      features["inputs"] = tf.expand_dims(features["inputs"], 2)
+    if 'inputs' in features and len(features['inputs'].shape) < 4:
+      inputs_old = features['inputs']
+      features['inputs'] = tf.expand_dims(features['inputs'], 2)
     if not self.has_input:
-      partial_targets = features.get("inputs")
+      partial_targets = features.get('inputs')
       if partial_targets is None:
-        partial_targets = features["targets"]
-      features["partial_targets"] = tf.to_int64(partial_targets)
-    targets_old = features.get("targets", None)
+        partial_targets = features['targets']
+      features['partial_targets'] = tf.to_int64(partial_targets)
+    targets_old = features.get('targets', None)
 
     target_modality = self._problem_hparams.target_modality
 
     def infer_step(recent_output, recent_logits, unused_loss):
-      """Inference step."""
+      '''Inference step.'''
       if not tf.contrib.eager.in_eager_mode():
         if self._target_modality_is_real:
           dim = self._problem_hparams.target_modality.top_dimensionality
@@ -239,7 +236,7 @@ class GradientCheckpointedSeq2seq(
         else:
           recent_output.set_shape([None, None, None, 1])
       padded = tf.pad(recent_output, [[0, 0], [0, 1], [0, 0], [0, 0]])
-      features["targets"] = padded
+      features['targets'] = padded
 
       samples, logits, losses, enc_out = self.sample(features)
       if target_modality.top_is_pointwise:
@@ -260,13 +257,13 @@ class GradientCheckpointedSeq2seq(
       loss = sum([l for l in losses.values() if l is not None])
       return samples, logits, loss, enc_out
 
-    if "partial_targets" in features:
-      initial_output = tf.to_int64(features["partial_targets"])
+    if 'partial_targets' in features:
+      initial_output = tf.to_int64(features['partial_targets'])
       while len(initial_output.get_shape().as_list()) < 4:
         initial_output = tf.expand_dims(initial_output, 2)
       batch_size = common_layers.shape_list(initial_output)[0]
     else:
-      batch_size = common_layers.shape_list(features["inputs"])[0]
+      batch_size = common_layers.shape_list(features['inputs'])[0]
       if self._target_modality_is_real:
         dim = self._problem_hparams.target_modality.top_dimensionality
         initial_output = tf.zeros((batch_size, 0, 1, dim), dtype=tf.float32)
@@ -279,11 +276,11 @@ class GradientCheckpointedSeq2seq(
     if target_modality.is_class_modality:
       decode_length = 1
     else:
-      if "partial_targets" in features:
+      if 'partial_targets' in features:
         prefix_length = common_layers.shape_list(
-            features["partial_targets"])[1]
+            features['partial_targets'])[1]
       else:
-        prefix_length = common_layers.shape_list(features["inputs"])[1]
+        prefix_length = common_layers.shape_list(features['inputs'])[1]
       decode_length = prefix_length + decode_length
 
     result = initial_output
@@ -302,36 +299,36 @@ class GradientCheckpointedSeq2seq(
     result, logits, loss, enc_out = infer_step(result, logits, loss)
 
     if inputs_old is not None:
-      features["inputs"] = inputs_old
+      features['inputs'] = inputs_old
     if targets_old is not None:
-      features["targets"] = targets_old
-    losses = {"training": loss}
-    if "partial_targets" in features:
+      features['targets'] = targets_old
+    losses = {'training': loss}
+    if 'partial_targets' in features:
       partial_target_length = common_layers.shape_list(
-          features["partial_targets"])[1]
+          features['partial_targets'])[1]
       result = tf.slice(
           result, [0, partial_target_length, 0, 0], [-1, -1, -1, -1])
 
-    """ Modified """
+    ''' Modified '''
     # Added encoder outputs to inference outputs dictionary.
     return {
-        "outputs": result,
-        "scores": None,
-        "encoder_outputs": enc_out,
-        "logits": logits,
-        "losses": losses,
+        'outputs': result,
+        'scores': None,
+        'encoder_outputs': enc_out,
+        'logits': logits,
+        'losses': losses,
     }
 
   def sample(self, features):
-    """ Modified """
+    ''' Modified '''
     # Passing encoder output reference.
     logits, losses, enc_out = self(features)  # pylint: disable=not-callable
     if self._target_modality_is_real:
       return logits, logits, losses  # Raw numbers returned from real modality.
-    if self.hparams.sampling_method == "argmax":
+    if self.hparams.sampling_method == 'argmax':
       samples = tf.argmax(logits, axis=-1)
     else:
-      assert self.hparams.sampling_method == "random"
+      assert self.hparams.sampling_method == 'random'
 
       def multinomial_squeeze(logits, temperature=1.0):
         logits_shape = common_layers.shape_list(logits)

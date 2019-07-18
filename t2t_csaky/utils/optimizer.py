@@ -15,33 +15,33 @@ from tensorflow.python.training import optimizer
 
 
 def optimize(loss, learning_rate, hparams):
-  """Minimize loss."""
+  '''Minimize loss.'''
   loss = t2t_opt.weight_decay_and_noise(loss, hparams, learning_rate)
-  loss = tf.identity(loss, name="total_loss")
+  loss = tf.identity(loss, name='total_loss')
   t2t_opt.log_variable_sizes(verbose=hparams.summarize_vars)
   diet_vars = [
       v for v in tf.global_variables() if v.dtype == dtypes.float16_ref
   ]
   t2t_opt.log_variable_sizes(
-      diet_vars, "Diet Variables", verbose=hparams.summarize_vars)
+      diet_vars, 'Diet Variables', verbose=hparams.summarize_vars)
   opt = GradientCheckpointedOptimizer(hparams.optimizer,
                                       learning_rate,
                                       hparams)
 
-  tf.summary.scalar("learning_rate", learning_rate)
-  opt_summaries = ["loss", "global_gradient_norm"]
+  tf.summary.scalar('learning_rate', learning_rate)
+  opt_summaries = ['loss', 'global_gradient_norm']
   if hparams.summarize_grads:
-    tf.logging.info("Summarizing gradients")
-    opt_summaries.extend(["gradients", "gradient_norm"])
+    tf.logging.info('Summarizing gradients')
+    opt_summaries.extend(['gradients', 'gradient_norm'])
 
   if hparams.clip_grad_norm:
-    tf.logging.info("Clipping gradients, norm: %0.5f", hparams.clip_grad_norm)
+    tf.logging.info('Clipping gradients, norm: %0.5f', hparams.clip_grad_norm)
   if hparams.grad_noise_scale:
-    tf.logging.info("Adding noise to gradients, noise scale: %0.5f",
+    tf.logging.info('Adding noise to gradients, noise scale: %0.5f',
                     hparams.grad_noise_scale)
 
   train_op = tf.contrib.layers.optimize_loss(
-      name="training",
+      name='training',
       loss=loss,
       global_step=tf.train.get_or_create_global_step(),
       learning_rate=learning_rate,
@@ -54,16 +54,16 @@ def optimize(loss, learning_rate, hparams):
 
 
 class GradientCheckpointedOptimizer(tf.train.Optimizer):
-  """Conditional optimizer."""
+  '''Conditional optimizer.'''
 
   def __init__(self, optimizer_name, lr, hparams, use_tpu=False):
-    if optimizer_name == "Adam" and use_tpu:
+    if optimizer_name == 'Adam' and use_tpu:
       # LazyAdamOptimizer does not work on TPU
-      optimizer_name = "TrueAdam"
+      optimizer_name = 'TrueAdam'
 
-    tf.logging.info("Using optimizer %s", optimizer_name)
+    tf.logging.info('Using optimizer %s', optimizer_name)
 
-    if optimizer_name == "Adam":
+    if optimizer_name == 'Adam':
       # We change the default epsilon for Adam and re-scale lr.
       # Using LazyAdam as it's much faster for large vocabulary embeddings.
       self._opt = tf.contrib.opt.LazyAdamOptimizer(
@@ -71,23 +71,23 @@ class GradientCheckpointedOptimizer(tf.train.Optimizer):
           beta1=hparams.optimizer_adam_beta1,
           beta2=hparams.optimizer_adam_beta2,
           epsilon=hparams.optimizer_adam_epsilon)
-    elif optimizer_name == "Momentum":
+    elif optimizer_name == 'Momentum':
       self._opt = tf.train.MomentumOptimizer(
           lr,
           momentum=hparams.optimizer_momentum_momentum,
           use_nesterov=hparams.optimizer_momentum_nesterov)
-    elif optimizer_name == "YellowFin":
+    elif optimizer_name == 'YellowFin':
       self._opt = yellowfin.YellowFinOptimizer(
           learning_rate=lr, momentum=hparams.optimizer_momentum_momentum)
-    elif optimizer_name == "TrueAdam":
+    elif optimizer_name == 'TrueAdam':
       self._opt = tf.train.AdamOptimizer(
           lr / 500.0,
           beta1=hparams.optimizer_adam_beta1,
           beta2=hparams.optimizer_adam_beta2,
           epsilon=hparams.optimizer_adam_epsilon)
-    elif optimizer_name == "Adafactor":
+    elif optimizer_name == 'Adafactor':
       self._opt = t2t_opt.AdafactorOptimizer(lr / 500.0)
-    elif optimizer_name == "Adagrad":
+    elif optimizer_name == 'Adagrad':
       self._opt = tf.train.AdagradOptimizer(lr / 500.0)
     else:
       self._opt = tf.contrib.layers.OPTIMIZER_CLS_NAMES[optimizer_name](lr)
@@ -97,10 +97,10 @@ class GradientCheckpointedOptimizer(tf.train.Optimizer):
                         aggregation_method=None,
                         colocate_gradients_with_ops=False,
                         grad_loss=None):
-    """Compute gradients of `loss` for the variables in `var_list`.
+    '''Compute gradients of `loss` for the variables in `var_list`.
     This is the first part of `minimize()`.  It returns a list
-    of (gradient, variable) pairs where "gradient" is the gradient
-    for "variable".  Note that "gradient" can be a `Tensor`, an
+    of (gradient, variable) pairs where 'gradient' is the gradient
+    for 'variable'.  Note that 'gradient' can be a `Tensor`, an
     `IndexedSlices`, or `None` if there is no gradient for the
     given variable.
     Args:
@@ -121,12 +121,12 @@ class GradientCheckpointedOptimizer(tf.train.Optimizer):
     Raises:
       TypeError: If `var_list` contains anything else than `Variable` objects.
       ValueError: If some arguments are invalid.
-    """
+    '''
     if gate_gradients not in [tf.train.Optimizer.GATE_NONE,
                               tf.train.Optimizer.GATE_OP,
                               tf.train.Optimizer.GATE_GRAPH]:
-      raise ValueError("gate_gradients must be one of: Optimizer.GATE_NONE, "
-                       "Optimizer.GATE_OP, Optimizer.GATE_GRAPH.  Not %s" %
+      raise ValueError('gate_gradients must be one of: Optimizer.GATE_NONE, '
+                       'Optimizer.GATE_OP, Optimizer.GATE_GRAPH.  Not %s' %
                        gate_gradients)
     self._assert_valid_dtypes([loss])
     if grad_loss is not None:
@@ -142,7 +142,7 @@ class GradientCheckpointedOptimizer(tf.train.Optimizer):
     # pylint: enable=protected-access
     processors = [optimizer._get_processor(v) for v in var_list]
     if not var_list:
-      raise ValueError("No variables to optimize.")
+      raise ValueError('No variables to optimize.')
     var_refs = [p.target() for p in processors]
     # TODO: make the type of gradient checkpointing choosable.
     grads = tf.gradients(

@@ -9,6 +9,7 @@ from t2t_csaky.problems import character_chatbot
 from t2t_csaky.problems import cornell_chatbots
 from t2t_csaky.problems import daily_dialog_chatbot
 from t2t_csaky.problems import persona_chat_chatbot
+from t2t_csaky.problems import opensubtitles_chatbot
 
 from t2t_csaky.models import roulette_transformer
 from t2t_csaky.models import extracted_transformer

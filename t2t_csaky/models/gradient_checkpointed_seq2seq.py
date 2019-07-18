@@ -5,18 +5,16 @@ from __future__ import print_function
 import tensorflow as tf
 import math
 
-# Tensor2tensor imports
 from tensor2tensor.layers import common_layers
 from tensor2tensor.utils import t2t_model
 from tensor2tensor.utils import optimize
 
-# My imports.
 from t2t_csaky.hparams import seq2seq_hparams
 from t2t_csaky.utils import optimizer
 
 
 def lstm(inputs, hparams, train, name, initial_state=None):
-  """Run LSTM cell on inputs, assuming they are [batch x time x size]."""
+  '''Run LSTM cell on inputs, assuming they are [batch x time x size].'''
 
   def dropout_lstm_cell():
     return tf.contrib.rnn.DropoutWrapper(
@@ -36,14 +34,14 @@ def lstm(inputs, hparams, train, name, initial_state=None):
 
 
 def lstm_seq2seq_internal_dynamic(inputs, targets, hparams, train):
-  """The basic LSTM seq2seq model, main step used for training."""
-  with tf.variable_scope("lstm_seq2seq"):
+  '''The basic LSTM seq2seq model, main step used for training.'''
+  with tf.variable_scope('lstm_seq2seq'):
     if inputs is not None:
       # Flatten inputs.
       inputs = common_layers.flatten4d3d(inputs)
       # LSTM encoder.
       _, final_encoder_state = lstm(
-          tf.reverse(inputs, axis=[1]), hparams, train, "encoder")
+          tf.reverse(inputs, axis=[1]), hparams, train, 'encoder')
 
     else:
       final_encoder_state = None
@@ -53,11 +51,11 @@ def lstm_seq2seq_internal_dynamic(inputs, targets, hparams, train):
         common_layers.flatten4d3d(shifted_targets),
         hparams,
         train,
-        "decoder",
+        'decoder',
         initial_state=final_encoder_state)
 
     # Project the outputs.
-    with tf.variable_scope("projection"):
+    with tf.variable_scope('projection'):
       projected_outputs = tf.layers.dense(decoder_outputs,
                                           2048,
                                           activation=None,
@@ -66,8 +64,8 @@ def lstm_seq2seq_internal_dynamic(inputs, targets, hparams, train):
 
 
 def lstm_seq2seq_internal_static(inputs, targets, hparams, train):
-  """The basic LSTM seq2seq model, main step used for training."""
-  with tf.variable_scope("lstm_seq2seq"):
+  '''The basic LSTM seq2seq model, main step used for training.'''
+  with tf.variable_scope('lstm_seq2seq'):
     if inputs is not None:
       # Flatten inputs.
       inputs = tf.reverse(common_layers.flatten4d3d(inputs), axis=[1])
@@ -77,7 +75,7 @@ def lstm_seq2seq_internal_static(inputs, targets, hparams, train):
       input_list = [inputs[:, i, :] for i in range(21)]
 
       # LSTM encoder.
-      _, final_encoder_state = lstm(input_list, hparams, train, "encoder")
+      _, final_encoder_state = lstm(input_list, hparams, train, 'encoder')
     else:
       final_encoder_state = None
     input_list.clear()
@@ -89,7 +87,7 @@ def lstm_seq2seq_internal_static(inputs, targets, hparams, train):
     decoder_outputs, _ = lstm(target_list,
                               hparams,
                               train,
-                              "decoder",
+                              'decoder',
                               initial_state=final_encoder_state)
     target_list.clear()
 
@@ -99,7 +97,7 @@ def lstm_seq2seq_internal_static(inputs, targets, hparams, train):
     decoder_outputs.clear()
 
     # project the outputs
-    with tf.variable_scope("projection"):
+    with tf.variable_scope('projection'):
       projected_outputs = tf.layers.dense(tensors,
                                           2048,
                                           activation=None,
@@ -109,7 +107,7 @@ def lstm_seq2seq_internal_static(inputs, targets, hparams, train):
 
 # TODO: rename this (causes compatibility issues).
 class GradientCheckpointedSeq2seq(t2t_model.T2TModel):
-  """
+  '''
   A class where I replaced the internal hparams with my own function call.
   This way the hidden_size param of chatbot_lstm_hparams refers to the size
     of the lstm cells, while the hidden_size specified by the hparam set
@@ -120,30 +118,30 @@ class GradientCheckpointedSeq2seq(t2t_model.T2TModel):
 
   Moreover, gradient checkpointing was implemented, but didn't work.
   https://github.com/openai/gradient-checkpointing
-  """
+  '''
   def body(self, features):
-    if self._hparams.initializer == "orthogonal":
-      raise ValueError("LSTM models fail with orthogonal initializer.")
+    if self._hparams.initializer == 'orthogonal':
+      raise ValueError('LSTM models fail with orthogonal initializer.')
     train = self._hparams.mode == tf.estimator.ModeKeys.TRAIN
     return lstm_seq2seq_internal_dynamic(
-        features.get("inputs"),
-        features["targets"],
+        features.get('inputs'),
+        features['targets'],
         seq2seq_hparams.chatbot_lstm_hparams(),
         train)[0]
 
   # Change the optimizer to a new one, which uses gradient checkpointing.
   def optimize(self, loss, num_async_replicas=1):
-    """Return a training op minimizing loss."""
-    tf.logging.info("Base learning rate: %f", self.hparams.learning_rate)
+    '''Return a training op minimizing loss.'''
+    tf.logging.info('Base learning rate: %f', self.hparams.learning_rate)
     lr = self.hparams.learning_rate
     decay_rate = optimize.learning_rate_schedule(self.hparams)
     lr *= decay_rate
     if self.hparams.learning_rate_minimum:
       lr_min = float(self.hparams.learning_rate_minimum)
-      tf.logging.info("Applying learning rate minimum: %f", lr_min)
+      tf.logging.info('Applying learning rate minimum: %f', lr_min)
       lr = tf.max(lr, tf.to_float(lr_min))
     if num_async_replicas > 1:
-      tf.logging.info("Dividing learning rate by num_async_replicas: %d",
+      tf.logging.info('Dividing learning rate by num_async_replicas: %d',
                       num_async_replicas)
     lr /= math.sqrt(float(num_async_replicas))
     train_op = optimizer.optimize(loss, lr, self.hparams)
