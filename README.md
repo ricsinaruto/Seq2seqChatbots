@@ -69,20 +69,28 @@ With this mode you can decode from the trained models. The following parameters 
 * *return_beams*: If False return only the top beam, otherwise return *beam_size* number of beams.
 
 ## Results & Examples
-### See [this](https://anonfile.com/54YeAbf6b6/tables.pdf) for more sample response from [this](https://www.researchgate.net/publication/327594109_Making_Chatbots_Better_by_Training_on_Less_Data) paper.
-
-### Sample responses from various trainings
 S2S is a baseline seq2seq model from [this](https://arxiv.org/pdf/1506.05869.pdf) paper, Cornell is the Transformer model trained on Cornell data, Cornell S is similar, but trained with speaker-addressee annotations. OpenSubtitles is the Transformer trained with OpenSubtitles data, and OpenSubtitles F, is the previous training finetuned (further trained) on Cornell speaker annotated data.
 <a><img src="https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/docs/deep_learning_based_chatbot_models/pics/general_questions.png" align="top" height="550" ></a>
 
 ## Contributing
-New problems can be registered by subclassing the cornell or the opensubtitles chatbot problem. Usually it's enough to override the preprocess_data and the create_data functions. The former downloads and sets up the dataset, while the latter actually processes it and creates the train-valid-test files for training. See the [daily_dialog_chatbot](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/problems/daily_dialog_chatbot.py) for an example.
+**New problems** can be registered by subclassing WordChatbot, or even better to subclass CornellChatbotBasic or OpensubtitleChatbot, because they implement some additional functionalities. because Usually it's enough to override the preprocess_data and the create_data functions. The former downloads and sets up the dataset, while the latter actually processes it and creates the train-valid-test files for training. See the [daily_dialog_chatbot](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/problems/daily_dialog_chatbot.py) for an example.
 
 
 To create your own model you will need to follow the tensor2tensor tutorial on registering new models.
 
 ## Authors
+* **[Richard Csaky](ricsinaruto.github.io)** (If you need any help with running the code: ricsinaruto@hotmail.com)
 
-## Acknowledgments
-
-##### If you require any help with running the code or if you want the files of the trained models, write to this e-mail address. (ricsinaruto@hotmail.com)
+## License
+This project is licensed under the MIT License - see the [LICENSE.md]() file for details.
+Please include a link to this repo if you use it in your work and consider citing the following paper:
+```
+@InProceedings{Csaky:2017,
+  title = {Deep Learning Based Chatbot Models},
+  author = {Csaky, Richard},
+  year = {2019},
+  publisher={National Scientific Students' Associations Conference},
+  url ={https://tdk.bme.hu/VIK/DownloadPaper/asdad},
+  note={https://tdk.bme.hu/VIK/DownloadPaper/asdad}
+}
+```
