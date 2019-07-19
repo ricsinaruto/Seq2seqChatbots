@@ -39,8 +39,7 @@ class PersonaChatChatbot(cornell_chatbots.CornellChatbotBasic):
     self.zipped_data = os.path.join(self._raw_data_dir, 'convai2.tar.gz')
 
     # Create the download url.
-    self.url = \
-        'https://s3.amazonaws.com/fair-data/parlai/convai2/convai2.tar.gz'
+    self.url = 'http://parl.ai/downloads/convai2/convai2_fix_723.tgz'
 
     # Check at which part of the pipeline are we at.
     self.data_pipeline_status(train_mode)

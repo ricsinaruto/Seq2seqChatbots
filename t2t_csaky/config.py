@@ -6,7 +6,7 @@ for the current run. This file will also be copied to the provided directory.
 
 FLAGS = {
     't2t_usr_dir': 't2t_csaky',  # Tensor2tensor imports from this dir.
-    'data_dir': 'data_dir/DailyDialog/no_stop_words',
+    'data_dir': 'data_dir/DailyDialog/test_repo',
     'train_dir': 'train_dir/DailyDialog/seq2seq_base-base_with_numbers',
     'decode_dir': 'decode_dir/DailyDialog/trf_20_dropout-base',
     'problem': 'daily_dialog_chatbot',

@@ -308,7 +308,7 @@ class CornellChatbotSeparateNames(CornellChatbotBasic):
       counter += 1
 
     # Close the files.
-    self.close_6_files([trainSource,
+    self.close_n_files([trainSource,
                        trainTarget,
                        devSource,
                        devTarget,
