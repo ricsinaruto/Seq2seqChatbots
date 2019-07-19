@@ -2,11 +2,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-# tensor2tensor imports
 from tensor2tensor.models import transformer
 from tensor2tensor.utils import registry
 
-# my imports
 from t2t_csaky.config import TRANSFORMER_HPARAMS
 
 
@@ -14,16 +12,16 @@ from t2t_csaky.config import TRANSFORMER_HPARAMS
 @registry.register_hparams
 def general_transformer_hparams():
   hparams = transformer.transformer_base()
-  hparams.add_hparam("roulette", TRANSFORMER_HPARAMS["roulette_wheel"])
-  hparams.add_hparam("roulette_beam_size",
-                     TRANSFORMER_HPARAMS["roulette_beam_size"])
+  hparams.add_hparam('roulette', TRANSFORMER_HPARAMS['roulette_wheel'])
+  hparams.add_hparam('roulette_beam_size',
+                     TRANSFORMER_HPARAMS['roulette_beam_size'])
 
-  hparams.batch_size = TRANSFORMER_HPARAMS["batch_size"]
-  hparams.layer_prepostprocess_dropout = TRANSFORMER_HPARAMS["layer_dropout"]
-  hparams.symbol_modality_num_shards = TRANSFORMER_HPARAMS["embed_num_shards"]
-  hparams.attention_dropout = TRANSFORMER_HPARAMS["attention_dropout"]
-  hparams.relu_dropout = TRANSFORMER_HPARAMS["relu_dropout"]
-  hparams.summarize_vars = TRANSFORMER_HPARAMS["summarize_vars"]
+  hparams.batch_size = TRANSFORMER_HPARAMS['batch_size']
+  hparams.layer_prepostprocess_dropout = TRANSFORMER_HPARAMS['layer_dropout']
+  hparams.symbol_modality_num_shards = TRANSFORMER_HPARAMS['embed_num_shards']
+  hparams.attention_dropout = TRANSFORMER_HPARAMS['attention_dropout']
+  hparams.relu_dropout = TRANSFORMER_HPARAMS['relu_dropout']
+  hparams.summarize_vars = TRANSFORMER_HPARAMS['summarize_vars']
 
   return hparams
 

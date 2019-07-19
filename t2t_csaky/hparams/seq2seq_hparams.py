@@ -5,7 +5,6 @@ from __future__ import print_function
 from tensor2tensor.models import lstm
 from tensor2tensor.utils import registry
 
-# My imports.
 from t2t_csaky.config import SEQ2SEQ_HPARAMS
 
 
@@ -16,16 +15,16 @@ def general_gradient_checkpointed_seq2seq_hparams():
 
   hparams.clip_grad_norm = 0.0
   hparams.shared_embedding_and_softmax_weights = SEQ2SEQ_HPARAMS[
-      "shared_embedding_and_softmax_weights"]
-  hparams.optimizer = SEQ2SEQ_HPARAMS["optimizer"]
-  hparams.use_fixed_batch_size = SEQ2SEQ_HPARAMS["fixed_batch_size"]
-  hparams.summarize_vars = SEQ2SEQ_HPARAMS["summarize_vars"]
+      'shared_embedding_and_softmax_weights']
+  hparams.optimizer = SEQ2SEQ_HPARAMS['optimizer']
+  hparams.use_fixed_batch_size = SEQ2SEQ_HPARAMS['fixed_batch_size']
+  hparams.summarize_vars = SEQ2SEQ_HPARAMS['summarize_vars']
 
-  hparams.symbol_modality_num_shards = SEQ2SEQ_HPARAMS["embed_num_shards"]
-  hparams.hidden_size = SEQ2SEQ_HPARAMS["embedding_size"]
-  hparams.num_hidden_layers = SEQ2SEQ_HPARAMS["num_layers"]
-  hparams.batch_size = SEQ2SEQ_HPARAMS["batch_size"]
-  hparams.max_length = SEQ2SEQ_HPARAMS["max_sentence_len"]
+  hparams.symbol_modality_num_shards = SEQ2SEQ_HPARAMS['embed_num_shards']
+  hparams.hidden_size = SEQ2SEQ_HPARAMS['embedding_size']
+  hparams.num_hidden_layers = SEQ2SEQ_HPARAMS['num_layers']
+  hparams.batch_size = SEQ2SEQ_HPARAMS['batch_size']
+  hparams.max_length = SEQ2SEQ_HPARAMS['max_sentence_len']
   return hparams
 
 
@@ -42,7 +41,7 @@ def general_lstm_seq2seq_hparams():
 # From this only the hidden_size is used for the lstm_seq2seq model.
 def chatbot_lstm_hparams():
   hparams = chatbot_lstm_batch_256()
-  hparams.hidden_size = SEQ2SEQ_HPARAMS["lstm_hidden_size"]
+  hparams.hidden_size = SEQ2SEQ_HPARAMS['lstm_hidden_size']
   return hparams
 
 
@@ -53,7 +52,7 @@ def chatbot_lstm_batch_8k():
 
   hparams.clip_grad_norm = 0.0
   hparams.shared_embedding_and_softmax_weights = True
-  hparams.optimizer = "Adafactor"
+  hparams.optimizer = 'Adafactor'
   hparams.use_fixed_batch_size = False
   hparams.summarize_vars = True
 

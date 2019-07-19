@@ -13,7 +13,6 @@ from clint.textui import progress
 from tensor2tensor.data_generators import text_encoder
 from tensor2tensor.utils import registry
 
-# My imports.
 from t2t_csaky.problems import word_chatbot
 from t2t_csaky.config import PROBLEM_HPARAMS
 
@@ -24,50 +23,50 @@ EOS = text_encoder.EOS_ID
 
 @registry.register_problem
 class OpensubtitlesChatbot(word_chatbot.WordChatbot):
-  """
+  '''
   A class implementing the chatbot problem for the OpenSubtitles dataset.
-  """
+  '''
 
   @property
   def dataset_version(self):
     # Year of the opensubtitles dataset creation.
-    return PROBLEM_HPARAMS["dataset_version"]
+    return PROBLEM_HPARAMS['dataset_version']
 
   # Main function where the preprocessing of the data starts.
   def preprocess_data(self, train_mode):
-    """
+    '''
     Params:
       :train_mode: Whether we are in train or dev mode.
-    """
+    '''
 
-    year = "" if self.dataset_version == 2009 else str(self.dataset_version)
+    year = '' if self.dataset_version == 2009 else str(self.dataset_version)
     # Set the raw data directory and data.
-    self.raw_data_dir = os.path.join("/".join(self._data_dir.split("/")[:-1]),
+    self.raw_data_dir = os.path.join('/'.join(self._data_dir.split('/')[:-1]),
                                      'raw_data_' + str(self.dataset_version))
-    self.raw_data = os.path.join(self._raw_data_dir, "OpenSubtitles" + year)
-    self.zipped_data = os.path.join(self._raw_data_dir, "en.tar.gz")
+    self.raw_data = os.path.join(self._raw_data_dir, 'OpenSubtitles' + year)
+    self.zipped_data = os.path.join(self._raw_data_dir, 'en.tar.gz')
 
     # Create the download url.
-    self.url = ("http://opus.nlpl.eu/download.php?f=OpenSubtitles" +
-                str(year) + "/en.tar.gz")
+    self.url = ('http://opus.nlpl.eu/download.php?f=OpenSubtitles' +
+                str(year) + '/en.tar.gz')
 
     # Check at which part of the pipeline are we at.
     self.data_pipeline_status(train_mode)
 
   # Check at which part of the pipeline are we at.
   def data_pipeline_status(self, train_mode):
-    """
+    '''
     This function first check recursively at which point in the
     data processing point are we (what files can be found on the disk),
     and then proceeds from there.
 
     Params:
       :train_mode: Whether we are in train or dev mode.
-    """
+    '''
 
     # Build the source and target paths.
-    sourcePath = os.path.join(self._data_dir, train_mode + "Source.txt")
-    targetPath = os.path.join(self._data_dir, train_mode + "Target.txt")
+    sourcePath = os.path.join(self._data_dir, train_mode + 'Source.txt')
+    targetPath = os.path.join(self._data_dir, train_mode + 'Target.txt')
 
     # If raw data dir doesn't exist, create it.
     if not os.path.exists(self._raw_data_dir):
@@ -76,43 +75,43 @@ class OpensubtitlesChatbot(word_chatbot.WordChatbot):
     # Check whether sourcePath.txt exists.
     if (os.path.isfile(sourcePath) and os.path.isfile(targetPath) and
             os.path.isfile(os.path.join(self._data_dir, self.vocab_file))):
-      print("t2t_csaky_log: Source, target and vocab files exist in " +
-            self._data_dir + ", proceeding with data generation. " +
-            "If you want to rebuild these files, delete them first.")
+      print('t2t_csaky_log: Source, target and vocab files exist in ' +
+            self._data_dir + ', proceeding with data generation. ' +
+            'If you want to rebuild these files, delete them first.')
       return
 
     # Check whether the raw data is extracted to the raw_data_dir folder.
     elif os.path.exists(self._raw_data):
-      print("t2t_csaky_log: No source, target or vocab files found in " +
-            self._data_dir + ".")
-      print("t2t_csaky_log: Extracted raw data is in " + self._raw_data_dir +
-            ". Proceeding with creating source, target and vocab files.")
+      print('t2t_csaky_log: No source, target or vocab files found in ' +
+            self._data_dir + '.')
+      print('t2t_csaky_log: Extracted raw data is in ' + self._raw_data_dir +
+            '. Proceeding with creating source, target and vocab files.')
       self.create_data(train_mode)
 
     # Check whether the data is downloaded in the raw_data_dir_folder.
     elif os.path.exists(self._zipped_data):
-      print("t2t_csaky_log: No source, target or vocab files found in " +
-            self._data_dir + ".")
-      print("t2t_csaky_log: No extracted raw data found in " +
-            self._raw_data_dir + ".")
-      print("t2t_csaky_log: Unextracted raw data is in " + self._raw_data_dir +
-            ". Extracting and creating source, target and vocab files.")
+      print('t2t_csaky_log: No source, target or vocab files found in ' +
+            self._data_dir + '.')
+      print('t2t_csaky_log: No extracted raw data found in ' +
+            self._raw_data_dir + '.')
+      print('t2t_csaky_log: Unextracted raw data is in ' + self._raw_data_dir +
+            '. Extracting and creating source, target and vocab files.')
       self.extract_data(train_mode)
 
     else:
-      print("t2t_csaky_log: No source, target or vocab files found in " +
-            self._data_dir + ".")
-      print("t2t_csaky_log: No raw data found in " + self._raw_data_dir +
-            ". Proceeding with downloading the data, extracting it, " +
-            "and creating source, target and vocab files.")
+      print('t2t_csaky_log: No source, target or vocab files found in ' +
+            self._data_dir + '.')
+      print('t2t_csaky_log: No raw data found in ' + self._raw_data_dir +
+            '. Proceeding with downloading the data, extracting it, ' +
+            'and creating source, target and vocab files.')
       self.download_data(train_mode)
 
   # Download data from official sources.
   def download_data(self, train_mode):
-    """
+    '''
     Params:
       :train_mode:  Whether we are in train or dev mode.
-    """
+    '''
 
     # Open the url and download the data with progress bars.
     data_stream = requests.get(self._url, stream=True)
@@ -125,38 +124,38 @@ class OpensubtitlesChatbot(word_chatbot.WordChatbot):
           file.flush()
 
     # Next step is extracting the data.
-    print("t2t_csaky_log: Extracting data to " + self._zipped_data + ".")
+    print('t2t_csaky_log: Extracting data to ' + self._zipped_data + '.')
     self.extract_data(train_mode)
 
   # Extract data and go to the next step.
   def extract_data(self, train_mode):
-    """
+    '''
     Params:
       :train_mode:  Whether we are in train or dev mode.
-    """
+    '''
 
-    if self._zipped_data[-2:] == "gz":
-      zip_file = tarfile.open(self._zipped_data, "r:gz")
-    elif self._zipped_data[-3:] == "zip":
+    if self._zipped_data[-2:] == 'gz':
+      zip_file = tarfile.open(self._zipped_data, 'r:gz')
+    elif self._zipped_data[-3:] == 'zip':
       zip_file = zipfile.ZipFile(self._zipped_data, 'r')
     else:
-      print("t2t_csaky_log: " + self._zipped_data +
-            " is not a .zip or .gz file, so I can't extract it.")
+      print('t2t_csaky_log: ' + self._zipped_data +
+            ' is not a .zip or .gz file, so I can\'t extract it.')
 
     zip_file.extractall(self._raw_data_dir)
     zip_file.close()
 
     # Next step is creating the source, target and vocab files.
-    print("t2t_csaky_log: Creating " +
-          train_mode + " files in " + self._data_dir)
+    print('t2t_csaky_log: Creating ' +
+          train_mode + ' files in ' + self._data_dir)
     self.create_data(train_mode)
 
   # Create the source, target and vocab files.
   def create_data(self, train_mode):
-    """
+    '''
     Params:
       :train_mode: Whether we are in train or dev mode.
-    """
+    '''
 
     # open the 6 files
     trainSource, trainTarget, devSource, devTarget, testSource, testTarget = \
@@ -170,7 +169,7 @@ class OpensubtitlesChatbot(word_chatbot.WordChatbot):
     for root, subfolders, files in os.walk(self._raw_data_dir):
       for file in files:
         if conv_id % 100 == 0:
-          print("t2t_csaky_log: Parsed " + str(conv_id) + " files.")
+          print('t2t_csaky_log: Parsed ' + str(conv_id) + ' files.')
         if file.endswith('.gz'):
           source_lines = ''
           target_lines = ''
@@ -193,7 +192,7 @@ class OpensubtitlesChatbot(word_chatbot.WordChatbot):
                   words = self.clean_line(words)
 
                   # Build the vocabulary.
-                  if dataset_split_counter <= self.dataset_split["train"]:
+                  if dataset_split_counter <= self.dataset_split['train']:
                     word_list = words.split()
                     for word in word_list:
                       if word in vocabulary:
@@ -219,11 +218,11 @@ class OpensubtitlesChatbot(word_chatbot.WordChatbot):
             source_lines = '\n'.join(source_lines.split('\n')[:-2]) + '\n'
 
           # Save the dialog according to the dataset split.
-          if dataset_split_counter <= self.dataset_split["train"]:
+          if dataset_split_counter <= self.dataset_split['train']:
             trainSource.write(source_lines)
             trainTarget.write(target_lines)
-          elif dataset_split_counter <= (self.dataset_split["train"] +
-                                         self.dataset_split["val"]):
+          elif dataset_split_counter <= (self.dataset_split['train'] +
+                                         self.dataset_split['val']):
             devSource.write(source_lines)
             devTarget.write(target_lines)
           else:
@@ -255,18 +254,18 @@ class OpensubtitlesChatbot(word_chatbot.WordChatbot):
 
   # Clean a line with some re rules.
   def clean_line(self, line):
-    """
+    '''
     Params:
       :line: Line to be processed and returned.
-    """
+    '''
     line = line.lower()
-    line = re.sub("[^a-z .!?'\t\\\]", "", line)
+    line = re.sub("[^a-z .!?'\t\\\]", '', line)
     line = re.sub("\\\['] ", " '", line)
-    line = re.sub("[\\\]", " ", line)
-    line = re.sub("[.]", " . ", line)
-    line = re.sub("[?]", " ? ", line)
-    line = re.sub("[!]", " ! ", line)
-    line = re.sub("[ ]'[ ]", " ", line)
+    line = re.sub('[\\\]', ' ', line)
+    line = re.sub('[.]', ' . ', line)
+    line = re.sub('[?]', ' ? ', line)
+    line = re.sub('[!]', ' ! ', line)
+    line = re.sub("[ ]'[ ]", ' ', line)
     line = re.sub("n't", " n't", line)
 
     return line
