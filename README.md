@@ -69,20 +69,20 @@ With this mode you can decode from the trained models. The following parameters 
 * *return_beams*: If False return only the top beam, otherwise return *beam_size* number of beams.
 
 ## Results & Examples
-S2S is a baseline seq2seq model from [this](https://arxiv.org/pdf/1506.05869.pdf) paper, Cornell is the Transformer model trained on Cornell data, Cornell S is similar, but trained with speaker-addressee annotations. OpenSubtitles is the Transformer trained with OpenSubtitles data, and OpenSubtitles F, is the previous training finetuned (further trained) on Cornell speaker annotated data.
-<a><img src="https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/docs/deep_learning_based_chatbot_models/pics/general_questions.png" align="top" height="550" ></a>
+Soon
 
 ## Contributing
-**New problems** can be registered by subclassing WordChatbot, or even better to subclass CornellChatbotBasic or OpensubtitleChatbot, because they implement some additional functionalities. because Usually it's enough to override the preprocess_data and the create_data functions. The former downloads and sets up the dataset, while the latter actually processes it and creates the train-valid-test files for training. See the [daily_dialog_chatbot](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/problems/daily_dialog_chatbot.py) for an example.
-
-
-To create your own model you will need to follow the tensor2tensor tutorial on registering new models.
+##### Check the [issues](https://github.com/ricsinaruto/Seq2seqChatbots/issues) for some additions where help is appreciated. Any contributions are welcome :heart:
+##### Please try to follow the code syntax style used in the repo (flake8, 2 spaces indent, 80 char lines, commenting a lot, etc.)
+**New problems** can be registered by subclassing [WordChatbot](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/problems/word_chatbot.py), or even better to subclass [CornellChatbotBasic](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/problems/cornell_chatbots.py) or [OpensubtitleChatbot](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/problems/opensubtitles_chatbot.py), because they implement some additional functionalities. Usually it's enough to override the *preprocess* and *create_data* functions. Check the [documentation](https://github.com/ricsinaruto/Seq2seqChatbots/wiki/API-Documentation) for more details and see [daily_dialog_chatbot](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/t2t_csaky/problems/daily_dialog_chatbot.py) for an example.  
+  
+**New models** and hyperparameters can be added by following the tensor2tensor [tutorial](https://github.com/tensorflow/tensor2tensor#adding-your-own-components).
 
 ## Authors
 * **[Richard Csaky](ricsinaruto.github.io)** (If you need any help with running the code: ricsinaruto@hotmail.com)
 
 ## License
-This project is licensed under the MIT License - see the [LICENSE.md]() file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/LICENSE) file for details.
 Please include a link to this repo if you use it in your work and consider citing the following paper:
 ```
 @InProceedings{Csaky:2017,
