@@ -88,7 +88,7 @@ S2S is a simple seq2seq model with LSTMs trained on Cornell, others are Transfor
 TRF is the Transformer model, while RT means randomly selected responses from the training set and GT means ground truth responses. For an explanation of the metrics see the [paper](https://arxiv.org/abs/1905.05471).
 
 ### Responses from [Transformer](https://arxiv.org/abs/1706.03762) Trained on [DailyDialog](https://arxiv.org/abs/1710.03957)
-<a><img src="https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/wiki_images/dailydialog_examples.png" align="top" height="800" ></a>
+<a><img src="https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/wiki_images/dailydialog_examples.png" align="top" height="819" ></a>
 
 ## Contributing
 ##### Check the [issues](https://github.com/ricsinaruto/Seq2seqChatbots/issues) for some additions where help is appreciated. Any contributions are welcome :heart:
