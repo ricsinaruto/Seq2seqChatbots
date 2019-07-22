@@ -69,7 +69,26 @@ With this mode you can decode from the trained models. The following parameters 
 * *return_beams*: If False return only the top beam, otherwise return *beam_size* number of beams.
 
 ## Results & Examples
-Soon
+The following results are from [these](https://tdk.bme.hu/VIK/DownloadPaper/asdad) two [papers](https://arxiv.org/abs/1905.05471).
+
+### Loss and Metrics of [Transformer](https://arxiv.org/abs/1706.03762) Trained on [Cornell](https://www.cs.cornell.edu/~cristian/Cornell_Movie-Dialogs_Corpus.html)
+<a><img src="https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/wiki_images/cornell_loss.png" align="top" height="300" ></a>
+
+<a><img src="https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/wiki_images/cornell_metrics.png" align="top" height="100" ></a>
+TRF is the Transformer model, while RT means randomly selected responses from the training set and GT means ground truth responses. For an explanation of the metrics see the [paper](https://arxiv.org/abs/1905.05471).
+
+### Responses from [Transformer](https://arxiv.org/abs/1706.03762) and [Seq2seq](https://arxiv.org/pdf/1506.05869.pdf) Trained on [Cornell](https://www.cs.cornell.edu/~cristian/Cornell_Movie-Dialogs_Corpus.html) and [Opensubtitles](http://opus.nlpl.eu/OpenSubtitles2018.php)
+S2S is a simple seq2seq model with LSTMs trained on Cornell, others are Transformer models. Opensubtitles F is pre-trained on Opensubtitles and finetuned on Cornell.
+<a><img src="https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/wiki_images/tdk_table.png" align="top" height="600" ></a>
+
+### Loss and Metrics of [Transformer](https://arxiv.org/abs/1706.03762) Trained on [DailyDialog](https://arxiv.org/abs/1710.03957)
+<a><img src="https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/wiki_images/loss_dailydialog.png" align="top" height="300" ></a>
+
+<a><img src="https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/wiki_images/daily_dialog_metrics.png" align="top" height="120" ></a>
+TRF is the Transformer model, while RT means randomly selected responses from the training set and GT means ground truth responses. For an explanation of the metrics see the [paper](https://arxiv.org/abs/1905.05471).
+
+### Responses from [Transformer](https://arxiv.org/abs/1706.03762) Trained on [DailyDialog](https://arxiv.org/abs/1710.03957)
+<a><img src="https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/wiki_images/dailydialog_examples.png" align="top" height="800" ></a>
 
 ## Contributing
 ##### Check the [issues](https://github.com/ricsinaruto/Seq2seqChatbots/issues) for some additions where help is appreciated. Any contributions are welcome :heart:
