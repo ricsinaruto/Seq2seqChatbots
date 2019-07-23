@@ -5,6 +5,7 @@ The [wiki](https://github.com/ricsinaruto/Seq2seqChatbots/wiki/Chatbot-and-Relat
 #### Data filtering code for the ACL [paper](https://arxiv.org/abs/1905.05471) has been moved [here](https://github.com/ricsinaruto/NeuralChatbots-DataFiltering).  
 
 ## Features
+  :floppy_disk: &nbsp; Run your own trainings or experiment with pre-trained models  
   :white_check_mark: &nbsp; 4 different dialog datasets integrated with tensor2tensor  
   :twisted_rightwards_arrows: &nbsp; Seemlessly works with any model or hyperparameter set in tensor2tensor  
   :rocket: &nbsp;&nbsp; Easily extendable base class for dialog problems
