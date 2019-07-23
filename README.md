@@ -1,8 +1,8 @@
 # Seq2seqChatbots &middot; [![twitter](https://img.shields.io/twitter/url/https/shields.io.svg?style=social)](https://ctt.ac/Zgu6I)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![Paper1](https://img.shields.io/badge/Paper-Research-yellow.svg)](https://arxiv.org/abs/1905.05471) [![Paper2](https://img.shields.io/badge/Paper-Survey-yellow.svg)](https://tdk.bme.hu/VIK/DownloadPaper/asdad) [![Code1](https://img.shields.io/badge/code-filtering-green.svg)](https://github.com/ricsinaruto/NeuralChatbots-DataFiltering) [![Code2](https://img.shields.io/badge/code-evaluation-green.svg)](https://github.com/ricsinaruto/dialog-eval) [![notes](https://img.shields.io/badge/paper%20notes-on%20wiki-red.svg)](https://github.com/ricsinaruto/Seq2seqChatbots/wiki/Chatbot-and-Related-Research-Paper-Notes-with-Images) [![documentation](https://img.shields.io/badge/documentation-on%20wiki-red.svg)](https://github.com/ricsinaruto/Seq2seqChatbots/wiki/API-Documentation)  
 A wrapper around [tensor2tensor](https://github.com/tensorflow/tensor2tensor) to flexibly train, interact, and generate data for neural chatbots.  
-Data filtering code for the ACL [paper](https://arxiv.org/abs/1905.05471) has been moved [here](https://github.com/ricsinaruto/NeuralChatbots-DataFiltering).  
 The [wiki](https://github.com/ricsinaruto/Seq2seqChatbots/wiki/Chatbot-and-Related-Research-Paper-Notes-with-Images) contains my notes and summaries of over 150 recent publications related to neural dialog modeling.
+#### Data filtering code for the ACL [paper](https://arxiv.org/abs/1905.05471) has been moved [here](https://github.com/ricsinaruto/NeuralChatbots-DataFiltering).  
 
 ## Features
   :white_check_mark: &nbsp; 4 different dialog datasets integrated with tensor2tensor  
