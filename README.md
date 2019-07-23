@@ -102,7 +102,7 @@ TRF is the Transformer model, while RT means randomly selected responses from th
 * **[Richard Csaky](ricsinaruto.github.io)** (If you need any help with running the code: ricsinaruto@hotmail.com)
 
 ## License
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/ricsinaruto/Seq2seqChatbots/blob/master/LICENSE) file for details.  
 Please include a link to this repo if you use it in your work and consider citing the following paper:
 ```
 @InProceedings{Csaky:2017,
