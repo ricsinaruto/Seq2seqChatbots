@@ -13,11 +13,11 @@ The [wiki](https://github.com/ricsinaruto/Seq2seqChatbots/wiki/Chatbot-and-Relat
 
 
 ## Setup
-Run setup.py which installs required packages and steps you through downloading additional data or model checkpoints:
+Run setup.py which installs required packages and steps you through downloading additional data:
 ```
 python setup.py
 ```
-
+You can download all trained models used in [this](https://arxiv.org/abs/1905.05471) paper from [here](https://mega.nz/#!mI0iDCTI!qhKoBiQRY3rLg3K6nxAmd4ZMNEX4utFRvSby_0q2dwU). Each training contains two checkpoints, one for the validation loss minimum and another after 150 epochs. The data and the trainings folder structure match each other exactly.
 ## Usage
 ```
 python t2t_csaky/main.py --mode=train
