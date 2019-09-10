@@ -105,4 +105,15 @@ def decoding():
 
 # Run a longer experiment, with many calls to the above functions.
 def experiment():
-  pass
+  ckpt_list = [1, 1328, 2647, 3963, 5284, 6611, 7932, 9254, 10581, 11902, 13227, 14558, 15882, 17209]
+  dir_list = ["base_with_numbers", "base_both_identity_clustering", "base_source_based_identity_clustering_CORRECT", "base_target_based_identity_clustering",
+              "base_both_avg_embedding", "base_target_based_avg_embedding", "base_source_based_avg_embedding",
+              "base_both_sent_eval", "base_target_based_sent_eval", "base_source_based_sent_eval"]
+  for ckpt in ckpt_list:
+    #FLAGS["data_dir"] = "data_dir/DailyDialog/" + folder
+    #FLAGS["train_dir"] = "train_dir/DailyDialog/trf_20_dropout-" + folder
+    #FLAGS["decode_dir"] = "decode_dir/DailyDialog/trf_20_dropout-" + folder
+    with open(FLAGS["train_dir"] + "/checkpoint", "w") as ckpt_file:
+      ckpt_file.write('model_checkpoint_path: "model.ckpt-' + str(ckpt) + '"')
+    FLAGS["output_file_name"] = "test_set_" + str(ckpt) + ".txt"
+    decoding()
