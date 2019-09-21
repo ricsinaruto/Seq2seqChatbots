@@ -170,71 +170,71 @@ class OpensubtitlesChatbot(word_chatbot.WordChatbot):
       for file in files:
         if conv_id % 100 == 0:
           print('t2t_csaky_log: Parsed ' + str(conv_id) + ' files.')
-        if file.endswith('.gz'):
-          source_lines = ''
-          target_lines = ''
-          conv_id += 1
-          dataset_split_counter += 1
 
-          # Open one .gz file and parse it.
-          with gzip.open(os.path.join(root, file), 'r') as txt_file:
-            words = ''
-            line_id = 1
+        source_lines = ''
+        target_lines = ''
+        conv_id += 1
+        dataset_split_counter += 1
 
-            # Parse one line.
-            for line in txt_file:
-              line = str(line)
+        # Open one .gz file and parse it.
+        with open(os.path.join(root, file), 'r', errors='ignore') as txt_file:
+          words = ''
+          line_id = 1
 
-              # Check if it's a new sentence.
-              if line.find('<s id="') != -1:
-                if len(words) > 0:
-                  # Do some cleaning.
-                  words = self.clean_line(words)
+          # Parse one line.
+          for line in txt_file:
+            line = str(line)
 
-                  # Build the vocabulary.
-                  if dataset_split_counter <= self.dataset_split['train']:
-                    word_list = words.split()
-                    for word in word_list:
-                      if word in vocabulary:
-                        vocabulary[word] += 1
-                      else:
-                        vocabulary[word] = 1
+            # Check if it's a new sentence.
+            if line.find('<s id="') != -1:
+              if len(words) > 0:
+                # Do some cleaning.
+                words = self.clean_line(words)
 
-                  # Add the previous line.
-                  source_lines += words + '\n'
-                  if line_id != 1:
-                    target_lines += words + '\n'
-                  line_id += 1
-                words = ''
+                # Build the vocabulary.
+                if dataset_split_counter <= self.dataset_split['train']:
+                  word_list = words.split()
+                  for word in word_list:
+                    if word in vocabulary:
+                      vocabulary[word] += 1
+                    else:
+                      vocabulary[word] = 1
 
-              else:
-                index = line.find('<w id="')
-                if index >= 0:
-                  line = line[index:]
-                  word = line[line.find('>') + 1:line.find('</w')]
-                  words = words + ' ' + word.replace('\t', ' ')
+                # Add the previous line.
+                source_lines += words + '\n'
+                if line_id != 1:
+                  target_lines += words + '\n'
+                line_id += 1
+              words = ''
 
-            # Delete the final source sentence, since it doesn't have a target.
-            source_lines = '\n'.join(source_lines.split('\n')[:-2]) + '\n'
+            else:
+              index = line.find('<w id="')
+              if index >= 0:
+                line = line[index:]
+                word = line[line.find('>') + 1:line.find('</w')]
+                words = words + ' ' + word.replace('\t', ' ')
 
-          # Save the dialog according to the dataset split.
-          if dataset_split_counter <= self.dataset_split['train']:
-            trainSource.write(source_lines)
-            trainTarget.write(target_lines)
-          elif dataset_split_counter <= (self.dataset_split['train'] +
-                                         self.dataset_split['val']):
-            devSource.write(source_lines)
-            devTarget.write(target_lines)
-          else:
-            testSource.write(source_lines)
-            testTarget.write(target_lines)
+          # Delete the final source sentence, since it doesn't have a target.
+          source_lines = '\n'.join(source_lines.split('\n')[:-2]) + '\n'
 
-          # Reset the split counter if we reached 100%.
-          if dataset_split_counter == 100:
-            dataset_split_counter = 0
+        # Save the dialog according to the dataset split.
+        if dataset_split_counter <= self.dataset_split['train']:
+          trainSource.write(source_lines)
+          trainTarget.write(target_lines)
+        elif dataset_split_counter <= (self.dataset_split['train'] +
+                                       self.dataset_split['val']):
+          devSource.write(source_lines)
+          devTarget.write(target_lines)
+        else:
+          testSource.write(source_lines)
+          testTarget.write(target_lines)
 
-          # Check if we reached the desired dataset size.
-          number_of_lines += line_id
+        # Reset the split counter if we reached 100%.
+        if dataset_split_counter == 100:
+          dataset_split_counter = 0
+
+        # Check if we reached the desired dataset size.
+        number_of_lines += line_id
         if (self.targeted_dataset_size != 0 and
                 self.targeted_dataset_size < number_of_lines):
           break
