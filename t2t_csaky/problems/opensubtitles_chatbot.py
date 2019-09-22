@@ -258,14 +258,27 @@ class OpensubtitlesChatbot(word_chatbot.WordChatbot):
     Params:
       :line: Line to be processed and returned.
     '''
+    # 2 functions for more complex replacing.
+    def replace(matchobj):
+      return re.sub("'", " '", str(matchobj.group(0)))
+
+    def replace_null(matchobj):
+      return re.sub("'", '', str(matchobj.group(0)))
+
     line = line.lower()
-    line = re.sub("[^a-z .!?'\t\\\]", '', line)
-    line = re.sub("\\\['] ", " '", line)
-    line = re.sub('[\\\]', ' ', line)
+
+    # Keep some special tokens.
+    line = re.sub("[^a-z .?!'0-9\t\\\\]", '', line)
+    line = re.sub("\\\\['] ", " '", line)
+    line = re.sub('[\\\\]', ' ', line)
     line = re.sub('[.]', ' . ', line)
     line = re.sub('[?]', ' ? ', line)
     line = re.sub('[!]', ' ! ', line)
+
+    # Take care of apostrophes.
     line = re.sub("[ ]'[ ]", ' ', line)
+    line = re.sub(" '[a-z]", replace_null, line)
     line = re.sub("n't", " n't", line)
+    line = re.sub("[^ n]'[^ t]", replace, line)
 
     return line
