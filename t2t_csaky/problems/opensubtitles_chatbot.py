@@ -264,10 +264,11 @@ class OpensubtitlesChatbot(word_chatbot.WordChatbot):
 
     # Keep some special tokens.
     line = re.sub('[^a-z .?!\'0-9]', '', line)
+    line = re.sub('n \'t', 'n\'t', line)
     line = re.sub('[.]', ' . ', line)
     line = re.sub('[?]', ' ? ', line)
     line = re.sub('[!]', ' ! ', line)
 
     words = nltk.word_tokenize(line)
     line = ' '.join(words)
-    return line
+    return line + ' '
