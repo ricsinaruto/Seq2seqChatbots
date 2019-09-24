@@ -5,8 +5,9 @@ import os
 import requests
 import tarfile
 import re
-import gzip
 import zipfile
+import unicodedata
+import nltk
 from collections import Counter
 from clint.textui import progress
 
@@ -187,10 +188,9 @@ class OpensubtitlesChatbot(word_chatbot.WordChatbot):
 
             # Check if it's a new sentence.
             if line.find('<s id="') != -1:
+              # Do some cleaning.
+              words = self.clean_line(words)
               if len(words) > 0:
-                # Do some cleaning.
-                words = self.clean_line(words)
-
                 # Build the vocabulary.
                 if dataset_split_counter <= self.dataset_split['train']:
                   word_list = words.split()
@@ -258,27 +258,16 @@ class OpensubtitlesChatbot(word_chatbot.WordChatbot):
     Params:
       :line: Line to be processed and returned.
     '''
-    # 2 functions for more complex replacing.
-    def replace(matchobj):
-      return re.sub("'", " '", str(matchobj.group(0)))
-
-    def replace_null(matchobj):
-      return re.sub("'", '', str(matchobj.group(0)))
-
     line = line.lower()
+    line = re.sub(' \' ', '\'', line)
+    line = unicodedata.normalize('NFKD', line)
 
     # Keep some special tokens.
-    line = re.sub("[^a-z .?!'0-9\t\\\\]", '', line)
-    line = re.sub("\\\\['] ", " '", line)
-    line = re.sub('[\\\\]', ' ', line)
+    line = re.sub('[^a-z .?!\'0-9]', '', line)
     line = re.sub('[.]', ' . ', line)
     line = re.sub('[?]', ' ? ', line)
     line = re.sub('[!]', ' ! ', line)
 
-    # Take care of apostrophes.
-    line = re.sub("[ ]'[ ]", ' ', line)
-    line = re.sub(" '[a-z]", replace_null, line)
-    line = re.sub("n't", " n't", line)
-    line = re.sub("[^ n]'[^ t]", replace, line)
-
+    words = nltk.word_tokenize(line)
+    line = ' '.join(words)
     return line
