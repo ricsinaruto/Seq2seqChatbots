@@ -9,7 +9,7 @@ import zipfile
 from clint.textui import progress
 
 
-def download_data(url, zipped_path):
+def download_data(url, zipped_path, extract):
   # Open the url and download the data with progress bars.
   data_stream = requests.get(url, stream=True)
 
@@ -23,14 +23,18 @@ def download_data(url, zipped_path):
 
   # Extract file.
   zip_file = zipfile.ZipFile(zipped_path, 'r')
-  zip_file.extractall('')
+  zip_file.extractall(extract)
   zip_file.close()
 
 
 print('Do you want to download all datasets used in the paper (116 MB)? (y/n)')
 if input() == 'y':
-  download_data('https://github.com/ricsinaruto/website/blob/master/docs/data.zip?raw=true', 'data.zip')
+  if not os.path.exists('data'):
+    os.mkdir('data')
+  download_data('https://ricsinaruto.github.io/website/docs/Twitter.zip', 'data/Twitter.zip', 'data')
+  download_data('https://ricsinaruto.github.io/website/docs/Cornell.zip', 'data/Cornell.zip', 'data')
+  download_data('https://ricsinaruto.github.io/website/docs/DailyDialog.zip', 'data/DailyDialog.zip', 'data')
 
 print('Do you want to download all generated responses on the test set by the different models (7 MB)? (y/n)')
 if input() == 'y':
-  download_data('https://ricsinaruto.github.io/website/docs/responses.zip', 'responses.zip')
+  download_data('https://ricsinaruto.github.io/website/docs/responses.zip', 'responses.zip', '')
