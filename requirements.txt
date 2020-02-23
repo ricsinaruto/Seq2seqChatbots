@@ -1,5 +1,6 @@
 numpy
-tensorflow-gpu
+tensorflow-gpu==1.15.0
 tensor2tensor
 clint
 requests
+nltk
